@@ -12,16 +12,18 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import matplotlib.colors as mcolors
 
+from . import evaluate
+
 small_txt = 9
 medium_txt = 12
 big_txt = 25
 
-plt.rc('font', size=small_txt)          # controls default text sizes
-plt.rc('axes', titlesize=small_txt)     # fontsize of the axes title
-plt.rc('axes', labelsize=medium_txt)    # fontsize of the x and y labels
-plt.rc('xtick', labelsize=small_txt)    # fontsize of the tick labels
-plt.rc('ytick', labelsize=small_txt)    # fontsize of the tick labels
-plt.rc('legend', fontsize=small_txt)    # legend fontsize
+plt.rc('font', size=small_txt)
+plt.rc('axes', titlesize=small_txt)
+plt.rc('axes', labelsize=medium_txt)
+plt.rc('xtick', labelsize=small_txt)
+plt.rc('ytick', labelsize=small_txt)
+plt.rc('legend', fontsize=small_txt)
 
 def LFER(gas, outliers=False, show=False):
     '''Plots the linear LFER fits
@@ -78,7 +80,7 @@ def LFER(gas, outliers=False, show=False):
         #axi.set(adjustable='box', aspect='equal')
 
     plt.tight_layout()
-    
+
     if show:
         plt.show()
 
@@ -92,7 +94,7 @@ def histograms(gas, show=False):
     Returns:
         None 
     '''
-       
+
     # *TO DO MAKE THIS GENERAL
     dms = gas.vH.dms
     dms_no_out = gas.vH.dms_no_out
@@ -103,7 +105,7 @@ def histograms(gas, show=False):
 
     ax[0,0].set_xlabel(r'$\Delta H_{D,0}-\overline{\Delta H_{D,0}}$')
     ax[0,1].set_xlabel(r'$\Delta H_b-\overline{\Delta H_b}$')
-    
+
     cmap = cm.plasma
     norm = mcolors.Normalize(vmin=0, vmax=len(dms[0, :]))  # Normalize colors to the number of datasets
 
@@ -160,26 +162,28 @@ def isotherms(gas, show=False):
     b_b0_f = LFE_params[3]
     kd0_f = np.exp((dHD_f-b_kd0_f)/a_kd0_f)
     b0_f = np.exp((dHb_f-b_b0_f)/a_b0_f)
-    
+
     b_f = gas.b_f
     kd_f = gas.kd_f
     C_f = gas.vH.c_f
-
     cmap = cm.plasma
     norm = mcolors.Normalize(vmin=0, vmax=len(T))  # Normalize colors to the number of datasets
 
     for i, temp in enumerate(T):
-    
+
+        press, c_model, c_model_err = evaluate.isotherm(gas, i)
+
         linecolor = cmap(norm(i))
-        max_press = np.max(p[i])
-        press = np.linspace(1E-6,max_press,100)
 
         ax[i//2,i%2].set_ylabel(r'$C \; \mathrm{(cm^3_{STP} \; cm^{-3}_{pol})}$')
         ax[i//2,i%2].set_xlabel(r'$p_i \; \mathrm{or} \; f \; \mathrm{(atm)}$')
 
-        ax[i//2,i%2].plot(press,C_f[i,:], color=linecolor, label='DMS_fit')
+        ax[i//2,i%2].plot(press, c_model, color=linecolor, label='DMS_fit')
+        ax[i//2,i%2].fill_between(press, c_model-c_model_err/2, c_model+c_model_err/2, color=linecolor, label='DMS_fit', alpha=0.3)
+
         ax[i//2,i%2].plot(p[i],c[i],'o', color='black')
-    
+        ax[i//2,i%2].errorbar(p[i],c[i],yerr=cerr[i],xerr=None,fmt='none', color='black')
+
     #for axi in ax: 
     #    axi.legend()
 
@@ -207,10 +211,10 @@ def heat_of_sorption(gas, show=False):
 
     S_inf_0 = gas.analysis.deltaH_S_inf[1]
     deltaH_S_inf = gas.analysis.deltaH_S_inf[0]
-    
+
     k_D_0 = gas.analysis.deltaH_D[1]
     deltaH_D = gas.analysis.deltaH_D[0]
-    
+
     b_0 = gas.analysis.deltaH_b[1]
     deltaH_b = gas.analysis.deltaH_b[0]
 
@@ -230,7 +234,7 @@ def heat_of_sorption(gas, show=False):
 
     def lin_fit(data, slope, ints):
         return slope*data+ints
-    
+
     #print(deltaH_S_inf)
     ax[0].plot(inv_RT, ln_S_inf, 'o', color='black')
     ax[0].plot(inv_RT, lin_fit(inv_RT,-deltaH_S_inf,ln_S_inf_0), label='OLS', color=cmap(norm(1)))
@@ -247,22 +251,8 @@ def heat_of_sorption(gas, show=False):
     ax[2].plot(inv_RT, lin_fit(inv_RT,-deltaH_b,ln_b_0), label='OLS', color=cmap(norm(3)))
     ax[2].set_ylabel(r'$\mathrm{ln}(b)$')
     ax[2].set_xlabel(r'$(RT)^{-1}$')
-    
-    #ax[1].plot(inv_RT, deltaHb,'o', color = 'black')
-    #ax[1].plot(inv_RT, lin_fit(log_b0,slope_b,int_b), label='OLS', color=cmap(norm(5)))
-    #ax[1].set_xlabel(r'$\mathrm{ln}(b_0)$')
-    #ax[1].set_ylabel(r'$\Delta H_b$')
-
-    # === Add top axis with temperature ===
-    def inv_RT_to_T(x): return 1 / x
-    def T_to_inv_RT(x): return 1 / x
-
-    for axi in ax:
-        secax = axi.secondary_xaxis('top', functions=(inv_RT_to_T, T_to_inv_RT))
-        secax.set_xlabel('T (K)')
 
     plt.tight_layout()
-    
+
     if show:
         plt.show()
-    

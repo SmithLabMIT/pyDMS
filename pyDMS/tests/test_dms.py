@@ -9,7 +9,7 @@ gas.cerr = np.array([[0.1,0.2,0.3,0.4,0.5,0.6],[0.1,0.2,0.3,0.4,0.5,0.6],[0.1,0.
 gas.p = np.array([[0.1,0.5,1,2,3,5],[0.1,0.5,1,2,3,5],[0.1,0.5,1,2,3,5],[0.1,0.5,1,2,3,5],[0.1,0.5,1,2,3,5]])
 gas.T = np.array([308,328,398,423])
 
-gas.LFER.out = np.array([0.1, 0.2, 0.3, 0.4]) # *get reall data
+gas.LFER.out = np.array([0.1, 0.2, 0.3, 0.4]) # *get real data
     
 x_LFER = np.array([1.0, 0.1, 0.5, 0.05, 10, 10, 10, 10]) # * get real data
 x_vH = np.array([1.0, 0.1, 10, 10, 10, 10]) # * get real data

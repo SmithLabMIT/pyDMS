@@ -131,7 +131,7 @@ def virial_eos(gas, params=None):
     Returns:
         A numpy array in gas.f with the fugacities at the corresponding pressures provided in gas.p
     '''
-    
+
     gas_name = gas.formula
     T = gas.T
     p = gas.p
@@ -139,7 +139,7 @@ def virial_eos(gas, params=None):
     R = 8.314e6  # cm^3·Pa/(mol·K)
     atm_to_pa = 1.01325e5  # Conversion factor from atm to Pa
     p = p * atm_to_pa
-    
+
     if params is not None:
         B0 = params.get('B0',0)
         B1 = params.get('B1',0)
@@ -158,9 +158,9 @@ def virial_eos(gas, params=None):
         C1 = gas_name.get('C1',0)
 
     if B0==0:
-        pyDMS.warning("WARNING: B0 = 0")
+        pyDMS.warning_in_orange("WARNING: B0 = 0")
     if B1==0:
-        pyDMS.warning("WARNING: B1 = 0")
+        pyDMS.warning_in_orange("WARNING: B1 = 0")
 
     B =  B0 + B1/T + B2/T**2 + B3/T**3 + B4/T**4
     C = C0+C1*T
@@ -174,7 +174,7 @@ def virial_eos(gas, params=None):
     
     return gas
 
-def peng_robinson_eos(gas, params):
+def peng_robinson_eos(gas, params=None):
     '''Computes the fugacity of a gas at a given temperature and pressure using the Peng-Robinson EoS
 
     Built-in Virial coefficients are from the NIST Chemistry Webbook (https://webbook.nist.gov/chemistry/):
@@ -208,13 +208,13 @@ def peng_robinson_eos(gas, params):
         pc = gas_name.get('Pc',0)
 
     if omega==0:
-        pyDMS.warning("WARNING: The accentric factor (omega) = 0")
+        pyDMS.warning_in_orange("WARNING: The accentric factor (omega) = 0")
 
     if Tc==0:
-        pyDMS.error("Error: Critical Temperature (Tc) cannot be 0")
+        pyDMS.error_in_red("Error: Critical Temperature (Tc) cannot be 0")
 
     if Pc==0:
-        pyDMS.error("Error: Critical Pressure (Pc) cannot be 0")
+        pyDMS.error_in_red("Error: Critical Pressure (Pc) cannot be 0")
 
     mpa_to_atm = 9.86923 # atm/MPa
     p_mpa = p/mpa_to_atm
@@ -249,5 +249,6 @@ def peng_robinson_eos(gas, params):
             f_atm_list.append(f_atm)
         else:
             f_atm_list.append(np.nan)  # If no valid phi, store NaN
-    gas.f = np.array(f_atm_list)  # Return an array of fugacities 
+    gas.f = np.array(f_atm_list)  # Return an array of fugacities
+    
     return gas

@@ -15,7 +15,6 @@ from scipy.stats import median_abs_deviation, chi2
 import statsmodels.api as sm
 
 import pyDMS
-from . import visualize as vis
 from . import report
 from . import evaluate
 
@@ -88,7 +87,6 @@ class LFER:
     def __repr__(self):
         return 'str'
 
-
 class vH:
     '''
     dms:
@@ -101,8 +99,9 @@ class vH:
     plusminus_ch:
     'c_f':
     res:
+    'hessian_average'
     '''
-    __slots__ = ['dms', 'dms_no_out', 'avg_dms', 'plusminus_1', 'plusminus_2','plusminus_ch','c_f','res', 'settings']
+    __slots__ = ['dms', 'dms_no_out', 'avg_dms', 'plusminus_1', 'plusminus_2','plusminus_ch','c_f','res', 'settings', 'hessian_matrix']
 
     def __init__(self):
         self.dms = None
@@ -113,6 +112,7 @@ class vH:
         self.plusminus_ch = None
         self.c_f = None # no reason to store this, just calculate it in vis
         self.res = None
+        self.hessian_matrix = None
         self.settings = None
 
     def __repr__(self):
@@ -135,7 +135,7 @@ class analysis:
     def __repr__(self):
         return 'str'
 
-def LFER_loss(x, gas):
+def LFER_loss(x, gas, func='chi2'):
     '''Defines the loss function for the LFER optimization.
 
     Args:
@@ -145,6 +145,14 @@ def LFER_loss(x, gas):
     Returns:
         The loss function result as a number
     '''
+    settings = gas.LFER.settings
+
+    # finding settings
+    if settings is None:
+        settings = {}
+
+    settings.setdefault('ch_constraint', 'decrease')
+    ch_constraint = settings.get('ch_constraint')
 
     # retriving gas data
     c_vec = gas.c
@@ -160,7 +168,14 @@ def LFER_loss(x, gas):
     dHD = x[1]
     b0 = x[2]
     dHb = x[3]
-    ch_vec = x[4:]
+
+    if ch_constraint == 'decrease':
+        ch_vec = x[4:]
+    elif ch_constraint == 'linear':
+        slope_ch = x[4]
+        int_ch = x[5]
+    else:
+        pyDMS.error_in_red('Ch constraint not recognized. Use "decrease" or "linear"')
 
     # looping through each concentration vector
     for i,_ in enumerate(c_vec):
@@ -179,16 +194,22 @@ def LFER_loss(x, gas):
         # solving the DMS model
         calc = kd * p + ch * b * p / (1 + b * p)
 
+        if func == 'chi2':
         # using the chi-squared error as the loss function
-        ssr[i] = np.sum(((calc - c) ** 2) / (cerr**2))
-
+            ssr[i] = np.sum(((calc - c) ** 2) / (cerr**2))
+            random_thing = None
+        elif func == 'least-sq':
+            ssr[i] = np.sum((calc - c) ** 2)
+            #random_thing = None
+        else:
+            return pyDMS.error_in_red('Loss function not recognized')
     # Sum of all the errors as metric
     out = np.sum(ssr)
 
     # * see if scaling is really necessary
     return out/1000
 
-def vH_loss(x, gas):
+def vH_loss(x, gas, func='chi2'):
     '''Defines the loss function for the van't Hoff optimization.
 
     Args:
@@ -237,9 +258,16 @@ def vH_loss(x, gas):
         # solving the DMS model
         calc = kd * p + ch * b * p / (1 + b * p)
 
-        # using the chi-squared error as the loss function
-        ssr[i] = np.sum(((calc - c) ** 2) / (cerr**2))
-
+        if func == 'chi2':
+            # using the chi-squared error as the loss function
+            ssr[i] = np.sum(((calc - c) ** 2) / (cerr**2))
+            random_thing = None
+        elif func == 'least-sq':
+            #ssr[i] = np.sum((calc - c) ** 2)
+            random_thing = None
+        else:
+            return pyDMS.error_in_red('Loss function not recognized')
+        
     # Sum of all the errors as metric 
     out2 = np.sum(ssr)
 
@@ -301,8 +329,6 @@ def hess(gas, soln):
     dCdHD = np.zeros_like(c_vec)
     dCdHb = np.zeros_like(c_vec)
     dCdCH = np.zeros_like(c_vec)
-    #dCdCH = np.array([np.zeros_like(c_vec) for _ in range(len(c_vec))])
-    #dCdHD = np.zeros([len(c_vec) for _ in range(len(c_vec[0]))])
     hessian = np.zeros((len(c_vec)+2,len(c_vec)+2))/1e6
     
     # looping through each concentration vector
@@ -361,7 +387,7 @@ def calc_LFEs(gas, settings=None):
     # finding settings
     if settings is None:
         settings = {}
-    
+
     settings.setdefault('dHD_bounds', [-1, -30])
     settings.setdefault('dHb_bounds', [-1, -30])
     settings.setdefault('kD0_bounds', [0.001, 0.01])
@@ -382,7 +408,6 @@ def calc_LFEs(gas, settings=None):
     solver = settings.get("solver")
     verbose = settings.get("verbose")
     solver_verbose = settings.get("solver_verbose")
-
 
     # * consider allowing this to be turned off?
 
@@ -486,7 +511,7 @@ def calc_LFEs(gas, settings=None):
             }
 
             # finding initial guess
-            LFER_loss(x0,gas)
+            LFER_loss(x0, gas)
 
             if not verbose:
                 warnings.filterwarnings("ignore", message="delta_grad == 0.0")
@@ -511,29 +536,23 @@ def calc_LFEs(gas, settings=None):
             maxiter = settings.get('maxiter')
         
             options = {
-                    'maxiter': maxiter,        # max iterations
-                    'ftol': ftol,          # function tolerance 
+                    'maxiter': maxiter,     # max iterations
+                    'ftol': ftol,           # function tolerance 
                     'disp': solver_verbose, # display iteration results
             }
 
             # finding initial guess
             LFER_loss(x0,gas)
 
-            # * create flag array
-            #flag = np.zeros((1,j))
-
             # running optimization
             result = minimize(
                 LFER_loss,
                 x0,
-                args=(gas,),
+                args=(gas),
                 method='SLSQP',
                 bounds=solver_bounds,
                 constraints={'type': 'ineq', 'fun': linear_constraint},
                 options=options)
- 
-            # * get hessian matrix approximations
-            # * get flag array
 
         # collecting optimization results
         flag[j] = result.status
@@ -571,7 +590,6 @@ def calc_LFEs(gas, settings=None):
 
     # *TO DO: NEED TO EXAMINE THIS SOME MORE
     par_outliers_removed = np.transpose(par_outliers_removed)
-    #print(par_outliers_removed)
     par_outliers_removed = par_outliers_removed[~np.any(par_outliers_removed == 0, axis=1)]
     par_outliers_removed = np.transpose(par_outliers_removed)
 
@@ -588,7 +606,6 @@ def calc_LFEs(gas, settings=None):
     # deltaHD = aD*ln(kd0) + bD
     log_kd0 = np.log(par_outliers_removed[0])
     deltaHd = par_outliers_removed[1]
-    # deltaHb = ab*ln(b0) + bb
     log_b0 = np.log(par_outliers_removed[2])
     deltaHb = par_outliers_removed[3]
 
@@ -608,16 +625,17 @@ def calc_LFEs(gas, settings=None):
     out = [slope_kd, int_kd, slope_b, int_b] # collecting slopes, intercepts
     SE = [slope_kd_err, int_kd_err, slope_b_err, int_b_err] # collecting errors
 
-
-    # THIS JUST COLLECTS ALL DATA * idk why its len(c) it should just be 4
-    pars = np.zeros((len(log_kd0), len(c))) # creating a matrix for holding results
+    # collecting data
+    # * keep an eye on this. Changed from len(c) to 4
+    pars = np.zeros((len(log_kd0), 4))
     pars[:,0] = log_kd0
     pars[:,1] = deltaHd
     pars[:,2] = log_b0
     pars[:,3] = deltaHb
 
-    # collecting data with outliers for plotting * idk why its len(c) it should just be 4
-    pars_outliers = np.zeros((len(log_kd0_out), len(c))) # creating a matrix for holding results
+    # collecting data with outliers for plotting
+    # * keep an eye on this. Changed from len(c) to 4
+    pars_outliers = np.zeros((len(log_kd0_out), len(c)))
     pars_outliers[:,0] = log_kd0_out
     pars_outliers[:,1] = deltaHd_out
     pars_outliers[:,2] = log_b0_out
@@ -629,10 +647,8 @@ def calc_LFEs(gas, settings=None):
     gas.LFER.pars_outliers = pars_outliers
 
     gas.LFER.settings = settings
+    
     return gas
-    # * make this class parameters for easier access
-    #return [out, SE, pars, time, [log_kd0, deltaHd], [log_b0, deltaHb]]
-    #print(par_outliers_removed)
 
 def calc_params(gas, settings=None):
     '''Implements the vH_loss function to optimize the DMS model based on van't Hoff constraints
@@ -650,14 +666,12 @@ def calc_params(gas, settings=None):
           subclass
     '''
 
-    #x0 = None
     # pulling in data
     c = gas.c
     cerr = gas.cerr
     p = gas.p
     T = gas.T
     LFE_params = gas.LFER.out
-    pars = gas.LFER.pars
 
     settings = gas.vH.settings
 
@@ -723,10 +737,10 @@ def calc_params(gas, settings=None):
     rng = np.random.default_rng()
 
     for j in range(trials):
-        
+
         if verbose and np.mod(j,10)==0:
             print(f'van\'t Hoff trial: {j}/{trials}')
-                  
+
         # picking a random number in each bound
         dHD_0 = dHD0_0_bnd[0] + dHDval*rng.random()
         dHb_0 = dHb_0_bnd[0] + dHbval*rng.random()
@@ -765,12 +779,11 @@ def calc_params(gas, settings=None):
             gtol = settings.get('gtol')
             maxiter = settings.get('maxiter')
 
-            # hessian_approx = BFGS() # Initialize the BFGS Hessian approximation
             options = {
-                    'maxiter': maxiter,         # maximum iterations
+                    'maxiter': maxiter,     # maximum iterations
                     'xtol': xtol,           # variable tolerance
                     'gtol': gtol,           # function tolerance
-                    'disp': solver_verbose,  # display optimization progress
+                    'disp': solver_verbose, # display optimization progress
             }
 
             # finding initial guess
@@ -785,7 +798,7 @@ def calc_params(gas, settings=None):
                 vH_loss,
                 x1,
                 args=(gas),
-                method='trust-constr',  # 'SLSQP' is the closest equivalent to 'fmincon'
+                method='trust-constr',
                 bounds=solver_bounds,
                 constraints={'type': 'ineq', 'fun': linear_constraint},
                 options=options #,
@@ -802,8 +815,8 @@ def calc_params(gas, settings=None):
             maxiter = settings.get('maxiter')
         
             options = {
-                    'maxiter': maxiter,        # max iterations
-                    'ftol': ftol,          # function tolerance 
+                    'maxiter': maxiter,     # max iterations
+                    'ftol': ftol,           # function tolerance 
                     'disp': solver_verbose, # display iteration results
             }
 
@@ -818,15 +831,11 @@ def calc_params(gas, settings=None):
                 vH_loss,
                 x1,
                 args=(gas,),
-                method='SLSQP',  # 'SLSQP' is the closest equivalent to 'fmincon'
+                method='SLSQP',
                 bounds=solver_bounds,
                 constraints={'type': 'ineq', 'fun': linear_constraint},
                 options=options)
             
-            # * get hessian matrix approximations
-            # * get flag array
-
-        #hessian_matrix[:,:,j] = hessian_approx.get_matrix()
         hessian_matrix[:,:,j] = hess(gas, result)
         flag[j] = result.status
         res[j] = result.fun
@@ -850,7 +859,6 @@ def calc_params(gas, settings=None):
 
         outliers = np.where(TF == 1)[0]  # indices where outliers are True
 
-       # * removed an if statement and should still work: keep an eye an it
         outlier_track[i] = len(outliers) # store number of outliers for each parameter
 
         avg_dms[i] = np.mean(par2) # finding average of each cleaned parameter
@@ -858,19 +866,7 @@ def calc_params(gas, settings=None):
         num_par_final[i] = len(par2) # number of remaining parameter iterations post-cleaning
 
     par2_outliers_removed = np.transpose(par2_outliers_removed)
-    #print(par_outliers_removed)
     par2_outliers_removed = par2_outliers_removed[~np.any(par2_outliers_removed == 0, axis=1)]
-
-
-    # This was never used
-    # Initialize arrays to store correlation coefficients and p-values
-    #cor = np.zeros((len(x1)-1, len(x1)-1))
-    #pval = np.zeros((len(x1)-1, len(x1)-1))
-
-    # Calculate pairwise correlations
-    #for a in range(len(x1)-1):
-    #    for c in range(a+1, len(x1)):
-    #        cor[a, c], pval[a, c] = np.corrcoef(transposed_dms[:, a], transposed_dms[:, c])[0, 1], np.corrcoef(transposed_dms[:, a], transposed_dms[:, c])[1, 0]
 
     dHD_f = avg_dms[0]
     dHb_f = avg_dms[1]
@@ -894,6 +890,30 @@ def calc_params(gas, settings=None):
         b_f[i] = b0_f*np.exp(-dHb_f*1000/(8.314*temp))
         C_f[i,:] = kd_f[i]*press+ch_vec_f[i]*b_f[i]*press/(1+b_f[i]*press) 
 
+    gas.vH.c_f = C_f
+    gas.kd_f = kd_f
+    gas.b_f = b_f
+    gas.ch_vec_f = ch_vec_f
+    gas.vH.dms = dms
+    gas.vH.dms_no_out = par2_outliers_removed
+    gas.vH.avg_dms = avg_dms
+    gas.vH.res = res
+    gas.vH.hessian_matrix = hessian_matrix
+
+    gas.vH.settings = settings
+
+    return gas
+
+def chi2_error_fit(gas):
+    '''
+    *
+    '''
+    
+    hessian_matrix = gas.vH.hessian_matrix
+    res = gas.vH.res
+    avg_dms = gas.vH.avg_dms
+    ch_vec_f = gas.ch_vec_f
+    
     # mean of the Hessians across all trials
     hessian_avg = np.mean(hessian_matrix, axis=2)
 
@@ -969,26 +989,14 @@ def calc_params(gas, settings=None):
 
     ch_err = np.array([arr[1] for arr in plusminus_ch]) # error for C_H'
 
-    #gas.kd0 = kd0_f
-    #gas.b0 = b0_f
-    gas.vH.c_f = C_f
-    gas.kd_f = kd_f
-    gas.b_f = b_f
-    gas.ch_vec_f = ch_vec_f
-    gas.vH.dms = dms
-    gas.vH.dms_no_out = par2_outliers_removed
-    gas.vH.avg_dms = avg_dms
     gas.vH.plusminus_1 = plusminus_1
     gas.vH.plusminus_2 = plusminus_2
     gas.vH.plusminus_ch = plusminus_ch
-    gas.vH.res = res
     gas.ch_err = ch_err
-
-    gas.vH.settings = settings
 
     return gas
 
-def calc_error(gas):
+def propogate_error(gas):
     '''Determines error from the van't Hoff optimization and propogates the error to further parameters
 
     Args:
@@ -1056,8 +1064,7 @@ def calc_error(gas):
 
     return gas
 
-def compute(gas,
-            info = True):
+def compute(gas, info = True):
     
     '''Provides a wrapper to run the entire optimization procedure with a single function call
 
@@ -1072,10 +1079,12 @@ def compute(gas,
     Returns:
         All data in the Gas.LFER and Gas.vH subclasses
     '''
-    calc_LFEs(gas)                                                
+
+    calc_LFEs(gas)
     calc_params(gas)
 
-    calc_error(gas)
+    chi2_error_fit(gas)
+    propogate_error(gas)
 
     evaluate.heat_of_sorption(gas)
     #vis.heat_of_sorption(gas)

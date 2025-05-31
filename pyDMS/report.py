@@ -75,7 +75,7 @@ def isotherms(gas):
     '''
 
     vis.isotherms(gas)
-    plt.savefig('isotherms.tmp.png', bbox_inches='tight', dpi=300)
+    plt.savefig('isotherms.tmp.png', bbox_inches='tight', dpi=600)
     plt.close()
     return 'isotherms.tmp.png'
 
@@ -143,6 +143,7 @@ def generate(gas):
     local_time = time.localtime()
     formatted_datetime = time.strftime("%Y-%m-%d %H:%M:%S %Z", local_time)
 
+    temp = gas.T
 
     C_H = gas.ch_vec_f
     kD = gas.kd_f
@@ -179,7 +180,7 @@ def generate(gas):
 
     elements.append(Paragraph("DMS Parameters", styles["Heading2"]))
 
-    col_widths = [1 * inch*.5, 1*inch*.8, 4 * inch]
+    col_widths = [1.2*inch, 1.2*inch, 4*inch]
 
     # Define common table style
     table_style = TableStyle([
@@ -189,7 +190,7 @@ def generate(gas):
         ('BACKGROUND', (0, 1), (-1, -1), colors.white),
     ])
 
-    header_data = [["Label", "Parameter", "Result ± Error"]]
+    header_data = [["Temperature", "Parameter", "Result ± Error"]]
     header_table = Table(header_data, colWidths=col_widths, rowHeights=20)
     header_table.setStyle(table_style)
     header_table.hAlign = 'LEFT'  
@@ -198,7 +199,7 @@ def generate(gas):
 
     for i, _ in enumerate(kD):
 
-        label = f"Set {i + 1}"
+        label = f"{temp[i]} K"
 
         kD_text = "k<sub>D</sub>"
         C_H_text = "C'<sub>H</sub>"
@@ -324,16 +325,38 @@ def generate(gas):
 
     elements.append(PlatypusImage(plot_path, width=desired_width, height=desired_height))
 
+    data = [
+    ['', Paragraph("Entropic Prefactor (S<sub>i,0</sub>)", styles["Normal"]),Paragraph("ΔH<sub>i</sub> (kJ/mol)", styles["Normal"])],
+    ["i = Infinite Dilution", f"{gas.analysis.deltaH_S_inf[1]:.3e} ± {gas.analysis.deltaH_S_inf_err[1]:.3e}", f"{gas.analysis.deltaH_S_inf[0]:.6f} ± {gas.analysis.deltaH_S_inf_err[0]:.6f}"],
+    ["i = Langmuir", f"{gas.analysis.deltaH_D[1]:.3e} ± {gas.analysis.deltaH_D_err[1]:.3e}", f"{gas.analysis.deltaH_D[0]:.6f} ± {gas.analysis.deltaH_D_err[0]:.6f}"],
+    ["i = Henry", f"{gas.analysis.deltaH_b[1]:.3e} ± {gas.analysis.deltaH_b_err[1]:.3e}", f"{gas.analysis.deltaH_b[0]:.6f} ± {gas.analysis.deltaH_b_err[0]:.6f}"]
+    ]
+
+    table = Table(data, colWidths=[inch*1.5,inch*2.5,inch*2.5])
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.white),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+    ]))
+
+    elements.append(table)
     elements.append(PageBreak())
+
+    centered_para = ParagraphStyle(
+    name='CenteredCell',
+    parent=styles['Normal'],
+    alignment=1)
 
     elements.append(Paragraph("Analysis Settings", styles["Heading2"]))
 
     data = [
-    ["Optimization Stage", "Parameter","Value", Paragraph("Location<sup>a</sup>", styles["Normal"]), "Variable"],
-    ["LFER", Paragraph("ΔH<sub>D</sub>", styles["Normal"]), f"{LFER_settings.get('dHD_bounds'), "dHD_bounds"}"],
-    ["LFER", Paragraph("ΔH<sub>b</sub>", styles["Normal"]), f"{LFER_settings.get('dHb_bounds')}"],
-    ["LFER", Paragraph("k<sub>D,0</sub>", styles["Normal"]), f"{LFER_settings.get('kD0_bounds')}"],
-    ["LFER", Paragraph("b<sub>0</sub>", styles["Normal"]), f"{LFER_settings.get('b0_bounds')}"],
+    ["Optimization Stage", "Parameter","Value"],
+    ["LFER", Paragraph("ΔH<sub>D</sub>", centered_para), f"{LFER_settings.get('dHD_bounds')}"],
+    ["LFER", Paragraph("ΔH<sub>b</sub>", centered_para), f"{LFER_settings.get('dHb_bounds')}"],
+    ["LFER", Paragraph("k<sub>D,0</sub>", centered_para), f"{LFER_settings.get('kD0_bounds')}"],
+    ["LFER", Paragraph("b<sub>0</sub>", centered_para), f"{LFER_settings.get('b0_bounds')}"],
     ]
 
     table = Table(data, colWidths=[inch*1.5,inch*1.5,inch*2])
@@ -350,7 +373,7 @@ def generate(gas):
     for i, val in enumerate(LFER_settings.get('ch_bounds')):
 
         data = [
-            ["LFER", Paragraph(f"C'<sub>H</sub> #{i+1}", styles["Normal"]), val]
+            ["LFER", Paragraph(f"C'<sub>H</sub> #{i+1}", centered_para), val]
         ]
 
         table = Table(data, colWidths=[inch*1.5,inch*1.5,inch*2])
@@ -384,8 +407,8 @@ def generate(gas):
     elements.append(table)
 
     data = [
-    ["van't Hoff", Paragraph("ΔH<sub>D</sub>", styles["Normal"]), f"{vH_settings.get('dHD_bounds')}"],
-    ["van't Hoff", Paragraph("ΔH<sub>b</sub>", styles["Normal"]), f"{vH_settings.get('dHb_bounds')}"],
+    ["van't Hoff", Paragraph("ΔH<sub>D</sub>", centered_para), f"{vH_settings.get('dHD_bounds')}"],
+    ["van't Hoff", Paragraph("ΔH<sub>b</sub>", centered_para), f"{vH_settings.get('dHb_bounds')}"],
     ]
 
     table = Table(data, colWidths=[inch*1.5,inch*1.5,inch*2])
@@ -401,7 +424,7 @@ def generate(gas):
 
     for i, val in enumerate(LFER_settings.get('ch_bounds')):
         data = [
-            ["LFER", Paragraph(f"C'<sub>H</sub> #{i+1}", styles["Normal"]), val]
+            ["van't Hoff", Paragraph(f"C'<sub>H</sub> #{i+1}", centered_para), val]
         ]        
 
         table = Table(data, colWidths=[inch*1.5,inch*1.5,inch*2])
@@ -445,12 +468,12 @@ def generate(gas):
     elements.append(Paragraph("Please reach out to Brandon C. Tapia via email (bctapia@mit.edu) or through the pyDMS GitHub page", styles["Normal"]))
 
     elements.append(Paragraph("Code Availability", styles["Heading2"]))
-    elements.append(Paragraph("pyDMS can be downloaded from: LINK", styles["Normal"]))
+    elements.append(Paragraph("pyDMS can be downloaded via:", styles["Normal"]))
 
     items = [
-        ListItem(Paragraph("GitHub (source code): *", styles["Normal"])),
-        ListItem(Paragraph("pip: *", styles["Normal"])),
-        ListItem(Paragraph("Anaconda: *", styles["Normal"]))
+        ListItem(Paragraph("GitHub (source code): git clone **(insert link)", styles["Normal"])),
+        ListItem(Paragraph("pip: pip install **insert name", styles["Normal"])),
+        ListItem(Paragraph("Anaconda: conda install **insert name", styles["Normal"]))
     ]
 
     bullet_list = ListFlowable(items, 
