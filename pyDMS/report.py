@@ -126,7 +126,7 @@ def footer(canvas, doc):
     canvas.drawImage(image_path, width - 2.1 * inch, 0.05 * inch, 
                          width=desired_width, height=desired_height, mask='auto')
 
-def generate(gas):
+def generate(gas, report_name):
     '''Creates the report PDF
     
     Args:
@@ -135,8 +135,6 @@ def generate(gas):
     Returns:
         None
     '''    
-
-    report_name = "dummy_report.pdf"
 
     print(f'Generating report {report_name}')
 

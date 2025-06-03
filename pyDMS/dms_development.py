@@ -7,7 +7,6 @@ Licensed under the MIT License
 '''
 
 import warnings
-import pickle
 import numpy as np
 import numpy.polynomial.polynomial as poly
 from scipy.optimize import minimize
@@ -136,18 +135,6 @@ class analysis:
     def __repr__(self):
         return 'str'
 
-def save_gas_class(gas_obj, filename):
-    print('Pickling Gas class')
-    with open(filename, 'wb') as f:
-        pickle.dump(gas_obj, f, protocol=pickle.HIGHEST_PROTOCOL)
-    print('Pickling successful!')
-    print('------------------------------------------------------------------')
-
-def load_gas_class(filename):
-    print('Unpickling Gas class')
-    with open(filename, 'rb') as f:
-        return pickle.load(f)
-
 def LFER_loss(x, gas, func='chi2'):
     '''Defines the loss function for the LFER optimization.
 
@@ -164,6 +151,9 @@ def LFER_loss(x, gas, func='chi2'):
     if settings is None:
         settings = {}
 
+    settings.setdefault('ch_constraint', 'decrease')
+    ch_constraint = settings.get('ch_constraint')
+
     # retriving gas data
     c_vec = gas.c
     cerr_vec = gas.cerr
@@ -179,14 +169,19 @@ def LFER_loss(x, gas, func='chi2'):
     b0 = x[2]
     dHb = x[3]
 
-    ch_vec = x[4:]
+    if ch_constraint == 'decrease':
+        ch_vec = x[4:]
+    elif ch_constraint == 'linear':
+        slope_ch = x[4]
+        int_ch = x[5]
+    else:
+        pyDMS.error_in_red('Ch constraint not recognized. Use "decrease" or "linear"')
 
     # looping through each concentration vector
     for i,_ in enumerate(c_vec):
         
         # extracting parameters for relevant concentrations
         T = T_vec[i]
-        ch = ch_vec[i]
         p = p_vec[i]
         c = c_vec[i]
         cerr = cerr_vec[i]
@@ -195,6 +190,13 @@ def LFER_loss(x, gas, func='chi2'):
         kd = kd0 * np.exp(-dHD * 1000 / (8.314 * T))
         b = b0 * np.exp(-dHb * 1000 / (8.314 * T))
 
+        if ch_constraint == 'decrease':
+            ch = ch_vec[i]
+        elif ch_constraint == 'linear':
+            ch = slope_ch * T_vec[i] + int_ch
+        else:
+            pyDMS.error_in_red('Ch constraint not recognized. Use "decrease" or "linear"')
+        
         # solving the DMS model
         calc = kd * p + ch * b * p / (1 + b * p)
 
@@ -299,7 +301,7 @@ def is_outlier(arr):
     c = -1 / (np.sqrt(2) * erfcinv(3/2))  # MATLAB's scaling factor
     scaled_mad = c * mad
 
-    return np.abs(arr - median) > 2 * scaled_mad  # Boolean mask for outliers
+    return np.abs(arr - median) > 3 * scaled_mad  # Boolean mask for outliers
 
 def hess(gas, soln):
     '''Solves the analytical Hessian for the vH_loss loss function
@@ -327,6 +329,7 @@ def hess(gas, soln):
 
     dHD = soln.x[0]
     dHb = soln.x[1]
+    
     ch_vec = soln.x[2:]
 
     # initializing arrays for the Hessian
@@ -395,9 +398,10 @@ def calc_LFEs(gas, settings=None):
     settings.setdefault('dHD_bounds', [-1, -30])
     settings.setdefault('dHb_bounds', [-1, -30])
     settings.setdefault('kD0_bounds', [0.001, 0.01])
-    settings.setdefault('b0_bounds', [0.0001, 0.005])
-    settings.setdefault('ch_bounds', np.array([[0, 100] for _ in range(len(c))]))
-    settings.setdefault('trials', 1000)
+    settings.setdefault('b0_bounds', [-0.0001, 0.005])
+    settings.setdefault('ch_bounds', np.array([[0, 150] for _ in range(len(c))]))
+    settings.setdefault('ch_constraint', 'decrease')
+    settings.setdefault('trials', 15)
     settings.setdefault('solver', 'SLSQP')
     settings.setdefault('verbose', True)
     settings.setdefault('solver_verbose', False)
@@ -407,6 +411,7 @@ def calc_LFEs(gas, settings=None):
     b0_0_bnd = settings.get('b0_bounds')
     dHb_0_bnd = settings.get('dHb_bounds')
     ch_0_bnd = settings.get('ch_bounds')
+    ch_constraint = settings.get('ch_constraint')
 
     trials = settings.get("trials")
     solver = settings.get("solver")
@@ -415,19 +420,20 @@ def calc_LFEs(gas, settings=None):
 
     # * consider allowing this to be turned off?
 
-    # setting up the solver constraints: A*x <= b
-    A_con = np.zeros((len(c)-1,len(c)+4))
-    b_con = np.zeros(len(c)-1)
+    if ch_constraint == 'decrease':
+        # setting up the solver constraints: A*x <= b
+        A_con = np.zeros((len(c)-1,len(c)+4))
+        b_con = np.zeros(len(c)-1)
 
-    # setting up the linear constraint so that each ch' must be lower than the previous
-    for i in range(len(c)-1):
-        first_index = i+4
-        second_index = i+5
-        A_con[i,first_index] = -1
-        A_con[i,second_index] = 1
+        # setting up the linear constraint so that each ch' must be lower than the previous
+        for i in range(len(c)-1):
+            first_index = i+4
+            second_index = i+5
+            A_con[i,first_index] = -1
+            A_con[i,second_index] = 1
 
-    def linear_constraint(x):
-        return b_con - (A_con @ x)
+        def linear_constraint(x):
+            return b_con - (A_con @ x)
 
     # checks to ensure proper data formatting
     if np.shape(c) != np.shape(cerr) != np.shape(p):
@@ -438,7 +444,13 @@ def calc_LFEs(gas, settings=None):
 
 
     # setting up arrays for storing minimization results
-    nOptVars = 4 + len(c) # no. of optimization variables
+    if ch_constraint == 'decrease':
+        nOptVars = 4 + len(c) # no. of optimization variables\
+    elif ch_constraint == 'linear':
+        nOptVars = 6
+    else:
+        pyDMS.error_in_red('Ch constraint not recognized. Use "decrease" or "linear"')
+
     dms = np.zeros((trials,nOptVars)) # results *
     res = np.zeros(trials) # func(x)
     flag = np.zeros(trials) # optimization flags
@@ -485,8 +497,14 @@ def calc_LFEs(gas, settings=None):
             ch_0[i]=bounds[0]+ch0_vals[i]*rng.random()
 
         # setting up initial guess for solver
-        x0 = np.concatenate([[kd0_0, dHD_0, b0_0,dHb_0],ch_0])
-
+        if ch_constraint == 'decrease':
+            x0 = np.concatenate([[kd0_0, dHD_0, b0_0,dHb_0],ch_0])
+        elif ch_constraint == 'linear':
+            slope_ch_0 = rng.uniform(-0.9, -0.1)
+            int_ch_0 = rng.uniform(100, 200)
+            x0 = np.array([kd0_0, dHD_0, b0_0, dHb_0, slope_ch_0, int_ch_0])
+        else:
+            pyDMS.error_in_red('*oops')
         # * consider storing the inital guess inside initial_g
 
         # * add custom bounds
@@ -494,7 +512,19 @@ def calc_LFEs(gas, settings=None):
         #                kd0_0     dHD_0     b0_0       dHb_0
         solver_bounds = [(0,None), (-50, 0), (0, None), (-50, 0)]
 
-        solver_bounds.extend([(ch_bnd[0], ch_bnd[1]) for ch_bnd in ch_0_bnd])
+        if ch_constraint == 'decrease':
+            solver_bounds.extend([(ch_bnd[0], ch_bnd[1]) for ch_bnd in ch_0_bnd])
+        elif ch_constraint == 'linear':
+            solver_bounds.extend([(-0.9, -0.1), (100, 200)])
+        else:
+            pyDMS.error_in_red('oops*')
+
+        if ch_constraint == 'decrease':
+            solver_constraint = {'type': 'ineq', 'fun': linear_constraint}
+        elif ch_constraint == 'linear':
+            solver_constraint = None
+        else:
+            pyDMS.error_in_red('*oops')
 
         # optimizing with the 'trust-constr' algorithm
         if solver=='trust-constr':
@@ -555,7 +585,7 @@ def calc_LFEs(gas, settings=None):
                 args=(gas),
                 method='SLSQP',
                 bounds=solver_bounds,
-                constraints={'type': 'ineq', 'fun': linear_constraint},
+                constraints=solver_constraint,
                 options=options)
 
         # collecting optimization results
@@ -685,8 +715,8 @@ def calc_params(gas, settings=None):
     
     settings.setdefault('dHD_bounds', [-1, -30])
     settings.setdefault('dHb_bounds', [-1, -30])
-    settings.setdefault('ch_bounds', np.array([[0, 100] for _ in range(len(c))]))
-    settings.setdefault('trials', 1000)
+    settings.setdefault('ch_bounds', np.array([[0, 150] for _ in range(len(c))]))
+    settings.setdefault('trials', 15)
     settings.setdefault('solver', 'SLSQP')
     settings.setdefault('verbose', True)
     settings.setdefault('solver_verbose', False)
@@ -1068,7 +1098,7 @@ def propogate_error(gas):
 
     return gas
 
-def compute(gas, output = 'dummy'):
+def compute(gas, info = True):
     
     '''Provides a wrapper to run the entire optimization procedure with a single function call
 
@@ -1092,14 +1122,11 @@ def compute(gas, output = 'dummy'):
 
     evaluate.heat_of_sorption(gas)
     #vis.heat_of_sorption(gas)
-    
-    if output is not None:
 
-        save_gas_class(gas, filename=output+'.pkl')
-
+    if info:
         report.LFER(gas)
         report.LFER(gas, outliers=True)
         report.histograms(gas)
         report.isotherms(gas)
         report.heat_of_sorption(gas)
-        report.generate(gas, report_name=output+'.pdf')
+        report.generate(gas)
