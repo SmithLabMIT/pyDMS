@@ -14,6 +14,8 @@ from scipy.optimize import minimize
 from scipy.special import erfcinv
 from scipy.stats import median_abs_deviation, chi2
 import statsmodels.api as sm
+from sklearn.linear_model import RANSACRegressor, LinearRegression
+
 
 import pyDMS
 from . import report
@@ -299,7 +301,7 @@ def is_outlier(arr):
     c = -1 / (np.sqrt(2) * erfcinv(3/2))  # MATLAB's scaling factor
     scaled_mad = c * mad
 
-    return np.abs(arr - median) > 2 * scaled_mad  # Boolean mask for outliers
+    return np.abs(arr - median) > 1 * scaled_mad  # Boolean mask for outliers
 
 def hess(gas, soln):
     '''Solves the analytical Hessian for the vH_loss loss function
@@ -571,32 +573,6 @@ def calc_LFEs(gas, settings=None):
     par_outliers_removed = np.copy(transposed_dms)  # Copy of the transposed results matrix
     par_with_outliers = np.copy(transposed_dms) # Copy of the transposed results matrix
 
-
-    # finding outliers for each parameter
-    for i in range(nOptVars):
-
-        par = transposed_dms[i] # parameter of interest
-        par_no_outliers = np.copy(par) # copying parameter of interest to separate array
-
-        TF = is_outlier(par) # finding if iteration parameter is an outlier (TRUE if outlier)
-
-        par_no_outliers[TF] = 0  # setting values to zero if outlier * unclear why this is needed
-        par_outliers_removed[i][TF] = 0  # setting outliers to zero in complete array as well
-        par = par[~TF] # removing values that are outliers from array
-
-        outliers = np.where(TF == 1)[0]  # indices where outliers are present
-        # * removed an if statement and should still work: keep an eye an it
-        outlier_track[i] = len(outliers) # store number of outliers for each parameter
-
-        avg_dms[i] = np.mean(par) # finding average of each cleaned parameter
-        std_dev[i] = np.std(par) # finding standard deviation of each cleaned parameter
-        num_par_final[i] = len(par) # number of remaining parameter iterations post-cleaning
-
-    # *TO DO: NEED TO EXAMINE THIS SOME MORE
-    par_outliers_removed = np.transpose(par_outliers_removed)
-    par_outliers_removed = par_outliers_removed[~np.any(par_outliers_removed == 0, axis=1)]
-    par_outliers_removed = np.transpose(par_outliers_removed)
-
     # For plotting purposes
     with warnings.catch_warnings(record=True) as W:
         warnings.simplefilter("always")  # This ensures that the warning is captured
@@ -604,38 +580,122 @@ def calc_LFEs(gas, settings=None):
         deltaHd_out = par_with_outliers[1]
         log_b0_out = np.log(par_with_outliers[2])
         deltaHb_out = par_with_outliers[3]
+    
+    ####################################
+    #Old method does not work well to find outliers around a regression
+    # finding outliers for each parameter
+    #for i in range(nOptVars):
+
+    #    par = transposed_dms[i] # parameter of interest
+    #    par_no_outliers = np.copy(par) # copying parameter of interest to separate array
+
+        #TF = is_outlier(par) # finding if iteration parameter is an outlier (TRUE if outlier)
+
+        #par_no_outliers[TF] = 0  # setting values to zero if outlier * unclear why this is needed
+        #par_outliers_removed[i][TF] = 0  # setting outliers to zero in complete array as well
+        #par = par[~TF] # removing values that are outliers from array
+
+        #outliers = np.where(TF == 1)[0]  # indices where outliers are present
+        # * removed an if statement and should still work: keep an eye an it
+        #outlier_track[i] = len(outliers) # store number of outliers for each parameter
+
+        #avg_dms[i] = np.mean(par) # finding average of each cleaned parameter
+        #std_dev[i] = np.std(par) # finding standard deviation of each cleaned parameter
+        #num_par_final[i] = len(par) # number of remaining parameter iterations post-cleaning
+
+    # *TO DO: NEED TO EXAMINE THIS SOME MORE
+    #par_outliers_removed = np.transpose(par_outliers_removed)
+    #par_outliers_removed = par_outliers_removed[~np.any(par_outliers_removed == 0, axis=1)]
+    #par_outliers_removed = np.transpose(par_outliers_removed)
 
 
     # FINDING LFER PARAMETERS
     # deltaHD = aD*ln(kd0) + bD
-    log_kd0 = np.log(par_outliers_removed[0])
-    deltaHd = par_outliers_removed[1]
-    log_b0 = np.log(par_outliers_removed[2])
-    deltaHb = par_outliers_removed[3]
+    #log_kd0 = np.log(par_outliers_removed[0])
+    #deltaHd = par_outliers_removed[1]
+    #log_b0 = np.log(par_outliers_removed[2])
+    #deltaHb = par_outliers_removed[3]
 
     # ensuring an intercept is fitted as well
-    log_kd0_with_const = sm.add_constant(log_kd0)
-    log_b0_with_const = sm.add_constant(log_b0)
+    #log_kd0_with_const = sm.add_constant(log_kd0)
+    #log_b0_with_const = sm.add_constant(log_b0)
 
     # fitting linear regressions
-    deltaHd_model = sm.OLS(deltaHd, log_kd0_with_const).fit()
-    deltaHb_model = sm.OLS(deltaHb, log_b0_with_const).fit()
+    #deltaHd_model = sm.OLS(deltaHd, log_kd0_with_const).fit()
+    #deltaHb_model = sm.OLS(deltaHb, log_b0_with_const).fit()
 
-    int_kd, slope_kd = deltaHd_model.params # int_kd = aD, slope_kD = bD
-    int_kd_err, slope_kd_err = deltaHd_model.bse # errors in int_kD and slope_kD
-    int_b, slope_b = deltaHb_model.params # int_b= ab, slope_b = bb
-    int_b_err, slope_b_err = deltaHb_model.bse # errors in int_b and slope_b
+    #int_kd, slope_kd = deltaHd_model.params # int_kd = aD, slope_kD = bD
+    #int_kd_err, slope_kd_err = deltaHd_model.bse # errors in int_kD and slope_kD
+    #int_b, slope_b = deltaHb_model.params # int_b= ab, slope_b = bb
+    #int_b_err, slope_b_err = deltaHb_model.bse # errors in int_b and slope_b
 
-    out = [slope_kd, int_kd, slope_b, int_b] # collecting slopes, intercepts
-    SE = [slope_kd_err, int_kd_err, slope_b_err, int_b_err] # collecting errors
+    #out = [slope_kd, int_kd, slope_b, int_b] # collecting slopes, intercepts
+    #SE = [slope_kd_err, int_kd_err, slope_b_err, int_b_err] # collecting errors
+    #######################################################################
+    valid_mask = (transposed_dms[0] > 0) & (transposed_dms[2] > 0)
+
+    log_kd0 = np.log(transposed_dms[0][valid_mask])
+    deltaHd = transposed_dms[1][valid_mask]
+    log_b0 = np.log(transposed_dms[2][valid_mask])
+    deltaHb = transposed_dms[3][valid_mask]
+    
+    X_kd = log_kd0.reshape(-1, 1)
+    X_b = log_b0.reshape(-1, 1)
+    ransac_kd = RANSACRegressor(LinearRegression(), residual_threshold=0.5, max_trials=1000, random_state=0)
+    ransac_kd.fit(X_kd, deltaHd)
+
+    ransac_b = RANSACRegressor(LinearRegression(), residual_threshold=0.25, max_trials=1000, random_state=0)
+    ransac_b.fit(X_b, deltaHb)
+
+    # Get coefficients
+    slope_kd = ransac_kd.estimator_.coef_[0]
+    int_kd = ransac_kd.estimator_.intercept_
+
+    slope_b = ransac_b.estimator_.coef_[0]
+    int_b = ransac_b.estimator_.intercept_
+
+    # Store output (errors need manual calc)
+    out = [slope_kd, int_kd, slope_b, int_b]
+
+    # For errors, you can do a simple refit on inliers only:
+    inliers_kd = ransac_kd.inlier_mask_
+    inliers_b = ransac_b.inlier_mask_
+
+    # Optionally use OLS just on inliers to estimate SE
+    X_kd_in = sm.add_constant(X_kd[inliers_kd])
+    X_b_in = sm.add_constant(X_b[inliers_b])
+
+    kd_fit = sm.OLS(deltaHd[inliers_kd], X_kd_in).fit()
+    b_fit = sm.OLS(deltaHb[inliers_b], X_b_in).fit()
+
+    SE = [kd_fit.bse[1], kd_fit.bse[0], b_fit.bse[1], b_fit.bse[0]]
+
+    #########################################################################
 
     # collecting data
     # * keep an eye on this. Changed from len(c) to 4
-    pars = np.zeros((len(log_kd0), 4))
-    pars[:,0] = log_kd0
-    pars[:,1] = deltaHd
-    pars[:,2] = log_b0
-    pars[:,3] = deltaHb
+    #pars = np.zeros((len(log_kd0), 4))
+    #pars[:,0] = log_kd0
+    #pars[:,1] = deltaHd
+    #pars[:,2] = log_b0
+    #pars[:,3] = deltaHb
+    #union_inliers = inliers_kd | inliers_b
+
+    #pars = np.zeros((np.sum(union_inliers), 4))
+    #pars[:, 0] = log_kd0[union_inliers]
+    #pars[:, 1] = deltaHd[union_inliers]
+    #pars[:, 2] = log_b0[union_inliers]
+    #pars[:, 3] = deltaHb[union_inliers]
+    # Initialize full-length array with NaNs
+    pars = np.full((len(log_kd0), 4), np.nan)
+
+    # Fill in values for inliers in each model
+    pars[inliers_kd, 0] = log_kd0[inliers_kd]
+    pars[inliers_kd, 1] = deltaHd[inliers_kd]
+
+    pars[inliers_b, 2] = log_b0[inliers_b]
+    pars[inliers_b, 3] = deltaHb[inliers_b]
+
 
     # collecting data with outliers for plotting
     # * keep an eye on this. Changed from len(c) to 4

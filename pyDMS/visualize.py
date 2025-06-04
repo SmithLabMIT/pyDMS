@@ -44,34 +44,42 @@ def LFER(gas, outliers=False, show=False):
     pars = gas.LFER.pars
     pars_outliers = gas.LFER.pars_outliers
 
-    log_kd0 = pars[:,0]
-    deltaHd = pars[:,1]
-    log_b0 = pars[:,2]
-    deltaHb = pars[:,3]
+    mask_kd = ~np.isnan(pars[:, 0]) & ~np.isnan(pars[:, 1])
+    mask_b = ~np.isnan(pars[:, 2]) & ~np.isnan(pars[:, 3])
 
-    log_kd0_out = pars_outliers[:,0]
-    deltaHd_out = pars_outliers[:,1]
-    log_b0_out = pars_outliers[:,2]
-    deltaHb_out = pars_outliers[:,3]
+    log_kd0 = pars[mask_kd, 0]
+    deltaHd = pars[mask_kd, 1]
+    log_b0 = pars[mask_b, 2]
+    deltaHb = pars[mask_b, 3]
 
-    fig, ax = plt.subplots(1,2, figsize=(6.2,3)) # never more than two plots
+    log_kd0_out = pars_outliers[:, 0]
+    deltaHd_out = pars_outliers[:, 1]
+    log_b0_out = pars_outliers[:, 2]
+    deltaHb_out = pars_outliers[:, 3]
+
+    fig, ax = plt.subplots(1, 2, figsize=(6.2, 3))  # never more than two plots
 
     cmap = cm.viridis
     norm = mcolors.Normalize(vmin=0, vmax=10)
 
     def lin_fit(data, slope, ints):
-        return slope*data+ints
+        return slope * data + ints
 
+    # Panel 1: kd
     if outliers:
-        ax[0].plot(log_kd0_out, deltaHd_out,'o', color='gray', alpha=0.7)
-    ax[0].plot(log_kd0, deltaHd,'o', color='black')
-    ax[0].plot(log_kd0, lin_fit(log_kd0,slope_kd,int_kd), label='OLS', color=cmap(norm(1)))
+        ax[0].plot(log_kd0_out, deltaHd_out, 'o', color='gray', alpha=0.7)
+    ax[0].plot(log_kd0, deltaHd, 'o', color='black')
+    x_fit_kd = np.linspace(np.min(log_kd0), np.max(log_kd0), 100)
+    ax[0].plot(x_fit_kd, lin_fit(x_fit_kd, slope_kd, int_kd), label='RANSAC fit', color=cmap(norm(1)))
     ax[0].set_xlabel(r'$\mathrm{ln}(k_{D,0})$')
     ax[0].set_ylabel(r'$\Delta H_D$')
+
+    # Panel 2: b
     if outliers:
-        ax[1].plot(log_b0_out, deltaHb_out,'o', color='gray', alpha=0.7)
-    ax[1].plot(log_b0, deltaHb,'o', color = 'black')
-    ax[1].plot(log_b0, lin_fit(log_b0,slope_b,int_b), label='OLS', color=cmap(norm(5)))
+        ax[1].plot(log_b0_out, deltaHb_out, 'o', color='gray', alpha=0.7)
+    ax[1].plot(log_b0, deltaHb, 'o', color='black')
+    x_fit_b = np.linspace(np.min(log_b0), np.max(log_b0), 100)
+    ax[1].plot(x_fit_b, lin_fit(x_fit_b, slope_b, int_b), label='RANSAC fit', color=cmap(norm(5)))
     ax[1].set_xlabel(r'$\mathrm{ln}(b_0)$')
     ax[1].set_ylabel(r'$\Delta H_b$')
 
