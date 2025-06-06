@@ -14,87 +14,121 @@ import pyDMS
 #   Landolt-Börnstein - Group IV Physical Chemistry;
 #   Springer-Verlag: Berlin/Heidelberg, 2002; Vol. 21A. https://doi.org/10.1007/b71692.
 
+# the units for the virial coefficients are:
+# B [=] cm^3/mol
+# C [=] cm^6/mol^2
+
 virial_coeff = {
         'He':{
-            'B0':9.2479,
-            'B1':1.0876*10**3,
-            'B2': 1.088*10**5,
-            'B3': 2.3869*10**6,
-            'B4': 0,
-            'C0': 0.13876333*1000,
-            'C1': -0.000131193*1000},
+            'B0': 9.2479, # check
+            'B1': 1.0876*10**3, # check
+            'B2': 1.088*10**5, # check
+            'B3': 2.3869*10**6, # check
+            'B4': 0, # check
+            'C0': 0.10023*1E-3,
+            'C1': None,
+            'C2': None,
+            'C3': None,
+            'C4': None},
         'H2':{  
-            'B0':1.7472*10,
-            'B1':-1.2926*10**2,
-            'B2':-2.6988*10**5,
-            'B3':8.0282*10**6,
-            'B4': 0,
-            'C0': -0.0893351*1000,
-            'C1': 0.001954*1000},
+            'B0':1.7472*10, # check
+            'B1':-1.2926*10**2, # check
+            'B2':-2.6988*10**5, # check
+            'B3':8.0282*10**6, # check
+            'B4': None, # check
+            'C0': 0.53597*1E-3,
+            'C1': None,
+            'C2': None,
+            'C3': None,
+            'C4': None},
         'N2':{
-            'B0':4.0286*10,
-            'B1':-9.3378*10**3,
-            'B2': -1.4164*10**6,
-            'B3': 6.1253*10**7,
-            'B4': -2.7198*10**9,
-            'C0': 2.433098621*1000,
-            'C1': -0.003424843*1000},
+            'B0':4.0286*10, # check
+            'B1':-9.3378*10**3, # check
+            'B2': -1.4164*10**6, # check
+            'B3': 6.1253*10**7, # check
+            'B4': -2.7198*10**9, # check
+            'C0': 0.45178*1E-3,
+            'C1': 282.49*1E-3,
+            'C2': None,
+            'C3': None,
+            'C4': None},
         'O2':{
-            'B0':4.2859*10,
-            'B1':-1.7696*10**4,
-            'B2': 5.2007*10**5,
-            'B3': -1.6393*10**8,
-            'B4': 5.0855*10**9,
-            'C0': 1.199412183*1000,
-            'C1': -0.000178252*1000},
+            'B0':4.2859*10, # check
+            'B1':-1.7696*10**4, # check
+            'B2': 5.2007*10**5, # check
+            'B3': -1.6393*10**8, # check
+            'B4': 5.0855*10**9, # check
+            'C0': 0.91432*1E-3,
+            'C1': -57.003*1E-3,
+            'C2': 38999*1E-3,
+            'C3': None,
+            'C4': None},
         'CH4':{
-            'B0':4.4344*10,
-            'B1': -1.6608*10**4,
-            'B2': -3.5430*10**6,
-            'B3': 2.9832*10**8,
-            'B4': -2.3448*10**10,
-            'C0': 4.930564307*1000,
-            'C1': -0.008472446*1000},
+            'B0':4.4344*10, # check
+            'B1': -1.6608*10**4, # check
+            'B2': -3.5430*10**6, # check
+            'B3': 2.9832*10**8, # check
+            'B4': -2.3448*10**10, # check
+            'C0': 1.468*1E-3,
+            'C1': -417.68*1E-3,
+            'C2': 2.1133e+05*1E-3,
+            'C3': None,
+            'C4': None},
         'CO2':{
-            'B0':5.74*10,
-            'B1':-3.8829*10**4,
-            'B2': 4.2899*10**5,
-            'B3': -1.4661*10**9,
-            'B4': 0,
-            'C0': 12.53856029*1000,
-            'C1': -0.025514329*1000},
+            'B0':5.74*10, # check
+            'B1':-3.8829*10**4, # check
+            'B2': 4.2899*10**5, # check
+            'B3': -1.4661*10**9, # check
+            'B4': None, # check
+            'C0': 8.2273*1E-3,
+            'C1': -11176*1E-3,
+            'C2': 5.2971e+06*1E-3,
+            'C3': -6.7348e+08*1E-3,
+            'C4': None},
         'C2H6':{
-            'B0':None,
-            'B1':None,
-            'B2': None,
-            'B3': None,
-            'B4': None,
-            'C0': None,
-            'C1': None},
+            'B0':None, # check
+            'B1':None, # check
+            'B2': None, # check
+            'B3': None, # check
+            'B4': None, # check
+            'C0': -21.966*1E-3,
+            'C1': 19216*1E-3,
+            'C2': -2.91e+06*1E-3,
+            'C3': None,
+            'C4': None},
         'C2H4':{
-            'B0':None,
-            'B1':None,
-            'B2': None,
-            'B3': None,
-            'B4': None,
-            'C0': None,
-            'C1': None},
+            'B0':None, # check
+            'B1':None, # check
+            'B2': None, # check
+            'B3': None, # check
+            'B4': None, # check
+            'C0': -19.585*1E-3,
+            'C1': 14199*1E-3,
+            'C2': -1.879e+06*1E-3,
+            'C3': None,
+            'C4': None},
         'C3H8':{
-            'B0':1.0971*10**2,
-            'B1':-8.4673*10**4,
-            'B2': 8.1215*10**6,
-            'B3': -3.4382*10**9,
-            'B4': 0,
-            'C0': 26283.52145,
-            'C1': 0},
+            'B0':1.0971*10**2, # check
+            'B1':-8.4673*10**4, # check
+            'B2': 8.1215*10**6, # check
+            'B3': -3.4382*10**9, # check
+            'B4': None,
+            'C0': 161.6*1E-3,
+            'C1': -2.1173e+05*1E-3,
+            'C2': 9.5225e+07*1E-3,
+            'C3': -1.342e+10*1E-3,
+            'C4': None},
         'C3H6':{
-            'B0':1.0101*10**2,
-            'B1':-7.5735*10**4,
-            'B2': -7.9502*10**6,
-            'B3': -2.7987*10**9,
-            'B4': 0,
-            'C0': 0,
-            'C1': 0}}
+            'B0':1.0101*10**2, # check
+            'B1':-7.5735*10**4, # check
+            'B2': -7.9502*10**6, # check
+            'B3': -2.7987*10**9, # check
+            'B4': None,
+            'C0': -11.713*1E-3,
+            'C1': 9511.1*1E-3,
+            'C2': None,
+            'C3': None,
+            'C4': None}}
 
 # Peng-Robinson Parameters from NIST Chemistry Webbook (https://webbook.nist.gov/chemistry/):
 # Linstrom, P. J.; Mallard, W. G. The NIST Chemistry WebBook:
@@ -133,7 +167,7 @@ def virial_eos(gas, params=None):
     '''
 
     gas_name = gas.formula
-    T = gas.T
+    T = gas.temp
     p = gas.p
 
     R = 8.314e6  # cm^3·Pa/(mol·K)
@@ -195,7 +229,7 @@ def peng_robinson_eos(gas, params=None):
         A numpy array in gas.f with the fugacities at the corresponding pressures provided in gas.p
     '''
     gas_name = gas.formula
-    T = gas.T
+    T = gas.temp
     p = gas.p
     
     if params is not None:

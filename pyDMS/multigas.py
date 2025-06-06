@@ -31,7 +31,7 @@ def mixed_isotherm(*gases, p_or_f=None, mol_frac=None, temp=None):
 
 
     for i, gas in enumerate(gases):
-        index = np.where(gas.T == temp)[0][0] # currently this just overwrites which is fine if every gas has the same location but we cant ensure that
+        index = np.where(gas.temp == temp)[0][0] # currently this just overwrites which is fine if every gas has the same location but we cant ensure that
 
     p_use = np.ones((len(gases),len(p_or_f)))*p_or_f # this is somewhat useless but fine for now
     p_partial = np.zeros_like(p_use)
@@ -48,21 +48,21 @@ def mixed_isotherm(*gases, p_or_f=None, mol_frac=None, temp=None):
     for i, gas in enumerate(gases):
 
         if i == 0:
-            ch = gas.ch_vec_f[index]
-            kd = gas.kd_f[index]
-            b0 = gas.b_f[index]
-            ch0_err = gas.ch_err[index]
-            kd_err = gas.kd_err[index]
+            ch = gas.CH[index]
+            kd = gas.kD[index]
+            b0 = gas.b[index]
+            ch0_err = gas.CH_err[index]
+            kd_err = gas.kD_err[index]
             b0_err = gas.b_err[index]
 
-        b_terms_sum += gas.b_f[index] * p_partial[i]
+        b_terms_sum += gas.b[index] * p_partial[i]
 
     b_terms_sum_plus_one = 1 + b_terms_sum
 
     # error propogation
     for i, gas in enumerate(gases):
         if i != 0:
-            b = gas.b_f[index]
+            b = gas.b[index]
             b_err = gas.b_err[index]
             term3_err_prop += b0**2*ch**2*p0**2*p_partial[i]**2*b_err**2/(b_terms_sum_plus_one)**4
 

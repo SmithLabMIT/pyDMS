@@ -24,11 +24,11 @@ def isotherm(gas, index, eos=None):
     '''
 
     # * update parameter locations
-    ch = gas.ch_vec_f[index]
-    kd = gas.kd_f[index]
-    b = gas.b_f[index]
-    ch_err = gas.ch_err[index]
-    kd_err = gas.kd_err[index]
+    ch = gas.CH[index]
+    kd = gas.kD[index]
+    b = gas.b[index]
+    ch_err = gas.CH_err[index]
+    kd_err = gas.kD_err[index]
     b_err = gas.b_err[index]
 
     p = np.linspace(1E-6,np.max(gas.p[index]),100)
@@ -54,17 +54,17 @@ def isosteric_heat(gas, calc_fug=False):
     
     #name = gas.name
     c_vec = gas.c
-    cerr_vec = gas.cerr
+    cerr_vec = gas.c_err
     p_vec = gas.p
-    T_vec = gas.T
+    T_vec = gas.temp
 
     #if calc_fug:
         # calculate fugacity here
 
     # extract dms parameters
-    kd_f = gas.kd_f
-    b_f = gas.b_f
-    ch_vec_f = gas.ch_vec_f
+    kd_f = gas.kD
+    b_f = gas.b
+    ch_vec_f = gas.CH
 
 
     # calculate inverse temperatures
@@ -96,9 +96,9 @@ def S_inf(gas):
     *
     '''
     
-    k_D = gas.kd_f
-    b = gas.b_f
-    ch = gas.ch_vec_f
+    k_D = gas.kD
+    b = gas.b
+    ch = gas.CH
     S_inf_calc = k_D+ch*b
 
     gas.analysis.S_inf = S_inf_calc
@@ -111,7 +111,7 @@ def heat_of_sorption(gas, method='all'):
     *
     '''
     
-    temp = gas.T
+    temp = gas.temp
 
     inv_RT = 1/(0.008314*temp)
 
@@ -143,7 +143,7 @@ def heat_of_sorption(gas, method='all'):
         '''
         '''
 
-        k_D = gas.kd_f
+        k_D = gas.kD
         
         ln_k_D = np.log(k_D)
 
@@ -154,8 +154,11 @@ def heat_of_sorption(gas, method='all'):
         int_deltak_D, slope_deltak_D = deltak_D_model.params
         int_deltak_D_err, slope_deltak_D_err = deltak_D_model.bse
 
-        gas.analysis.deltaH_D = [-slope_deltak_D, np.exp(int_deltak_D)]
-        gas.analysis.deltaH_D_err = [slope_deltak_D_err,np.exp(int_deltak_D)*int_deltak_D_err]
+        #gas.analysis.deltaH_D = [-slope_deltak_D, np.exp(int_deltak_D)]
+        #gas.analysis.deltaH_D_err = [slope_deltak_D_err,np.exp(int_deltak_D)*int_deltak_D_err]
+
+        gas.analysis.deltaH_D[1] = np.exp(int_deltak_D)
+        gas.analysis.deltaH_D_err[1] = np.exp(int_deltak_D)*int_deltak_D_err
 
         return gas
 
@@ -163,7 +166,7 @@ def heat_of_sorption(gas, method='all'):
         '''
         '''
         
-        b = gas.b_f
+        b = gas.b
 
         ln_b = np.log(b)
 
@@ -173,8 +176,12 @@ def heat_of_sorption(gas, method='all'):
 
         int_deltab, slope_deltab = deltab_model.params
         int_deltab_err, slope_deltab_err = deltab_model.bse
-        gas.analysis.deltaH_b = [-slope_deltab, np.exp(int_deltab)]
-        gas.analysis.deltaH_b_err = [slope_deltab_err, np.exp(int_deltab)*int_deltab_err]
+        
+        #gas.analysis.deltaH_b = [-slope_deltab, np.exp(int_deltab)]
+        #gas.analysis.deltaH_b_err = [slope_deltab_err, np.exp(int_deltab)*int_deltab_err]
+
+        gas.analysis.deltaH_b[1] = np.exp(int_deltab)
+        gas.analysis.deltaH_b_err[1] = np.exp(int_deltab)*int_deltab_err
 
         return gas
 

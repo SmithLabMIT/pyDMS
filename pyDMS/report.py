@@ -141,14 +141,14 @@ def generate(gas, report_name):
     local_time = time.localtime()
     formatted_datetime = time.strftime("%Y-%m-%d %H:%M:%S %Z", local_time)
 
-    temp = gas.T
+    temp = gas.temp
 
-    C_H = gas.ch_vec_f
-    kD = gas.kd_f
-    b = gas.b_f
+    C_H = gas.CH
+    kD = gas.kD
+    b = gas.b
 
-    C_H_err = gas.ch_err
-    kD_err = gas.kd_err
+    C_H_err = gas.CH_err
+    kD_err = gas.kD_err
     b_err = gas.b_err
 
     LFER_data = gas.LFER
@@ -157,7 +157,7 @@ def generate(gas, report_name):
     vH_data = gas.vH
     vH_settings = vH_data.settings
 
-    slope_kd, int_kd, slope_b, int_b = LFER_data.out
+    slope_kd, int_kd, slope_b, int_b = LFER_data.fit
 
     doc = SimpleDocTemplate(report_name, pagesize=letter)
     styles = getSampleStyleSheet()

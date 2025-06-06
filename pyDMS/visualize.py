@@ -40,9 +40,9 @@ def LFER(gas, outliers=False, show=False):
         None
     '''
 
-    slope_kd, int_kd, slope_b, int_b = gas.LFER.out
-    pars = gas.LFER.pars
-    pars_outliers = gas.LFER.pars_outliers
+    slope_kd, int_kd, slope_b, int_b = gas.LFER.fit
+    pars = gas.LFER.out
+    pars_outliers = gas.LFER.out_outliers
 
     mask_kd = ~np.isnan(pars[:, 0]) & ~np.isnan(pars[:, 1])
     mask_b = ~np.isnan(pars[:, 2]) & ~np.isnan(pars[:, 3])
@@ -104,8 +104,8 @@ def histograms(gas, show=False):
     '''
 
     # *TO DO MAKE THIS GENERAL
-    dms = gas.vH.dms
-    dms_no_out = gas.vH.dms_no_out
+    dms = gas.vH.out_outliers
+    dms_no_out = gas.vH.out
     transposed_dms = np.transpose(dms)
     transposed_dms_no_out = np.transpose(dms_no_out)
 
@@ -155,10 +155,10 @@ def isotherms(gas, show=False):
     fig, ax = plt.subplots(2,2, figsize=(7,7))
 
     c = gas.c
-    cerr = gas.cerr
+    cerr = gas.c_err
     p = gas.p
-    T = gas.T
-    LFE_params = gas.LFER.out
+    T = gas.temp
+    LFE_params = gas.LFER.fit
     avg_dms = gas.vH.avg_dms
 
     dHD_f = avg_dms[0]
@@ -171,9 +171,8 @@ def isotherms(gas, show=False):
     kd0_f = np.exp((dHD_f-b_kd0_f)/a_kd0_f)
     b0_f = np.exp((dHb_f-b_b0_f)/a_b0_f)
 
-    b_f = gas.b_f
-    kd_f = gas.kd_f
-    C_f = gas.vH.c_f
+    b_f = gas.b
+    kd_f = gas.kD
     cmap = cm.plasma
     norm = mcolors.Normalize(vmin=0, vmax=len(T))  # Normalize colors to the number of datasets
 
@@ -205,16 +204,16 @@ def heat_of_sorption(gas, show=False):
     *
     '''
 
-    temp = gas.T
+    temp = gas.temp
 
     inv_RT = 1/(0.008314*temp)
 
     S_inf = gas.analysis.S_inf
-    k_D = gas.kd_f
-    b = gas.b_f
+    k_D = gas.kD
+    b = gas.b
 
     S_inf_err = gas.analysis.S_inf_err
-    k_D_err = gas.kd_err
+    k_D_err = gas.kD_err
     b_err = gas.b_err
 
     S_inf_0 = gas.analysis.deltaH_S_inf[1]
