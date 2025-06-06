@@ -20,6 +20,17 @@ from reportlab.lib.units import inch
 
 from . import visualize as vis
 
+def wait_for_file(path, timeout=10.0):
+    start = time.time()
+    while True:
+        try:
+            with open(path, 'rb'):
+                return
+        except PermissionError:
+            if time.time() - start > timeout:
+                raise
+            time.sleep(0.05)
+
 def LFER(gas, outliers=False):
     '''Plots and saves the LFER linear fits
 
@@ -115,6 +126,8 @@ def footer(canvas, doc):
 
     image_path = os.path.join(script_dir, "images", "lab-logo-transparent-background.png")
 
+    wait_for_file(image_path)
+    
     with Image.open(image_path) as img:
         width_img, height_img = img.size
         aspect_ratio = width_img / height_img
@@ -231,6 +244,8 @@ def generate(gas, report_name):
 
     plot_path = 'isotherms.tmp.png'
 
+    wait_for_file(plot_path)
+
     with Image.open(plot_path) as img:
         width, height = img.size
         aspect_ratio = width / height
@@ -271,6 +286,8 @@ def generate(gas, report_name):
     elements.append(Spacer(1, 12))
 
     plot_path = 'LFER.tmp.png'
+    
+    wait_for_file(plot_path)
 
     with Image.open(plot_path) as img:
         width, height = img.size
@@ -282,6 +299,8 @@ def generate(gas, report_name):
     elements.append(PlatypusImage(plot_path, width=desired_width, height=desired_height))
 
     plot_path = 'LFER_outliers.tmp.png'
+
+    wait_for_file(plot_path)
 
     with Image.open(plot_path) as img:
         width, height = img.size
@@ -299,6 +318,8 @@ def generate(gas, report_name):
 
     plot_path = 'hist.tmp.png'
 
+    wait_for_file(plot_path)
+
     with Image.open(plot_path) as img:
         width, height = img.size
         aspect_ratio = width / height
@@ -313,6 +334,8 @@ def generate(gas, report_name):
     elements.append(Paragraph("Energetics", styles["Heading2"]))
 
     plot_path = 'heat_of_sorption.tmp.png'
+    
+    wait_for_file(plot_path)
 
     with Image.open(plot_path) as img:
         width, height = img.size

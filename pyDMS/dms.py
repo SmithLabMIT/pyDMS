@@ -20,6 +20,7 @@ from sklearn.linear_model import RANSACRegressor, LinearRegression
 import pyDMS
 from . import report
 from . import evaluate
+from . import fugacity
 
 class Gas:
     '''
@@ -41,7 +42,7 @@ class Gas:
     __slots__ = ['formula', 'c', 'p', 'f', 'c_err', 'temp',
                  'kD', 'b', 'CH', 
                  'kD_err', 'b_err', 'CH_err',
-                 'LFER', 'vH', 'analysis','settings']
+                 'LFER', 'vH', 'analysis','settings', 'virial_coeff', 'pr_coeff']
 
     def __init__(self):
 
@@ -52,15 +53,15 @@ class Gas:
         self.f = None
         self.c_err = None
         self.temp = None
-
         self.CH = None
         self.kD = None
         self.b = None
         self.CH_err = None
         self.kD_err = None
         self.b_err = None
-
         self.settings = None
+        self.virial_coeff = None
+        self.pr_coeff = None
 
         self.LFER = LFER()
 
@@ -140,6 +141,9 @@ class analysis:
         return 'str'
 
 def save_gas_class(gas_obj, filename):
+    '''
+    *
+    '''
     print('Pickling Gas class')
     with open(filename, 'wb') as f:
         pickle.dump(gas_obj, f, protocol=pickle.HIGHEST_PROTOCOL)
@@ -147,9 +151,42 @@ def save_gas_class(gas_obj, filename):
     print('------------------------------------------------------------------')
 
 def load_gas_class(filename):
+    '''
+    *
+    '''
     print('Unpickling Gas class')
     with open(filename, 'rb') as f:
         return pickle.load(f)
+
+def calculate_fugacity(gas):
+    '''
+    *
+    '''
+
+    if gas.f is not None:
+        print('Fugacity data supplied in Gas.f; No fugacity calculation will be performed')
+    elif gas.virial_coeff:
+        print('Calculating fugacity using user-supplied Virial coefficients')
+        fugacity.virial_eos(gas)
+    elif gas.pr_coeff:
+        print('Calculating fugacity using user-supplied Peng-Robinson coefficients')
+        fugacity.peng_robinson_eos(gas)
+    elif gas.formula in fugacity.virial_coeff:
+        print('Calculating fugacity using built-in Virial EoS')
+        fugacity.virial_eos(gas)
+    elif gas.formula in fugacity.pr_coeff:
+        print('Calculating fugacity using built-in Peng-Robinson EoS')
+        fugacity.peng_robinson_eos(gas)
+    elif gas.f is None and gas.formula is None:
+        pyDMS.warning_in_orange('Fugacity data and gas unspecified.\nFitting will be performed with pressure data.') 
+    elif gas.formula not in fugacity.virial_coeff and gas.formula not in fugacity.pr_coeff: 
+        pyDMS.warning_in_orange('Fugacity data unspecified and Gas.formula not found in built-in data.' \
+        '\nSupply Gas.virial_coeff or Gas.pr_coeff to calculate fugacity.' \
+        '\nFitting will be performed with pressure data.')
+    else:
+        pyDMS.warning_in_orange('Something went wrong trying to calculate fugacity.\n Will use gas.p')
+    
+    return
 
 def LFER_loss(x, gas, func='chi2'):
     '''Defines the loss function for the LFER optimization.
@@ -408,7 +445,11 @@ def calc_LFEs(gas, settings=None):
     settings.setdefault('ch_bounds', np.array([[0, 150] for _ in range(len(c))]))
 
     settings.setdefault('trials', 1000)
-    settings.setdefault('solver', 'SLSQP')
+    settings.setdefault('solver_LFER', 'SLSQP')
+    settings.setdefault('ftol', 1E-12)
+    settings.setdefault('xtol', 1E-12)
+    settings.setdefault('gtol', 1E-12)
+    settings.setdefault('maxiter_LFER',1000)
     settings.setdefault('verbose', True)
     settings.setdefault('solver_verbose', False)
 
@@ -425,9 +466,14 @@ def calc_LFEs(gas, settings=None):
     ch_solver = settings.get('ch_bounds')
     
     trials = settings.get("trials")
-    solver = settings.get("solver")
+    solver = settings.get("solver_LFER")
+    ftol_val = settings.get('xtol', 1E-12)
+    xtol_val = settings.get('xtol', 1E-12)
+    gtol_val = settings.get('gtol', 1E-12)
+    maxiter_LFER = settings.get('maxiter_LFER',1000)
     verbose = settings.get("verbose")
     solver_verbose = settings.get("solver_verbose")
+
 
     # * consider allowing this to be turned off?
 
@@ -461,7 +507,6 @@ def calc_LFEs(gas, settings=None):
     #avg_dms = np.zeros(nOptVars) # averaged results # *we do not need
     #std_dev = np.zeros(nOptVars) # standard deviations # *we do not need
     #num_par_final = np.zeros(nOptVars) # no. of non-outlier chains # *we do not need
-
 
     # finding the range of each bound
     kdval = kd0_0_bnd[1] - kd0_0_bnd[0]
@@ -522,18 +567,10 @@ def calc_LFEs(gas, settings=None):
         # optimizing with the 'trust-constr' algorithm
         if solver=='trust-constr':
 
-            settings.setdefault('xtol', 1e-12)
-            settings.setdefault('gtol', 1e-12)
-            settings.setdefault('maxiter', 1000)
-            
-            xtol = settings.get('xtol')
-            gtol = settings.get('gtol')
-            maxiter = settings.get('maxiter')
-
             options = {
-                    'maxiter': maxiter,        # maximum iterations
-                    'xtol': xtol,              # variable tolerance
-                    'gtol': gtol,              # function tolerance
+                    'maxiter': maxiter_LFER,        # maximum iterations
+                    'xtol': xtol_val,              # variable tolerance
+                    'gtol': gtol_val,              # function tolerance
                     'disp': solver_verbose,    # display optimization progress
             }
 
@@ -555,16 +592,10 @@ def calc_LFEs(gas, settings=None):
 
         # optimizing with the 'SLQSP' algorithm
         elif solver=='SLSQP':
-
-            settings.setdefault('ftol', 1e-12)
-            settings.setdefault('maxiter', 1000)
-            
-            ftol = settings.get('ftol')
-            maxiter = settings.get('maxiter')
         
             options = {
-                    'maxiter': maxiter,     # max iterations
-                    'ftol': ftol,           # function tolerance 
+                    'maxiter': maxiter_LFER,     # max iterations
+                    'ftol': ftol_val,           # function tolerance 
                     'disp': solver_verbose, # display iteration results
             }
 
@@ -596,7 +627,7 @@ def calc_LFEs(gas, settings=None):
 
     # For plotting purposes
     with warnings.catch_warnings(record=True) as W:
-        warnings.simplefilter("always")  # This ensures that the warning is captured
+        warnings.simplefilter("always")
         log_kd0_out = np.log(par_with_outliers[0])
         deltaHd_out = par_with_outliers[1]
         log_b0_out = np.log(par_with_outliers[2])
@@ -700,13 +731,7 @@ def calc_LFEs(gas, settings=None):
     #pars[:,1] = deltaHd
     #pars[:,2] = log_b0
     #pars[:,3] = deltaHb
-    #union_inliers = inliers_kd | inliers_b
 
-    #pars = np.zeros((np.sum(union_inliers), 4))
-    #pars[:, 0] = log_kd0[union_inliers]
-    #pars[:, 1] = deltaHd[union_inliers]
-    #pars[:, 2] = log_b0[union_inliers]
-    #pars[:, 3] = deltaHb[union_inliers]
     # Initialize full-length array with NaNs
     pars = np.full((len(log_kd0), 4), np.nan)
 
@@ -716,7 +741,6 @@ def calc_LFEs(gas, settings=None):
 
     pars[inliers_b, 2] = log_b0[inliers_b]
     pars[inliers_b, 3] = deltaHb[inliers_b]
-
 
     # collecting data with outliers for plotting
     # * keep an eye on this. Changed from len(c) to 4
@@ -773,8 +797,11 @@ def calc_params(gas, settings=None):
     settings.setdefault('ch_bounds', np.array([[0, 150] for _ in range(len(c))]))
 
     settings.setdefault('trials', 1000)
-    settings.setdefault('solver', 'SLSQP')
-    settings.setdefault('verbose', True)
+    settings.setdefault('solver_vH', 'SLSQP')
+    settings.setdefault('ftol', 1E-12)
+    settings.setdefault('xtol', 1E-12)
+    settings.setdefault('gtol', 1E-12)
+    settings.setdefault('maxiter_vH',1000)
     settings.setdefault('solver_verbose', False)
 
     dHD0_0_bnd = settings.get('dHD_guess')
@@ -786,7 +813,11 @@ def calc_params(gas, settings=None):
     ch_solver = settings.get('ch_bounds')
 
     trials = settings.get("trials")
-    solver = settings.get("solver")
+    solver = settings.get("solver_vH")
+    ftol_val = settings.get('xtol', 1E-12)
+    xtol_val = settings.get('xtol', 1E-12)
+    gtol_val = settings.get('gtol', 1E-12)
+    maxiter_vH = settings.get('maxiter_vH',1000)
     verbose = settings.get("verbose")
     solver_verbose = settings.get("solver_verbose")
 
@@ -869,18 +900,10 @@ def calc_params(gas, settings=None):
         # optimizing with the 'trust-constr' algorithm
         if solver=='trust-constr':
             
-            settings.setdefault('xtol', 1e-12)
-            settings.setdefault('gtol', 1e-12)
-            settings.setdefault('maxiter', 1000)
-            
-            xtol = settings.get('xtol')
-            gtol = settings.get('gtol')
-            maxiter = settings.get('maxiter')
-
             options = {
-                    'maxiter': maxiter,     # maximum iterations
-                    'xtol': xtol,           # variable tolerance
-                    'gtol': gtol,           # function tolerance
+                    'maxiter': maxiter_vH,     # maximum iterations
+                    'xtol': xtol_val,           # variable tolerance
+                    'gtol': gtol_val,           # function tolerance
                     'disp': solver_verbose, # display optimization progress
             }
 
@@ -906,15 +929,9 @@ def calc_params(gas, settings=None):
         # optimizing with the 'SLQSP' algorithm
         elif solver=='SLSQP':
             
-            settings.setdefault('ftol', 1e-12)
-            settings.setdefault('maxiter', 1000)
-            
-            ftol = settings.get('ftol')
-            maxiter = settings.get('maxiter')
-        
             options = {
-                    'maxiter': maxiter,     # max iterations
-                    'ftol': ftol,           # function tolerance 
+                    'maxiter': maxiter_vH,     # max iterations
+                    'ftol': ftol_val,           # function tolerance 
                     'disp': solver_verbose, # display iteration results
             }
 

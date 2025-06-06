@@ -26,21 +26,21 @@ virial_coeff = {
             'B3': 2.3869*10**6, # check
             'B4': 0, # check
             'C0': 0.10023*1E-3,
-            'C1': None,
-            'C2': None,
-            'C3': None,
-            'C4': None},
+            'C1': 0,
+            'C2': 0,
+            'C3': 0,
+            'C4': 0},
         'H2':{  
             'B0':1.7472*10, # check
             'B1':-1.2926*10**2, # check
             'B2':-2.6988*10**5, # check
             'B3':8.0282*10**6, # check
-            'B4': None, # check
+            'B4': 0, # check
             'C0': 0.53597*1E-3,
-            'C1': None,
-            'C2': None,
-            'C3': None,
-            'C4': None},
+            'C1': 0,
+            'C2': 0,
+            'C3': 0,
+            'C4': 0},
         'N2':{
             'B0':4.0286*10, # check
             'B1':-9.3378*10**3, # check
@@ -49,9 +49,9 @@ virial_coeff = {
             'B4': -2.7198*10**9, # check
             'C0': 0.45178*1E-3,
             'C1': 282.49*1E-3,
-            'C2': None,
-            'C3': None,
-            'C4': None},
+            'C2': 0,
+            'C3': 0,
+            'C4': 0},
         'O2':{
             'B0':4.2859*10, # check
             'B1':-1.7696*10**4, # check
@@ -61,8 +61,8 @@ virial_coeff = {
             'C0': 0.91432*1E-3,
             'C1': -57.003*1E-3,
             'C2': 38999*1E-3,
-            'C3': None,
-            'C4': None},
+            'C3': 0,
+            'C4': 0},
         'CH4':{
             'B0':4.4344*10, # check
             'B1': -1.6608*10**4, # check
@@ -72,63 +72,63 @@ virial_coeff = {
             'C0': 1.468*1E-3,
             'C1': -417.68*1E-3,
             'C2': 2.1133e+05*1E-3,
-            'C3': None,
-            'C4': None},
+            'C3': 0,
+            'C4': 0},
         'CO2':{
             'B0':5.74*10, # check
             'B1':-3.8829*10**4, # check
             'B2': 4.2899*10**5, # check
             'B3': -1.4661*10**9, # check
-            'B4': None, # check
+            'B4': 0, # check
             'C0': 8.2273*1E-3,
             'C1': -11176*1E-3,
             'C2': 5.2971e+06*1E-3,
             'C3': -6.7348e+08*1E-3,
-            'C4': None},
+            'C4': 0},
         'C2H6':{
-            'B0':None, # check
-            'B1':None, # check
-            'B2': None, # check
-            'B3': None, # check
-            'B4': None, # check
+            'B0':0, # check
+            'B1':0, # check
+            'B2': 0, # check
+            'B3': 0, # check
+            'B4': 0, # check
             'C0': -21.966*1E-3,
             'C1': 19216*1E-3,
             'C2': -2.91e+06*1E-3,
-            'C3': None,
-            'C4': None},
+            'C3': 0,
+            'C4': 0},
         'C2H4':{
-            'B0':None, # check
-            'B1':None, # check
-            'B2': None, # check
-            'B3': None, # check
-            'B4': None, # check
+            'B0':0, # check
+            'B1':0, # check
+            'B2': 0, # check
+            'B3': 0, # check
+            'B4': 0, # check
             'C0': -19.585*1E-3,
             'C1': 14199*1E-3,
             'C2': -1.879e+06*1E-3,
-            'C3': None,
-            'C4': None},
+            'C3': 0,
+            'C4': 0},
         'C3H8':{
             'B0':1.0971*10**2, # check
             'B1':-8.4673*10**4, # check
             'B2': 8.1215*10**6, # check
             'B3': -3.4382*10**9, # check
-            'B4': None,
+            'B4': 0,
             'C0': 161.6*1E-3,
             'C1': -2.1173e+05*1E-3,
             'C2': 9.5225e+07*1E-3,
             'C3': -1.342e+10*1E-3,
-            'C4': None},
+            'C4': 0},
         'C3H6':{
             'B0':1.0101*10**2, # check
             'B1':-7.5735*10**4, # check
             'B2': -7.9502*10**6, # check
             'B3': -2.7987*10**9, # check
-            'B4': None,
+            'B4': 0, # check
             'C0': -11.713*1E-3,
             'C1': 9511.1*1E-3,
-            'C2': None,
-            'C3': None,
-            'C4': None}}
+            'C2': 0,
+            'C3': 0,
+            'C4': 0}}
 
 # Peng-Robinson Parameters from NIST Chemistry Webbook (https://webbook.nist.gov/chemistry/):
 # Linstrom, P. J.; Mallard, W. G. The NIST Chemistry WebBook:
@@ -142,7 +142,7 @@ pr_coeff = {
         'omega': 0.1}
 }
 
-def virial_eos(gas, params=None):
+def virial_eos(gas):
     '''Computes the fugacity of a gas at a given temperature and pressure using a Virial expansion
 
     Built-in Virial coefficients are from: Virial Coefficients of Pure Gases; Frenkel, M., Marsh, K. N., Eds.;
@@ -172,32 +172,40 @@ def virial_eos(gas, params=None):
 
     R = 8.314e6  # cm^3·Pa/(mol·K)
     atm_to_pa = 1.01325e5  # Conversion factor from atm to Pa
-    p = p * atm_to_pa
+    p = p * atm_to_pa 
 
-    if params is not None:
-        B0 = params.get('B0',0)
-        B1 = params.get('B1',0)
-        B2 = params.get('B2',0)
-        B3 = params.get('B3',0)
-        B4 = params.get('B4',0)
-        C0 = params.get('C0',0)
-        C1 = params.get('C1',0)
+    if gas.virial_coeff:
+        virial_data = gas.virial_coeff
+        B0 = virial_data.get('B0',0)
+        B1 = virial_data.get('B1',0)
+        B2 = virial_data.get('B2',0)
+        B3 = virial_data.get('B3',0)
+        B4 = virial_data.get('B4',0)
+        C0 = virial_data.get('C0',0)
+        C1 = virial_data.get('C1',0)
+        C2 = virial_data.get('C2',0)
+        C3 = virial_data.get('C3',0)
+        C4 = virial_data.get('C4',0)
     else:
-        B0 = gas_name.get('B0',0)
-        B1 = gas_name.get('B1',0)
-        B2 = gas_name.get('B2',0)
-        B3 = gas_name.get('B3',0)
-        B4 = gas_name.get('B4',0)
-        C0 = gas_name.get('C0',0)
-        C1 = gas_name.get('C1',0)
+        virial_data = virial_coeff.get(gas_name)
+        B0 = virial_data.get('B0',0)
+        B1 = virial_data.get('B1',0)
+        B2 = virial_data.get('B2',0)
+        B3 = virial_data.get('B3',0)
+        B4 = virial_data.get('B4',0)
+        C0 = virial_data.get('C0',0)
+        C1 = virial_data.get('C1',0)
+        C2 = virial_data.get('C2',0)
+        C3 = virial_data.get('C3',0)
+        C4 = virial_data.get('C4',0)
 
     if B0==0:
-        pyDMS.warning_in_orange("WARNING: B0 = 0")
+        pyDMS.warning_in_orange("B0 = 0. This is unusual.")
     if B1==0:
-        pyDMS.warning_in_orange("WARNING: B1 = 0")
+        pyDMS.warning_in_orange("B1 = 0. This is unusual.")
 
     B =  B0 + B1/T + B2/T**2 + B3/T**3 + B4/T**4
-    C = C0+C1*T
+    C = C0 + C1/T + C2/T**2 + C3/T**3 + C4/T**4
     vm = R*T/p
     ln_phi = B/vm + (C+B**2)/(2*vm**2)
     phi = np.exp(ln_phi)
@@ -208,7 +216,7 @@ def virial_eos(gas, params=None):
     
     return gas
 
-def peng_robinson_eos(gas, params=None):
+def peng_robinson_eos(gas):
     '''Computes the fugacity of a gas at a given temperature and pressure using the Peng-Robinson EoS
 
     Built-in Virial coefficients are from the NIST Chemistry Webbook (https://webbook.nist.gov/chemistry/):
@@ -232,14 +240,16 @@ def peng_robinson_eos(gas, params=None):
     T = gas.temp
     p = gas.p
     
-    if params is not None:
-        omega = params.get('omega',0)
-        Tc = params.get('Tc',0)
-        pc = params.get('Pc',0)
+    if gas.pr_coeff:
+        pr_data = gas.pr_coeff
+        omega = pr_data.get('omega',0)
+        Tc = pr_data.get('Tc',0)
+        Pc = pr_data.get('Pc',0)
     else:
-        omega = gas_name.get('omega',0)
-        Tc = gas_name.get('Tc',0)
-        pc = gas_name.get('Pc',0)
+        pr_data = pr_coeff.get(gas_name)
+        omega = pr_data.get('omega',0)
+        Tc = pr_data.get('Tc',0)
+        Pc = pr_data.get('Pc',0)
 
     if omega==0:
         pyDMS.warning_in_orange("WARNING: The accentric factor (omega) = 0")
@@ -255,8 +265,8 @@ def peng_robinson_eos(gas, params=None):
     R = 8.314 # J/(mol·K)
 
     k = 0.375 + 1.542*omega - 0.270*omega**2
-    a = 0.457*(1+k*(1-np.sqrt(T/Tc)))**2*R**2*Tc**2/pc
-    b = 0.0778*R*Tc/pc
+    a = 0.457*(1+k*(1-np.sqrt(T/Tc)))**2*R**2*Tc**2/Pc
+    b = 0.0778*R*Tc/Pc
     A = a * p_mpa / (R**2 * T**2)
     B = b * p_mpa / (R * T)
 
