@@ -154,7 +154,6 @@ def load_gas_class(filename):
     '''
     *
     '''
-    print('Unpickling Gas class')
     with open(filename, 'rb') as f:
         return pickle.load(f)
 

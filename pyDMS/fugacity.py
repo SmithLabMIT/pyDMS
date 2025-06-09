@@ -167,53 +167,48 @@ def virial_eos(gas):
     '''
 
     gas_name = gas.formula
-    T = gas.temp
-    p = gas.p
+    temps = np.atleast_1d(gas.temp)  # ensure 1D array
+    p_grid = np.atleast_2d(gas.p)    # ensure 2D array
 
-    R = 8.314e6  # cm^3·Pa/(mol·K)
-    atm_to_pa = 1.01325e5  # Conversion factor from atm to Pa
-    p = p * atm_to_pa 
+    R = 8.314e6  # cm³·Pa/(mol·K)
+    atm_to_pa = 1.01325e5
+    p_grid_pa = p_grid * atm_to_pa
 
     if gas.virial_coeff:
         virial_data = gas.virial_coeff
-        B0 = virial_data.get('B0',0)
-        B1 = virial_data.get('B1',0)
-        B2 = virial_data.get('B2',0)
-        B3 = virial_data.get('B3',0)
-        B4 = virial_data.get('B4',0)
-        C0 = virial_data.get('C0',0)
-        C1 = virial_data.get('C1',0)
-        C2 = virial_data.get('C2',0)
-        C3 = virial_data.get('C3',0)
-        C4 = virial_data.get('C4',0)
     else:
-        virial_data = virial_coeff.get(gas_name)
-        B0 = virial_data.get('B0',0)
-        B1 = virial_data.get('B1',0)
-        B2 = virial_data.get('B2',0)
-        B3 = virial_data.get('B3',0)
-        B4 = virial_data.get('B4',0)
-        C0 = virial_data.get('C0',0)
-        C1 = virial_data.get('C1',0)
-        C2 = virial_data.get('C2',0)
-        C3 = virial_data.get('C3',0)
-        C4 = virial_data.get('C4',0)
+        virial_data = virial_coeff.get(gas_name, {})
 
-    if B0==0:
+    B0 = virial_data.get('B0', 0)
+    B1 = virial_data.get('B1', 0)
+    B2 = virial_data.get('B2', 0)
+    B3 = virial_data.get('B3', 0)
+    B4 = virial_data.get('B4', 0)
+    C0 = virial_data.get('C0', 0)
+    C1 = virial_data.get('C1', 0)
+    C2 = virial_data.get('C2', 0)
+    C3 = virial_data.get('C3', 0)
+    C4 = virial_data.get('C4', 0)
+
+    if B0 == 0:
         pyDMS.warning_in_orange("B0 = 0. This is unusual.")
-    if B1==0:
+    if B1 == 0:
         pyDMS.warning_in_orange("B1 = 0. This is unusual.")
 
-    B =  B0 + B1/T + B2/T**2 + B3/T**3 + B4/T**4
-    C = C0 + C1/T + C2/T**2 + C3/T**3 + C4/T**4
-    vm = R*T/p
-    ln_phi = B/vm + (C+B**2)/(2*vm**2)
-    phi = np.exp(ln_phi)
-    f = p * phi
-    f_atm = f / atm_to_pa
+    fugacities = []
 
-    gas.f = np.array(f_atm) 
-    
+    for i, T in enumerate(temps):
+        p_row = p_grid_pa[i]
+        B = B0 + B1/T + B2/T**2 + B3/T**3 + B4/T**4
+        C = C0 + C1/T + C2/T**2 + C3/T**3 + C4/T**4
+        vm = R * T / p_row
+        ln_phi = B/vm + (C + B**2) / (2 * vm**2)
+        phi = np.exp(ln_phi)
+        f_pa = p_row * phi
+        f_atm = f_pa / atm_to_pa
+        fugacities.append(f_atm)
+
+    gas.f = np.array(fugacities)  # shape: (n_conditions, n_pressures)
     return gas
 
 def peng_robinson_eos(gas):
@@ -237,62 +232,67 @@ def peng_robinson_eos(gas):
         A numpy array in gas.f with the fugacities at the corresponding pressures provided in gas.p
     '''
     gas_name = gas.formula
-    T = gas.temp
-    p = gas.p
-    
+    temps = np.atleast_1d(gas.temp)   # (n_temps,)
+    p_grid = np.atleast_2d(gas.p)     # (n_temps, n_pressures)
+
     if gas.pr_coeff:
         pr_data = gas.pr_coeff
-        omega = pr_data.get('omega',0)
-        Tc = pr_data.get('Tc',0)
-        Pc = pr_data.get('Pc',0)
     else:
-        pr_data = pr_coeff.get(gas_name)
-        omega = pr_data.get('omega',0)
-        Tc = pr_data.get('Tc',0)
-        Pc = pr_data.get('Pc',0)
+        pr_data = pr_coeff.get(gas_name, {})
 
-    if omega==0:
+    omega = pr_data.get('omega', 0)
+    Tc = pr_data.get('Tc', 0)
+    Pc = pr_data.get('Pc', 0)
+
+    if omega == 0:
         pyDMS.warning_in_orange("WARNING: The accentric factor (omega) = 0")
-
-    if Tc==0:
+    if Tc == 0:
         pyDMS.error_in_red("Error: Critical Temperature (Tc) cannot be 0")
-
-    if Pc==0:
+    if Pc == 0:
         pyDMS.error_in_red("Error: Critical Pressure (Pc) cannot be 0")
 
-    mpa_to_atm = 9.86923 # atm/MPa
-    p_mpa = p/mpa_to_atm
-    R = 8.314 # J/(mol·K)
+    mpa_to_atm = 9.86923  # atm/MPa
+    R = 8.314  # J/(mol·K)
 
-    k = 0.375 + 1.542*omega - 0.270*omega**2
-    a = 0.457*(1+k*(1-np.sqrt(T/Tc)))**2*R**2*Tc**2/Pc
-    b = 0.0778*R*Tc/Pc
-    A = a * p_mpa / (R**2 * T**2)
-    B = b * p_mpa / (R * T)
+    fugacities = []
 
-    f_atm_list = []  # Store fugacity values for each pressure
-    
-    for i, p_val in enumerate(p):
-        coeffs = [1, -(1-B[i]), A[i]-3*B[i]**2-2*B[i], -A[i]*B[i]+B[i]**2+B[i]**3]
-        z_factors = np.roots(coeffs)  # Solve for Z
-        real_roots = np.real(z_factors[np.isreal(z_factors)])  # Keep only real solutions
+    for i, T in enumerate(temps):
+        p_row = p_grid[i] / mpa_to_atm  # convert atm → MPa for this row
+        k = 0.375 + 1.542 * omega - 0.270 * omega**2
+        alpha = (1 + k * (1 - np.sqrt(T / Tc)))**2
+        a = 0.457 * alpha * R**2 * Tc**2 / Pc
+        b = 0.0778 * R * Tc / Pc
 
-        phi_array = []
+        A = a * p_row / (R**2 * T**2)
+        B = b * p_row / (R * T)
 
-        for zf in real_roots:
-            if zf > B[i]:  # Ensure the log argument is valid
-                phi = np.exp(
-                    zf - 1 - np.log(zf - B[i]) - A[i] / (2 * np.sqrt(2) * B[i]) *
-                    np.log((zf + (1 + np.sqrt(2)) * B[i]) / (zf + (1 - np.sqrt(2)) * B[i]))
+        fug_row = []
+
+        for j, p_val in enumerate(p_row):
+            Aij = A[j]
+            Bij = B[j]
+            coeffs = [1, -(1 - Bij), Aij - 3 * Bij**2 - 2 * Bij, -Aij * Bij + Bij**2 + Bij**3]
+            z_roots = np.roots(coeffs)
+            z_real = np.real(z_roots[np.isreal(z_roots)])
+
+            if len(z_real) == 0:
+                fug_row.append(np.nan)
+                continue
+
+            zf = z_real[np.argmax(z_real)]  # use largest Z (vapor phase)
+
+            try:
+                ln_phi = (
+                    zf - 1 - np.log(zf - Bij)
+                    - Aij / (2 * np.sqrt(2) * Bij)
+                    * np.log((zf + (1 + np.sqrt(2)) * Bij) / (zf + (1 - np.sqrt(2)) * Bij))
                 )
-                phi_array.append(phi)
+                phi = np.exp(ln_phi)
+                fug_row.append(phi * p_val * mpa_to_atm)
+            except (ValueError, ZeroDivisionError, FloatingPointError):
+                fug_row.append(np.nan)
 
-        if phi_array:
-            phi_use = np.min(phi_array)  # Ensure proper array handling
-            f_atm = phi_use * p_val
-            f_atm_list.append(f_atm)
-        else:
-            f_atm_list.append(np.nan)  # If no valid phi, store NaN
-    gas.f = np.array(f_atm_list)  # Return an array of fugacities
-    
+        fugacities.append(fug_row)
+
+    gas.f = np.array(fugacities)
     return gas

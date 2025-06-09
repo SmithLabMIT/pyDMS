@@ -20,16 +20,20 @@ from reportlab.lib.units import inch
 
 from . import visualize as vis
 
-def wait_for_file(path, timeout=10.0):
+def wait_for_file(path, timeout=20.0):
+    iter1 = False
     start = time.time()
     while True:
         try:
             with open(path, 'rb'):
                 return
         except PermissionError:
+            if iter1 is False:
+                print(f'Waiting for {path} to be available...')
+                iter1 = True
             if time.time() - start > timeout:
                 raise
-            time.sleep(0.05)
+            time.sleep(0.5)
 
 def LFER(gas, outliers=False):
     '''Plots and saves the LFER linear fits
@@ -165,10 +169,9 @@ def generate(gas, report_name):
     b_err = gas.b_err
 
     LFER_data = gas.LFER
-    LFER_settings = LFER_data.settings
+    settings = gas.settings
 
     vH_data = gas.vH
-    vH_settings = vH_data.settings
 
     slope_kd, int_kd, slope_b, int_b = LFER_data.fit
 
@@ -374,10 +377,14 @@ def generate(gas, report_name):
 
     data = [
     ["Optimization Stage", "Parameter","Value"],
-    ["LFER", Paragraph("ΔH<sub>D</sub>", centered_para), f"{LFER_settings.get('dHD_bounds')}"],
-    ["LFER", Paragraph("ΔH<sub>b</sub>", centered_para), f"{LFER_settings.get('dHb_bounds')}"],
-    ["LFER", Paragraph("k<sub>D,0</sub>", centered_para), f"{LFER_settings.get('kD0_bounds')}"],
-    ["LFER", Paragraph("b<sub>0</sub>", centered_para), f"{LFER_settings.get('b0_bounds')}"],
+    ["", Paragraph("ΔH<sub>D</sub> Initial Guess Range", centered_para), f"{settings.get('dHD_guess')}"],
+    ["", Paragraph("ΔH<sub>b</sub> Initial Guess Range", centered_para), f"{settings.get('dHb_guess')}"],
+    ["", Paragraph("k<sub>D,0</sub> Initial Guess Range", centered_para), f"{settings.get('kD0_guess')}"],
+    ["", Paragraph("b<sub>0</sub> Initial Guess Range", centered_para), f"{settings.get('b0_guess')}"],
+    ["", Paragraph("ΔH<sub>D</sub> Solver Bounds", centered_para), f"{settings.get('dHD_bounds')}"],
+    ["", Paragraph("ΔH<sub>b</sub> Solver Bounds", centered_para), f"{settings.get('dHb_bounds')}"],
+    ["", Paragraph("k<sub>D,0</sub> Solver Bounds", centered_para), f"{settings.get('kD0_bounds')}"],
+    ["", Paragraph("b<sub>0</sub> Solver Bounds", centered_para), f"{settings.get('b0_bounds')}"],
     ]
 
     table = Table(data, colWidths=[inch*1.5,inch*1.5,inch*2])
@@ -391,10 +398,10 @@ def generate(gas, report_name):
 
     elements.append(table)
 
-    for i, val in enumerate(LFER_settings.get('ch_bounds')):
+    for i, val in enumerate(settings.get('ch_bounds')):
 
         data = [
-            ["LFER", Paragraph(f"C'<sub>H</sub> #{i+1}", centered_para), val]
+            ["", Paragraph(f"C'<sub>H</sub> #{i+1}", centered_para), val]
         ]
 
         table = Table(data, colWidths=[inch*1.5,inch*1.5,inch*2])
@@ -409,65 +416,14 @@ def generate(gas, report_name):
         elements.append(table)
 
     data = [
-        ["LFER", "trials",f"{LFER_settings.get('trials')}"],
-        ["LFER", "solver",f"{LFER_settings.get('solver')}"],
-        ["LFER", "maxiter (solver)", f"{LFER_settings.get('maxiter')}"],
-        ["LFER", "ftol (SLSQP)", f"{LFER_settings.get('ftol')}"],
-        ["LFER", "xtol (trust-constr)", f"{LFER_settings.get('xtol')}"],
-        ["LFER", "gtol (trust-constr)", f"{LFER_settings.get('gtol')}"]]
-
-    table = Table(data, colWidths=[inch*1.5,inch*1.5,inch*2])
-    table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.white),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.white),
-    ]))
-
-    elements.append(table)
-
-    data = [
-    ["van't Hoff", Paragraph("ΔH<sub>D</sub>", centered_para), f"{vH_settings.get('dHD_bounds')}"],
-    ["van't Hoff", Paragraph("ΔH<sub>b</sub>", centered_para), f"{vH_settings.get('dHb_bounds')}"],
-    ]
-
-    table = Table(data, colWidths=[inch*1.5,inch*1.5,inch*2])
-    table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.white),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.white),
-    ]))
-
-    elements.append(table)
-
-    for i, val in enumerate(LFER_settings.get('ch_bounds')):
-        data = [
-            ["van't Hoff", Paragraph(f"C'<sub>H</sub> #{i+1}", centered_para), val]
-        ]        
-
-        table = Table(data, colWidths=[inch*1.5,inch*1.5,inch*2])
-        table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.white),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.white),
-        ]))
-
-        elements.append(table)
-
-    data= [
-        ["van't Hoff", "trials",f"{vH_settings.get('trials')}"],
-        ["van't Hoff", "solver",f"{vH_settings.get('solver')}"],
-        ["van't Hoff", "maxiter (solver)", f"{vH_settings.get('maxiter')}"],
-        ["van't Hoff", "ftol (SLSQP)", f"{vH_settings.get('ftol')}"],
-        ["van't Hoff", "xtol (trust-constr)",f"{vH_settings.get('trust-constr')}"],
-        ["van't Hoff", "gtol (trust-constr)", f"{vH_settings.get('gtol')}"]
-    ]
-
+        ["", "Trials",f"{settings.get('trials')}"],
+        ["", "LFER Solver",f"{settings.get('solver_LFER')}"],
+        ["", "maxiter (LFER solver)", f"{settings.get('maxiter_LFER')}"],
+        ["", "van't Hoff Solver",f"{settings.get('solver_vH')}"],
+        ["", "maxiter (van't Hoff solver)", f"{settings.get('maxiter_vH')}"],
+        ["", "ftol (SLSQP)", f"{settings.get('ftol')}"],
+        ["", "xtol (trust-constr)", f"{settings.get('xtol')}"],
+        ["", "gtol (trust-constr)", f"{settings.get('gtol')}"]]
 
     table = Table(data, colWidths=[inch*1.5,inch*1.5,inch*2])
     table.setStyle(TableStyle([

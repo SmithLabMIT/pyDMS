@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyDMS"
+dynamic = ["version"]
+description = "dual-mode sorption (DMS) model fitting and analysis"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { file = "LICENSE" }
+authors = [
+  { name = "Brandon C. Tapia", email = "bctapia@mit.edu" } #,
+#  { name = "TBA" },
+#  { name = "TBA" },
+#  { name = "TBA" }
+]
+
+dependencies = [
+  "numpy",
+  "matplotlib",
+  "Pillow",
+  "reportlab",
+  "scipy",
+  "statsmodels",
+  "scikit-learn"
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "black", "build", "twine"]
+
+keywords = ["sorption", "membranes", "gas separation", "polymer modeling"]
+
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Operating System :: OS Independent",
+  "License :: OSI Approved :: MIT License",
+  "Intended Audience :: Science/Research",
+  "Topic :: Scientific/Engineering :: Chemistry,"
+  "Topic :: Scientific/Engineering :: Physics"
+]

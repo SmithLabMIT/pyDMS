@@ -29,6 +29,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import warnings
 
+__version__ = '0.0.1'
+
 def error_in_red(message):
     '''
     Red error message
