@@ -11,7 +11,7 @@ import numpy as np
 import pyDMS
 
 
-def mixed_isotherm(*gases, p_or_f=None, mol_frac=None, temp=None):
+def mixed_isotherm(*gases, p_or_f, mol_frac, temp):
     '''
     Computes the mixed gas DMS isotherm
     p: total pressure to compute DMS at

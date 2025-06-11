@@ -12,18 +12,16 @@ import pyDMS
 from . import fugacity
 
 def isotherm(gas, index, eos=None):
+    '''Computes an isotherm from the optimized DMS parameters at the specified temperature.
+    
+    Args:
+        gas: An instance of the Gas class.
+        index: A float of the index of the temperature to compute the sorption isotherm at.
+        
+    Returns:
+        An array of the isotherm [pressure or fugacity, concentration, concentration error].
     '''
-    Computes the DMS isotherm
-    p: pressure/fugacity (atm) to compute DMS at
-    params: DMS parameters in a dictionary format
-    eos: Compute fugacity from provided p if desired using a virial approach or Peng-Robinson EOS
-    T: temperature to compute fugacity at
-    gas: gas to compute fugacity of
 
-    Returns: [pressure/fugacity, concentration, concentration error]
-    '''
-
-    # * update parameter locations
     ch = gas.CH[index]
     kd = gas.kD[index]
     b = gas.b[index]
@@ -31,71 +29,23 @@ def isotherm(gas, index, eos=None):
     kd_err = gas.kD_err[index]
     b_err = gas.b_err[index]
 
-    p = np.linspace(1E-6,np.max(gas.p[index]),100)
-
-    # making pylint happy
-    p_val = None
-
-    if eos=='virial':
-        p_val = fugacity.virial_eos(gas)
-    elif eos=='pr':
-        p_val = fugacity.peng_robinson_eos(gas)
-    elif eos is None:
-        p_val = p
-    else:
-        print("eos not recognized")
+    p_val = np.linspace(1E-6,np.max(gas.p[index]),1000)
 
     c = kd*p_val+ch*b*p_val/(1+b*p_val)
     c_err = np.sqrt(ch**2*p_val**2*b_err**2/(1+b*p_val)**4+b**2*p_val**2*ch_err**2/(1+b*p_val)**2+p_val**2*kd_err**2)
 
     return p_val, c, c_err
 
-def isosteric_heat(gas, calc_fug=False):
-    
-    #name = gas.name
-    c_vec = gas.c
-    cerr_vec = gas.c_err
-    p_vec = gas.p
-    T_vec = gas.temp
-
-    #if calc_fug:
-        # calculate fugacity here
-
-    # extract dms parameters
-    kd_f = gas.kD
-    b_f = gas.b
-    ch_vec_f = gas.CH
-
-
-    # calculate inverse temperatures
-    T_inv = 1/T_vec
-
-    # determine how many points to use
-    #def minimize_dms(gas, C_target):
-
-    # create an array of target concentrations (make it more detailed in beginning)
-    # create an array of pressure guesses
-
-    # create a function to minimize
-
-    # use fmincon to minimize to find pressure
-
-    # fit inverse T vs log(p_calc)
-
-    # extract slope
-
-    # find the average pressure
-
-    # z-value of the average pressure
-
-    # calculate the isosteric heat
-    #return
-
 def S_inf(gas):
+    '''Computes the sorption coefficient at infinite dilution
+
+    Args:
+        gas: an instance of the Gas class
+
+    Returns:
+        None
     '''
-    *
-    '''
-    
+
     k_D = gas.kD
     b = gas.b
     ch = gas.CH
@@ -104,11 +54,10 @@ def S_inf(gas):
     gas.analysis.S_inf = S_inf_calc
     gas.analysis.S_inf_err = 'Not yet implemented*'
 
-    return gas
 
 def heat_of_sorption(gas, method='all'):
-    '''
-    *
+    '''Computes heats of sorption
+
     '''
     
     temp = gas.temp

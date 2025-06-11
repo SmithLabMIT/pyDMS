@@ -1,7 +1,6 @@
 '''
 pyDMS.visualize
        
-
 Copyright 2025 Brandon C. Tapia
 
 Licensed under the MIT License
@@ -13,6 +12,8 @@ import matplotlib.cm as cm
 import matplotlib.colors as mcolors
 
 from . import evaluate
+
+# pylint: disable=C0103
 
 small_txt = 9
 medium_txt = 12
@@ -65,7 +66,6 @@ def LFER(gas, outliers=False, show=False):
     def lin_fit(data, slope, ints):
         return slope * data + ints
 
-    # Panel 1: kd
     if outliers:
         ax[0].plot(log_kd0_out, deltaHd_out, 'o', color='gray', alpha=0.7)
     ax[0].plot(log_kd0, deltaHd, 'o', color='black')
@@ -74,7 +74,6 @@ def LFER(gas, outliers=False, show=False):
     ax[0].set_xlabel(r'$\mathrm{ln}(k_{D,0})$')
     ax[0].set_ylabel(r'$\Delta H_D$')
 
-    # Panel 2: b
     if outliers:
         ax[1].plot(log_b0_out, deltaHb_out, 'o', color='gray', alpha=0.7)
     ax[1].plot(log_b0, deltaHb, 'o', color='black')
@@ -82,10 +81,6 @@ def LFER(gas, outliers=False, show=False):
     ax[1].plot(x_fit_b, lin_fit(x_fit_b, slope_b, int_b), label='RANSAC fit', color=cmap(norm(5)))
     ax[1].set_xlabel(r'$\mathrm{ln}(b_0)$')
     ax[1].set_ylabel(r'$\Delta H_b$')
-
-    #for axi in ax:
-        #axi.legend()
-        #axi.set(adjustable='box', aspect='equal')
 
     plt.tight_layout()
 
@@ -115,7 +110,7 @@ def histograms(gas, show=False):
     ax[0,1].set_xlabel(r'$\Delta H_b-\overline{\Delta H_b}$')
 
     cmap = cm.plasma
-    norm = mcolors.Normalize(vmin=0, vmax=len(dms[0, :]))  # Normalize colors to the number of datasets
+    norm = mcolors.Normalize(vmin=0, vmax=len(dms[0, :])) # Normalize colors to the # of datasets
 
     for i in range(len(dms[0,:])):
         if i > 1:
@@ -132,8 +127,7 @@ def histograms(gas, show=False):
         ax[i//3,i%3].hist(transposed_dms[i]-np.mean(transposed_dms[i]),color='gray',bins='sqrt', alpha=0.5)
         #ax[i//3,i%3].hist(transposed_dms[i],color='black')
         ax[i//3,i%3].hist(transposed_dms_no_out[i]-np.mean(transposed_dms_no_out[i]),color=color, bins='sqrt')
-    #print(transposed_dms)
-    #print(transposed_dms_no_out)
+
     plt.tight_layout()
 
     if show:
@@ -191,13 +185,10 @@ def isotherms(gas, show=False):
         ax[i//2,i%2].plot(p[i],c[i],'o', color='black')
         ax[i//2,i%2].errorbar(p[i],c[i],yerr=cerr[i],xerr=None,fmt='none', color='black')
 
-    #for axi in ax: 
-    #    axi.legend()
-
     plt.tight_layout()
 
     if show:
-        plt.plot
+        plt.plot()
 
 def heat_of_sorption(gas, show=False):
     '''

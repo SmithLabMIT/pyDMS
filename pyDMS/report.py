@@ -8,9 +8,8 @@ Licensed under the MIT License
 
 import os
 import time
-from datetime import datetime
-import numpy as np
 import matplotlib.pyplot as plt
+from datetime import datetime
 from PIL import Image
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image as PlatypusImage, ListItem, ListFlowable, PageBreak
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -21,6 +20,16 @@ from reportlab.lib.units import inch
 from . import visualize as vis
 
 def wait_for_file(path, timeout=20.0):
+    '''Waits for file to become available when opening to avoid a "permission denied" error.
+    
+    Args:
+        path: The filepath of the file to try to open
+        timeout: The number of seconds to continue trying to open before failing
+        
+    Returns:
+        None
+    '''
+
     iter1 = False
     start = time.time()
     while True:
@@ -131,7 +140,7 @@ def footer(canvas, doc):
     image_path = os.path.join(script_dir, "images", "lab-logo-transparent-background.png")
 
     wait_for_file(image_path)
-    
+
     with Image.open(image_path) as img:
         width_img, height_img = img.size
         aspect_ratio = width_img / height_img
@@ -289,7 +298,7 @@ def generate(gas, report_name):
     elements.append(Spacer(1, 12))
 
     plot_path = 'LFER.tmp.png'
-    
+
     wait_for_file(plot_path)
 
     with Image.open(plot_path) as img:
@@ -333,11 +342,11 @@ def generate(gas, report_name):
     elements.append(PlatypusImage(plot_path, width=desired_width, height=desired_height))
 
     elements.append(PageBreak())
-    
+
     elements.append(Paragraph("Energetics", styles["Heading2"]))
 
     plot_path = 'heat_of_sorption.tmp.png'
-    
+
     wait_for_file(plot_path)
 
     with Image.open(plot_path) as img:
@@ -356,7 +365,7 @@ def generate(gas, report_name):
     ["i = Henry", f"{gas.analysis.deltaH_b[1]:.3e} ± {gas.analysis.deltaH_b_err[1]:.3e}", f"{gas.analysis.deltaH_b[0]:.6f} ± {gas.analysis.deltaH_b_err[0]:.6f}"]
     ]
 
-    table = Table(data, colWidths=[inch*1.5,inch*2.5,inch*2.5])
+    table = Table(data, colWidths=[inch*1.5,inch*3.5,inch*2.5])
     table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.white),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
@@ -376,18 +385,18 @@ def generate(gas, report_name):
     elements.append(Paragraph("Analysis Settings", styles["Heading2"]))
 
     data = [
-    ["Optimization Stage", "Parameter","Value"],
-    ["", Paragraph("ΔH<sub>D</sub> Initial Guess Range", centered_para), f"{settings.get('dHD_guess')}"],
-    ["", Paragraph("ΔH<sub>b</sub> Initial Guess Range", centered_para), f"{settings.get('dHb_guess')}"],
-    ["", Paragraph("k<sub>D,0</sub> Initial Guess Range", centered_para), f"{settings.get('kD0_guess')}"],
-    ["", Paragraph("b<sub>0</sub> Initial Guess Range", centered_para), f"{settings.get('b0_guess')}"],
-    ["", Paragraph("ΔH<sub>D</sub> Solver Bounds", centered_para), f"{settings.get('dHD_bounds')}"],
-    ["", Paragraph("ΔH<sub>b</sub> Solver Bounds", centered_para), f"{settings.get('dHb_bounds')}"],
-    ["", Paragraph("k<sub>D,0</sub> Solver Bounds", centered_para), f"{settings.get('kD0_bounds')}"],
-    ["", Paragraph("b<sub>0</sub> Solver Bounds", centered_para), f"{settings.get('b0_bounds')}"],
+    ["Parameter","Value"],
+    [Paragraph("ΔH<sub>D</sub> Initial Guess Range", centered_para), f"{settings.get('dHD_guess')}"],
+    [Paragraph("ΔH<sub>b</sub> Initial Guess Range", centered_para), f"{settings.get('dHb_guess')}"],
+    [Paragraph("k<sub>D,0</sub> Initial Guess Range", centered_para), f"{settings.get('kD0_guess')}"],
+    [Paragraph("b<sub>0</sub> Initial Guess Range", centered_para), f"{settings.get('b0_guess')}"],
+    [Paragraph("ΔH<sub>D</sub> Solver Bounds", centered_para), f"{settings.get('dHD_bounds')}"],
+    [Paragraph("ΔH<sub>b</sub> Solver Bounds", centered_para), f"{settings.get('dHb_bounds')}"],
+    [Paragraph("k<sub>D,0</sub> Solver Bounds", centered_para), f"{settings.get('kD0_bounds')}"],
+    [Paragraph("b<sub>0</sub> Solver Bounds", centered_para), f"{settings.get('b0_bounds')}"],
     ]
 
-    table = Table(data, colWidths=[inch*1.5,inch*1.5,inch*2])
+    table = Table(data, colWidths=[inch*3,inch*2])
     table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.white),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
@@ -401,10 +410,10 @@ def generate(gas, report_name):
     for i, val in enumerate(settings.get('ch_bounds')):
 
         data = [
-            ["", Paragraph(f"C'<sub>H</sub> #{i+1}", centered_para), val]
+            [Paragraph(f"C'<sub>H</sub> #{i+1}", centered_para), val]
         ]
 
-        table = Table(data, colWidths=[inch*1.5,inch*1.5,inch*2])
+        table = Table(data, colWidths=[inch*3,inch*2])
         table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.white),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
@@ -416,16 +425,16 @@ def generate(gas, report_name):
         elements.append(table)
 
     data = [
-        ["", "Trials",f"{settings.get('trials')}"],
-        ["", "LFER Solver",f"{settings.get('solver_LFER')}"],
-        ["", "maxiter (LFER solver)", f"{settings.get('maxiter_LFER')}"],
-        ["", "van't Hoff Solver",f"{settings.get('solver_vH')}"],
-        ["", "maxiter (van't Hoff solver)", f"{settings.get('maxiter_vH')}"],
-        ["", "ftol (SLSQP)", f"{settings.get('ftol')}"],
-        ["", "xtol (trust-constr)", f"{settings.get('xtol')}"],
-        ["", "gtol (trust-constr)", f"{settings.get('gtol')}"]]
+        ["Trials",f"{settings.get('trials')}"],
+        ["LFER Solver",f"{settings.get('solver_LFER')}"],
+        ["maxiter (LFER solver)", f"{settings.get('maxiter_LFER')}"],
+        ["van't Hoff Solver",f"{settings.get('solver_vH')}"],
+        ["maxiter (van't Hoff solver)", f"{settings.get('maxiter_vH')}"],
+        ["ftol (SLSQP)", f"{settings.get('ftol')}"],
+        ["xtol (trust-constr)", f"{settings.get('xtol')}"],
+        ["gtol (trust-constr)", f"{settings.get('gtol')}"]]
 
-    table = Table(data, colWidths=[inch*1.5,inch*1.5,inch*2])
+    table = Table(data, colWidths=[inch*3,inch*2])
     table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.white),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
@@ -437,7 +446,6 @@ def generate(gas, report_name):
     elements.append(table)
 
     elements.append(PageBreak())
-
 
     elements.append(Paragraph("Questions/Comments/Concerns?", styles["Heading2"]))
     elements.append(Paragraph("Documentation available through ReadTheDocs (*)"))
