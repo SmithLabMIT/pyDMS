@@ -3,7 +3,8 @@ import pyDMS.dms as dms
 
 co2 = dms.Gas()
 
-co2.f = np.array(
+# this data is no longer "real" but works for an example
+co2.p = np.array(
     [[0.2, 0.5, 1.1, 1.8, 2.7, 3.7, 4.7, 6.1, 8.8, 11.8, 16.8, 22.1, 27.1, 31.9, 36.3],
      [0.2, 0.6, 1.3, 2.0, 2.8, 3.7, 4.7, 6.2, 8.9, 11.8, 16.9, 22.3, 27.6, 32.5, 37.1],
      [0.2, 0.7, 1.3, 1.9, 2.8, 3.8, 4.8, 6.2, 8.9, 11.8, 17.0, 22.6, 28.0, 33.1, 37.9],
@@ -23,6 +24,8 @@ co2.c_err = np.array(
 
 co2.temp = np.array([308, 318, 328, 338])
 
-co2.settings = {'trials': 20}
+co2.formula = 'CO2'  # we must specify the gas so the correct Virial coeffs are used
 
-dms.compute(co2, 'example1_pyDMS')
+co2.settings = {'trials': 200}
+
+dms.compute(co2, 'example3_pyDMS')

@@ -74,7 +74,7 @@ def LFER(gas, outliers=False, show=False):
     ax[0].plot(x_fit_kd, lin_fit(x_fit_kd, slope_kd, int_kd),
                label='RANSAC fit', color=cmap(norm(1)))
     ax[0].set_xlabel(r'$\mathrm{ln}(k_{D,0})$')
-    ax[0].set_ylabel(r'$\Delta H_D$')
+    ax[0].set_ylabel(r'$\Delta H_D \; (\mathrm{kJ \; mol^{-1}})$')
 
     if outliers:
         ax[1].plot(log_b0_out, deltaHb_out, 'o', color='gray', alpha=0.7)
@@ -83,7 +83,7 @@ def LFER(gas, outliers=False, show=False):
     ax[1].plot(x_fit_b, lin_fit(x_fit_b, slope_b, int_b),
                label='RANSAC fit', color=cmap(norm(5)))
     ax[1].set_xlabel(r'$\mathrm{ln}(b_0)$')
-    ax[1].set_ylabel(r'$\Delta H_b$')
+    ax[1].set_ylabel(r'$\Delta H_b$ \; (\mathrm{kJ \; mol^{-1}})')
 
     plt.tight_layout()
 
@@ -110,8 +110,8 @@ def histograms(gas, show=False):
 
     fig, ax = plt.subplots(2, 3, figsize=(10, 5))
 
-    ax[0, 0].set_xlabel(r'$\Delta H_{D,0}-\overline{\Delta H_{D,0}}$')
-    ax[0, 1].set_xlabel(r'$\Delta H_b-\overline{\Delta H_b}$')
+    ax[0, 0].set_xlabel(r'$\Delta H_{D,0}-\overline{\Delta H_{D,0}} \; (\mathrm{kJ \; mol^{-1}})$')
+    ax[0, 1].set_xlabel(r'$\Delta H_b-\overline{\Delta H_b}$ \; (\mathrm{kJ \; mol^{-1}})')
 
     cmap = cm.plasma
     # Normalize colors to the # of datasets
@@ -160,8 +160,11 @@ def isotherms(gas, show=False):
     cerr = gas.c_err
     if gas.f is not None:
         p_vec = gas.f
+        x_label = 'f'
     else:
         p_vec = gas.p
+        x_label = 'P'
+
     T = gas.temp
     # LFE_params = gas.LFER.fit
     # avg_dms = gas.vH.avg_dms
@@ -192,17 +195,19 @@ def isotherms(gas, show=False):
             r'$C \; \mathrm{(cm^3_{STP} \; cm^{-3}_{pol})}$'
             )
         ax[i//2, i % 2].set_xlabel(
-            r'$p_i \; \mathrm{or} \; f \; \mathrm{(atm)}$'
+            fr"${x_label} \; \mathrm{{(atm)}}$"
             )
 
-        ax[i//2, i % 2].plot(press, c_model, color=linecolor, label='DMS_fit')
+        ax[i//2, i % 2].plot(press, c_model, color=linecolor, label=f'{temp} K')
         ax[i//2, i % 2].fill_between(press, c_model-c_model_err/2, c_model
                                      + c_model_err/2, color=linecolor,
-                                     label='DMS_fit', alpha=0.3)
+                                     alpha=0.3)
 
         ax[i//2, i % 2].plot(p_vec[i], c[i], 'o', color='black')
         ax[i//2, i % 2].errorbar(p_vec[i], c[i], yerr=cerr[i], xerr=None,
                                  fmt='none', color='black')
+
+        ax[i//2, i % 2].legend(frameon=False)
 
     plt.tight_layout()
 
@@ -257,19 +262,19 @@ def heat_of_sorption(gas, show=False):
     ax[0].plot(inv_RT, lin_fit(inv_RT, -deltaH_S_inf, ln_S_inf_0), label='OLS',
                color=cmap(norm(1)))
     ax[0].set_ylabel(r'$\mathrm{ln}(S_\infty)$')
-    ax[0].set_xlabel(r'$(RT)^{-1}$')
+    ax[0].set_xlabel(r'$(RT)^{-1} \; \mathrm{mol \; kJ^{-1}}$')
 
     ax[1].plot(inv_RT, ln_k_D, 'o', color='black')
     ax[1].plot(inv_RT, lin_fit(inv_RT, -deltaH_D, ln_k_D_0), label='OLS',
                color=cmap(norm(2)))
     ax[1].set_ylabel(r'$\mathrm{ln}(k_D)$')
-    ax[1].set_xlabel(r'$(RT)^{-1}$')
+    ax[1].set_xlabel(r'$(RT)^{-1} \; \mathrm{mol \; kJ^{-1}}$')
 
     ax[2].plot(inv_RT, ln_b, 'o', color='black')
     ax[2].plot(inv_RT, lin_fit(inv_RT, -deltaH_b, ln_b_0), label='OLS',
                color=cmap(norm(3)))
     ax[2].set_ylabel(r'$\mathrm{ln}(b)$')
-    ax[2].set_xlabel(r'$(RT)^{-1}$')
+    ax[2].set_xlabel(r'$(RT)^{-1} \; \mathrm{mol \; kJ^{-1}}$')
 
     plt.tight_layout()
 

@@ -191,7 +191,7 @@ def save_gas_class(gas, filename):
     with open(filename, 'wb') as f:
         pickle.dump(gas, f, protocol=pickle.HIGHEST_PROTOCOL)
     print('Pickling successful!')
-    print('------------------------------------------------------------------')
+    print('--------------------------------------------------------------')
 
 
 def load_gas_class(filename):
@@ -256,12 +256,12 @@ def calculate_fugacity(gas):
             'Fugacity data unspecified and Gas.formula not found in built-in '
             'data.\nSupply Gas.virial_coeff or Gas.pr_coeff to calculate'
             'fugacity.\nFitting will be performed with pressure data.')
-    
+
     else:
         pyDMS.warning_in_orange(
             'Something went wrong trying to calculate fugacity.\n Will use '
             'gas.p')
-    print('--------------------------------------------------------------')
+
 
 def LFER_loss(x, gas, loss='chi2'):
     '''Defines the loss function for the LFER optimization.
@@ -524,14 +524,14 @@ def calc_LFEs(gas, settings=None):
     settings.setdefault('dHb_guess', [-1, -30])
     settings.setdefault('kD0_guess', [0.001, 0.01])
     settings.setdefault('b0_guess', [0.0001, 0.005])
-    settings.setdefault('ch_guess',
+    settings.setdefault('CH_guess',
                         np.array([[0, 100] for _ in range(len(c))]))
 
     settings.setdefault('dHD_bounds', [-50, 0])
     settings.setdefault('dHb_bounds', [-50, 0])
     settings.setdefault('kD0_bounds', [0, None])
     settings.setdefault('b0_bounds', [0, None])
-    settings.setdefault('ch_bounds',
+    settings.setdefault('CH_bounds',
                         np.array([[0, 150] for _ in range(len(c))]))
 
     settings.setdefault('trials', 1000)
@@ -547,13 +547,13 @@ def calc_LFEs(gas, settings=None):
     dHD0_0_bnd = settings.get('dHD_guess')
     b0_0_bnd = settings.get('b0_guess')
     dHb_0_bnd = settings.get('dHb_guess')
-    ch_0_bnd = settings.get('ch_guess')
+    ch_0_bnd = settings.get('CH_guess')
 
     kd0_b_solver = settings.get('kD0_bounds')
     dHD0_solver = settings.get('dHD_bounds')
     b0_solver = settings.get('b0_bounds')
     dHb_solver = settings.get('dHb_bounds')
-    ch_solver = settings.get('ch_bounds')
+    ch_solver = settings.get('CH_bounds')
 
     trials = settings.get("trials")
     solver = settings.get("solver_LFER")
@@ -868,12 +868,12 @@ def calc_params(gas):
 
     settings.setdefault('dHD_guess', [-1, -30])
     settings.setdefault('dHb_guess', [-1, -30])
-    settings.setdefault('ch_guess',
+    settings.setdefault('CH_guess',
                         np.array([[0, 100] for _ in range(len(c))]))
 
     settings.setdefault('dHD_bounds', [-50, 0])
     settings.setdefault('dHb_bounds', [-50, 0])
-    settings.setdefault('ch_bounds',
+    settings.setdefault('CH_bounds',
                         np.array([[0, 150] for _ in range(len(c))]))
 
     settings.setdefault('trials', 1000)
@@ -886,11 +886,11 @@ def calc_params(gas):
 
     dHD0_0_bnd = settings.get('dHD_guess')
     dHb_0_bnd = settings.get('dHb_guess')
-    ch_0_bnd = settings.get('ch_guess')
+    ch_0_bnd = settings.get('CH_guess')
 
     dHD0_solver = settings.get('dHD_bounds')
     dHb_solver = settings.get('dHb_bounds')
-    ch_solver = settings.get('ch_bounds')
+    ch_solver = settings.get('CH_bounds')
 
     trials = settings.get("trials")
     solver = settings.get("solver_vH")
@@ -929,17 +929,17 @@ def calc_params(gas):
 
     # printing bounds to search through
     if verbose:
-        print('---------------Van\'t Hoff Initial Guesses---------------')
+        print('------------------van\'t Hoff Initial Guesses------------------')
         print(f'dHD0_0: {dHD0_0_bnd}')
         print(f'dHb0_0: {dHb_0_bnd}')
         for i, ch_0_bnds in enumerate(ch_0_bnd):
             print(f'C_H\'{i}: {ch_0_bnds}')
-        print('---------------Van\'t Hoff Solver Bounds-----------------')
+        print('-------------------van\'t Hoff Solver Bounds-------------------')
         print(f'dHD0_0: {dHD0_solver}')
         print(f'dHb0_0: {dHb_solver}')
         for i, ch_0_bnds in enumerate(ch_solver):
             print(f'C_H\'{i}: {ch_0_bnds}')
-        print('---------------------------------------------------------')
+        print('--------------------------------------------------------------')
 
     # initializing random number generator
     rng = np.random.default_rng()
@@ -1213,7 +1213,7 @@ def propogate_error(gas):
     Returns:
         Data in the Gas.vH subclass and Gas class
     '''
-    print('-----------------------------------------------------------------')
+    print('--------------------------------------------------------------')
     print('Optimization successful; starting error propogation')
 
     LFE_params = gas.LFER.fit
@@ -1293,7 +1293,7 @@ def propogate_error(gas):
     gas.b_err = b_err
 
     print('Error propogation successful')
-    print('------------------------------------------------------------------')
+    print('--------------------------------------------------------------')
 
     return gas
 
@@ -1322,10 +1322,4 @@ def compute(gas, output='unnamed_file'):
     if output is not None:
 
         save_gas_class(gas, filename=output+'.pkl')
-
-        report.LFER(gas)
-        report.LFER(gas, outliers=True)
-        report.histograms(gas)
-        report.isotherms(gas)
-        report.heat_of_sorption(gas)
         report.generate(gas, report_name=output+'.pdf')
