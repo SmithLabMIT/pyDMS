@@ -2,10 +2,10 @@ r'''
 pyDMS.dms
                  ____  __  ________
     ____  __  __/ __ \/  |/  / ___/
-   / __ \/ / / / / / / /|_/ /\__ \ 
-  / /_/ / /_/ / /_/ / /  / /___/ / 
- / .___/\__, /_____/_/  /_//____/  
-/_/    /____/                              
+   / __ \/ / / / / / / /|_/ /\__ \
+  / /_/ / /_/ / /_/ / /  / /___/ /
+ / .___/\__, /_____/_/  /_//____/
+/_/    /____/
 
 Copyright 2025 Brandon C. Tapia
 
@@ -19,17 +19,19 @@ Software is furnished to do so, subject to the following conditions:
 The above copyright notice and this permission notice shall be included
 in all copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
-INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A 
-PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR 
-COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 '''
 
 import warnings
 
 __version__ = '0.0.1dev1'
+
 
 def error_in_red(message):
     '''
@@ -37,6 +39,7 @@ def error_in_red(message):
     '''
     print("\033[91m" + message + "\033[0m")
     warnings.warn(message, UserWarning)
+
 
 def warning_in_orange(message):
     '''
