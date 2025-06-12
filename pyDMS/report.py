@@ -11,6 +11,7 @@ import tempfile
 import time
 import matplotlib.pyplot as plt
 from datetime import datetime
+from importlib.resources import files
 from PIL import Image
 from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer, Table,
@@ -173,8 +174,7 @@ def footer(canvas, doc):
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
-    image_path = os.path.join(script_dir, "images",
-                              "lab-logo-transparent-background.png")
+    image_path = files("pyDMS.images").joinpath("lab-logo-transparent-background.png")
 
     wait_for_file(image_path)
 
@@ -185,9 +185,12 @@ def footer(canvas, doc):
         desired_width = 1.8 * inch
         desired_height = desired_width / aspect_ratio
 
-    canvas.drawImage(image_path, width - 2.1 * inch, 0.05 * inch,
-                     width=desired_width, height=desired_height, mask='auto')
+        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
+            img.save(tmp.name)
+            temp_image_path = tmp.name
 
+    canvas.drawImage(temp_image_path, width - 2.1 * inch, 0.05 * inch,
+                     width=desired_width, height=desired_height, mask='auto')
 
 def generate(gas, report_name):
     '''Creates the report PDF
