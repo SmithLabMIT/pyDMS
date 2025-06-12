@@ -466,7 +466,7 @@ def generate(gas, report_name):
 
         elements.append(table)
 
-        for i, val in enumerate(settings.get('ch_bounds')):
+        for i, val in enumerate(settings.get('CH_bounds')):
 
             data = [
                 [Paragraph(f"C'<sub>H</sub> #{i+1}", centered_para), val]
