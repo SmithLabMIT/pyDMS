@@ -52,6 +52,23 @@ def wait_for_file(path, timeout=20.0):
                 raise
             time.sleep(0.5)
 
+def get_scaled_image_dimensions(img_path, max_width=7 * inch, max_height=9 * inch, dpi=300):
+    with Image.open(img_path) as img:
+        width_px, height_px = img.size
+
+        #  1 pt = 1/72 inch
+        width_pt = (width_px / dpi) * 72
+        height_pt = (height_px / dpi) * 72
+
+        # Determine the uniform scale factor
+        scale_w = max_width / width_pt
+        scale_h = max_height / height_pt
+        scale = min(scale_w, scale_h, 1.0)  # Don't upscale
+
+        desired_width = width_pt * scale
+        desired_height = height_pt * scale
+
+    return desired_width, desired_height
 
 def LFER(gas, tmpdir, outliers=False):
     '''Plots and saves the LFER linear fits
@@ -134,7 +151,7 @@ def isotherms(gas, tmpdir):
 
     vis.isotherms(gas)
     path = os.path.join(tmpdir, 'isotherms.tmp.png')
-    plt.savefig(path, bbox_inches='tight', dpi=600)
+    plt.savefig(path, bbox_inches='tight', dpi=300)
     plt.close()
     return path
 
@@ -301,13 +318,7 @@ def generate(gas, report_name):
 
         wait_for_file(plot_path)
 
-        with Image.open(plot_path) as img:
-            width, height = img.size
-            aspect_ratio = width / height
-
-            desired_width = 7 * inch
-            desired_height = desired_width / aspect_ratio
-
+        desired_width, desired_height = get_scaled_image_dimensions(plot_path, max_width=doc.width-10, max_height=doc.height-70, dpi=300)
         elements.append(PlatypusImage(plot_path, width=desired_width,
                                       height=desired_height))
 
@@ -318,16 +329,16 @@ def generate(gas, report_name):
         elements.append(Spacer(1, 12))
 
         data = [
-            [Paragraph("Heat of Henry Sorption", styles["Normal"]),
+            [Paragraph("Heat of Henry Sorption (kJ/mol)", styles["Normal"]),
              Paragraph(f"ΔH<sub>D</sub> = {int_kd:.5G} + {slope_kd:.5G} "
                        "ln(k<sub>D,0</sub>)", styles["Normal"])],
 
-            [Paragraph("Heat of Langmuir Sorption", styles["Normal"]),
+            [Paragraph("Heat of Langmuir Sorption (kJ/mol)", styles["Normal"]),
              Paragraph(f"ΔH<sub>b</sub> = {int_b:.5G} + {slope_b:.5G} "
                        "ln(b<sub>0</sub>)", styles["Normal"])]
                        ]
 
-        table = Table(data, colWidths=[2*inch, 3*inch])
+        table = Table(data, colWidths=[3*inch, 3*inch])
 
         table.hAlign = 'LEFT'
 
@@ -381,19 +392,14 @@ def generate(gas, report_name):
 
         wait_for_file(plot_path)
 
-        with Image.open(plot_path) as img:
-            width, height = img.size
-            aspect_ratio = width / height
-
-            desired_width = 7*inch
-            desired_height = desired_width/aspect_ratio
+        desired_width, desired_height = get_scaled_image_dimensions(plot_path, max_width=doc.width-10, max_height=doc.height-70, dpi=300)
 
         elements.append(PlatypusImage(plot_path, width=desired_width,
                                       height=desired_height))
 
         elements.append(PageBreak())
 
-        elements.append(Paragraph("Energetics", styles["Heading2"]))
+        elements.append(Paragraph("Sorption Energetics", styles["Heading2"]))
 
         plot_path = heat_of_sorption(gas, tmpdir=tmpdir)
 
@@ -418,7 +424,7 @@ def generate(gas, report_name):
                 ["i = Henry", f"{gas.analysis.deltaH_b[1]:.3e} ± {gas.analysis.deltaH_b_err[1]:.3e}", f"{gas.analysis.deltaH_b[0]:.6f} ± {gas.analysis.deltaH_b_err[0]:.6f}"]
         ]
 
-        table = Table(data, colWidths=[inch*1.5, inch*3.5, inch*2.5])
+        table = Table(data, colWidths=[inch*1.5, inch*2.5, inch*2.5])
         table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.white),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
@@ -509,38 +515,14 @@ def generate(gas, report_name):
 
         elements.append(PageBreak())
 
-        elements.append(Paragraph("Questions/Comments/Concerns?",
+        elements.append(Paragraph("Questions or Comments?",
                                   styles["Heading2"]))
-        elements.append(Paragraph("Documentation available through ReadTheDocs (*)"))
-        elements.append(Spacer(1, 12))
         elements.append(Paragraph(
-            "Please reach out to Brandon C. Tapia via email (bctapia@mit.edu) "
-            "or through the pyDMS GitHub page", styles["Normal"]))
+            "Please reach out through the pyDMS GitHub page (*INSERT LINK*)", styles["Normal"]))
 
-        elements.append(Paragraph("Code Availability", styles["Heading2"]))
-        elements.append(Paragraph("pyDMS can be downloaded via:",
-                                  styles["Normal"]))
-
-        items = [
-            ListItem(Paragraph("GitHub (source code): git clone **(insert link)",
-                               styles["Normal"])),
-            ListItem(Paragraph("pip: pip install **insert name",
-                               styles["Normal"])),
-            ListItem(Paragraph("Anaconda: conda install **insert name",
-                               styles["Normal"]))
-        ]
-
-        bullet_list = ListFlowable(items,
-                                   bulletType='bullet',
-                                   start='•',
-                                   # bulletIndent=100,
-                                   # leftIndent=50,
-                                   spaceAfter=12)
-
-        # Elements to be added to the document
-        elements.append(bullet_list)
         elements.append(Paragraph("Citation", styles["Heading2"]))
         elements.append(Paragraph("If you used pyDMS in any presented or published work please cite:", styles["Normal"]))
+        elements.append(Paragraph("*INSERT PAPER*", styles["Normal"]))
 
         elements.append(Paragraph("License", styles["Heading2"]))
         elements.append(Paragraph("Copyright 2025 Brandon C. Tapia, Jing Ying Yeo, Pablo Dean, Albert X. Wu, Zachary P. Smith."))

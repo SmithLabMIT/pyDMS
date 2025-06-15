@@ -8,6 +8,8 @@ Licensed under the MIT License
 
 import numpy as np
 import statsmodels.api as sm
+import warnings
+
 import pyDMS
 
 
@@ -70,6 +72,10 @@ def heat_of_sorption(gas, method='all'):
     '''
 
     temp = gas.temp
+
+    if len(gas.temp) == 2:
+        # ignore variance warning when DOF=2-2=0
+        warnings.filterwarnings("ignore", message="divide by zero encountered in scalar divide", category=RuntimeWarning)
 
     inv_RT = 1/(0.008314*temp)
 

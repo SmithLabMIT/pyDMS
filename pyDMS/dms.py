@@ -190,7 +190,7 @@ def save_gas_class(gas, filename):
     print('Pickling Gas class')
     with open(filename, 'wb') as f:
         pickle.dump(gas, f, protocol=pickle.HIGHEST_PROTOCOL)
-    print('Pickling successful!')
+    print('Pickling successful')
     print('--------------------------------------------------------------')
 
 
@@ -827,7 +827,8 @@ def calc_LFEs(gas, settings=None):
     pars[inliers_b, 3] = deltaHb[inliers_b]
 
     # collecting data with outliers for plotting
-    pars_outliers = np.zeros((len(log_kd0_out), len(c)))
+    # *switched from len(c) to 4
+    pars_outliers = np.zeros((len(log_kd0_out), 4))
     pars_outliers[:, 0] = log_kd0_out
     pars_outliers[:, 1] = deltaHd_out
     pars_outliers[:, 2] = log_b0_out
@@ -1204,7 +1205,7 @@ def chi2_error_fit(gas):
 
 
 def propogate_error(gas):
-    '''Determines error from the van't Hoff optimization and propogates
+    '''Determines error from the van't Hoff optimization and propagates
         the error to further parameters
 
     Args:
@@ -1214,7 +1215,7 @@ def propogate_error(gas):
         Data in the Gas.vH subclass and Gas class
     '''
     print('--------------------------------------------------------------')
-    print('Optimization successful; starting error propogation')
+    print('Optimization successful; starting error propagation')
 
     LFE_params = gas.LFER.fit
     LFE_error = gas.LFER.fit_err
@@ -1292,7 +1293,7 @@ def propogate_error(gas):
     gas.kD_err = kd_err
     gas.b_err = b_err
 
-    print('Error propogation successful')
+    print('Error propagation successful')
     print('--------------------------------------------------------------')
 
     return gas
@@ -1320,6 +1321,8 @@ def compute(gas, output='unnamed_file'):
     # vis.heat_of_sorption(gas)
 
     if output is not None:
-
+        print(f'Pickling {output}.pkl')
         save_gas_class(gas, filename=output+'.pkl')
+        print('Pickling successful')
+        print('--------------------------------------------------------------')
         report.generate(gas, report_name=output+'.pdf')

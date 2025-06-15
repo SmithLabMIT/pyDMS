@@ -83,7 +83,7 @@ def LFER(gas, outliers=False, show=False):
     ax[1].plot(x_fit_b, lin_fit(x_fit_b, slope_b, int_b),
                label='RANSAC fit', color=cmap(norm(5)))
     ax[1].set_xlabel(r'$\mathrm{ln}(b_0)$')
-    ax[1].set_ylabel(r'$\Delta H_b$ \; (\mathrm{kJ \; mol^{-1}})')
+    ax[1].set_ylabel(r'$\Delta H_b \; (\mathrm{kJ \; mol^{-1}})$')
 
     plt.tight_layout()
 
@@ -102,43 +102,50 @@ def histograms(gas, show=False):
         None
     '''
 
-    # *TO DO MAKE THIS GENERAL
     dms = gas.vH.out_outliers
     dms_no_out = gas.vH.out
     transposed_dms = np.transpose(dms)
     transposed_dms_no_out = np.transpose(dms_no_out)
+    temps = gas.temp
+    n = transposed_dms.shape[0]
+    ncols = 3
+    nrows = int(np.ceil(n / ncols))
 
-    fig, ax = plt.subplots(2, 3, figsize=(10, 5))
-
-    ax[0, 0].set_xlabel(r'$\Delta H_{D,0}-\overline{\Delta H_{D,0}} \; (\mathrm{kJ \; mol^{-1}})$')
-    ax[0, 1].set_xlabel(r'$\Delta H_b-\overline{\Delta H_b}$ \; (\mathrm{kJ \; mol^{-1}})')
+    fig, ax = plt.subplots(nrows, ncols, figsize=(10, 2.5 * nrows))
+    ax = np.array(ax).reshape(nrows, ncols)
 
     cmap = cm.plasma
-    # Normalize colors to the # of datasets
-    norm = mcolors.Normalize(vmin=0, vmax=len(dms[0, :]))
+    norm = mcolors.Normalize(vmin=0, vmax=n)
 
-    for i in range(len(dms[0, :])):
-        if i > 1:
+    for i in range(n):
+        row, col = divmod(i, ncols)
+
+        if i == 0:
+            label = r'$\Delta H_{D}-\overline{\Delta H_{D}} \; (\mathrm{kJ \; mol^{-1}})$'
+        elif i == 1:
+            label = r'$\Delta H_b-\overline{\Delta H_b} \; (\mathrm{kJ \; mol^{-1}})$'
+        else:
             tex = "$C_H^{\\prime}-\\overline{C_H^{\\prime}}$"
-            ax[i//3, i % 3].set_xlabel(f"({tex}) #{i-1}")
+            label = f"({tex}) ({temps[i-2]} K)"
 
+        ax[row, col].set_xlabel(label)
+        ax[row, col].set_ylabel('Trials')
         color = cmap(norm(i))
 
-        ax[i//3, i % 3].set_ylabel('# Chains')
+        ax[row, col].hist(transposed_dms[i] - np.mean(transposed_dms[i]),
+                          color='gray', bins='sqrt', alpha=0.5)
+        ax[row, col].hist(transposed_dms_no_out[i] - np.mean(transposed_dms_no_out[i]),
+                          color=color, bins='sqrt')
 
-        # bins='auto' not used here because giving known memory error
-        # precision not too impoprtant because binning is for vis only
-        ax[i//3, i % 3].hist(transposed_dms[i]-np.mean(transposed_dms[i]),
-                             color='gray', bins='sqrt', alpha=0.5)
-        # ax[i//3,i%3].hist(transposed_dms[i],color='black')
-        ax[i//3, i % 3].hist(transposed_dms_no_out[i]
-                             - np.mean(transposed_dms_no_out[i]),
-                             color=color, bins='sqrt')
+    # Turn off unused axes
+    total_axes = nrows * ncols
+    for k in range(n, total_axes):
+        r, c = divmod(k, ncols)
+        ax[r, c].axis('off')
 
     plt.tight_layout()
-
     if show:
-        plt.plot()
+        plt.show()
 
 
 def isotherms(gas, show=False):
@@ -148,13 +155,18 @@ def isotherms(gas, show=False):
         gas: An instance of the Gas class with Gas populated
         show: Whether the plot should be printed to the screen
 
-
     Returns:
         None
     '''
 
-    # *TO DO: MAKE THIS GERNRAL
-    fig, ax = plt.subplots(2, 2, figsize=(7, 7))
+    T = gas.temp
+    n = len(T)
+
+    ncols = 2
+    nrows = int(np.ceil(n / ncols))
+
+    fig, ax = plt.subplots(nrows, ncols, figsize=(3.5 * ncols, 3 * nrows))
+    ax = np.array(ax).reshape(nrows, ncols)
 
     c = gas.c
     cerr = gas.c_err
@@ -165,54 +177,33 @@ def isotherms(gas, show=False):
         p_vec = gas.p
         x_label = 'P'
 
-    T = gas.temp
-    # LFE_params = gas.LFER.fit
-    # avg_dms = gas.vH.avg_dms
-
-    # dHD_f = avg_dms[0]
-    # dHb_f = avg_dms[1]
-    # c ch_vec_f = avg_dms[2:]
-    # a_kd0_f = LFE_params[0]
-    # b_kd0_f = LFE_params[1]
-    # a_b0_f = LFE_params[2]
-    # b_b0_f = LFE_params[3]
-    # kd0_f = np.exp((dHD_f-b_kd0_f)/a_kd0_f)
-    # b0_f = np.exp((dHb_f-b_b0_f)/a_b0_f)
-
-    # b_f = gas.b
-    # kd_f = gas.kD
     cmap = cm.plasma
-    # Normalize colors to the number of datasets
-    norm = mcolors.Normalize(vmin=0, vmax=len(T))
+    norm = mcolors.Normalize(vmin=0, vmax=n)
 
     for i, temp in enumerate(T):
+        row, col = divmod(i, ncols)
 
         press, c_model, c_model_err = evaluate.isotherm(gas, i)
-
         linecolor = cmap(norm(i))
 
-        ax[i//2, i % 2].set_ylabel(
-            r'$C \; \mathrm{(cm^3_{STP} \; cm^{-3}_{pol})}$'
-            )
-        ax[i//2, i % 2].set_xlabel(
-            fr"${x_label} \; \mathrm{{(atm)}}$"
-            )
+        ax[row, col].set_ylabel(r'$C \; \mathrm{(cm^3_{STP} \; cm^{-3}_{pol})}$')
+        ax[row, col].set_xlabel(fr"${x_label} \; \mathrm{{(atm)}}$")
+        ax[row, col].plot(press, c_model, color=linecolor, label=f'{temp} K')
+        ax[row, col].fill_between(press, c_model - c_model_err / 2, c_model + c_model_err / 2,
+                                  color=linecolor, alpha=0.3)
 
-        ax[i//2, i % 2].plot(press, c_model, color=linecolor, label=f'{temp} K')
-        ax[i//2, i % 2].fill_between(press, c_model-c_model_err/2, c_model
-                                     + c_model_err/2, color=linecolor,
-                                     alpha=0.3)
+        ax[row, col].plot(p_vec[i], c[i], 'o', color='black')
+        ax[row, col].errorbar(p_vec[i], c[i], yerr=cerr[i], fmt='none', color='black')
+        ax[row, col].legend(frameon=False)
 
-        ax[i//2, i % 2].plot(p_vec[i], c[i], 'o', color='black')
-        ax[i//2, i % 2].errorbar(p_vec[i], c[i], yerr=cerr[i], xerr=None,
-                                 fmt='none', color='black')
-
-        ax[i//2, i % 2].legend(frameon=False)
+    # Turn off unused axes
+    for k in range(n, nrows * ncols):
+        r, c_ = divmod(k, ncols)
+        ax[r, c_].axis('off')
 
     plt.tight_layout()
-
     if show:
-        plt.plot()
+        plt.show()
 
 
 def heat_of_sorption(gas, show=False):
