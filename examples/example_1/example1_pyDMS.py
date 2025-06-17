@@ -7,7 +7,7 @@ import pyDMS.dms as dms
 # functionality on H2S, CO2, CH4 and N2 sorption. Journal of Membrane Science
 # 2024, 696, 122465.
 
-co2 = dms.Gas() # setting up the Class to hold all the data
+co2 = dms.Gas()  # setting up the Class to hold all the data
 
 # fugacity data (atm)
 co2.f = np.array(

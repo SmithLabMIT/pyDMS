@@ -1,4 +1,4 @@
-'''
+"""
 pyDMS.dms
 
 Copyright 2025 Brandon C. Tapia
@@ -6,7 +6,7 @@ Copyright 2025 Brandon C. Tapia
 Licensed under the MIT License
 
 Fitting the dual-mode sorption (DMS) model with LFER and van't Hoff constraints
-'''
+"""
 
 import warnings
 import pickle
@@ -28,7 +28,7 @@ from . import fugacity
 
 
 class Gas:
-    '''Holds all input and output data of a pyDMS optimization run
+    """Holds all input and output data of a pyDMS optimization run
 
     Attributes:
         formula: a string indicating the chemical formula of the gas
@@ -66,11 +66,28 @@ class Gas:
             coefficients.
         pr_coeff: A dictionary containing user-supplied Peng-Robinson
             coefficients.
-    '''
+    """
 
-    __slots__ = ['formula', 'c', 'p', 'f', 'c_err', 'temp', 'kD', 'b', 'CH',
-                 'kD_err', 'b_err', 'CH_err', 'LFER', 'vH', 'analysis',
-                 'settings', 'virial_coeff', 'pr_coeff']
+    __slots__ = [
+        "formula",
+        "c",
+        "p",
+        "f",
+        "c_err",
+        "temp",
+        "kD",
+        "b",
+        "CH",
+        "kD_err",
+        "b_err",
+        "CH_err",
+        "LFER",
+        "vH",
+        "analysis",
+        "settings",
+        "virial_coeff",
+        "pr_coeff",
+    ]
 
     def __init__(self):
 
@@ -98,7 +115,7 @@ class Gas:
 
 
 class LFER:
-    '''Holds output from the LFER fitting optimization.
+    """Holds output from the LFER fitting optimization.
 
     Attributes:
         fit: An array of the linear fit results
@@ -109,9 +126,9 @@ class LFER:
             [log_kd0, deltaHd, log_b0, deltaHb]
         out_outliers: LFER inlier and ouitlier output
             [log_kd0, deltaHd, log_b0, deltaHb]
-    '''
+    """
 
-    __slots__ = ['fit', 'fit_err', 'out', 'out_outliers']
+    __slots__ = ["fit", "fit_err", "out", "out_outliers"]
 
     def __init__(self):
         self.fit = None
@@ -121,7 +138,7 @@ class LFER:
 
 
 class vH:
-    '''Holds output from the LFER fitting optimization.
+    """Holds output from the LFER fitting optimization.
     # * need to check this
     Attributes:
         fit: An array of the linear fit results
@@ -143,9 +160,18 @@ class vH:
     'c_f':
     res:
     'hessian_average'
-    '''
-    __slots__ = ['out_outliers', 'out', 'avg_dms', 'plusminus_1',
-                 'plusminus_2', 'plusminus_ch', 'residuals', 'hessian_matrix']
+    """
+
+    __slots__ = [
+        "out_outliers",
+        "out",
+        "avg_dms",
+        "plusminus_1",
+        "plusminus_2",
+        "plusminus_ch",
+        "residuals",
+        "hessian_matrix",
+    ]
 
     def __init__(self):
         self.out_outliers = None
@@ -159,11 +185,18 @@ class vH:
 
 
 class analysis:
-    '''*
+    """*"""
 
-    '''
-    __slots__ = ['S_inf', 'S_inf_err', 'deltaH_S_inf', 'deltaH_S_inf_err',
-                 'deltaH_D', 'deltaH_D_err', 'deltaH_b', 'deltaH_b_err']
+    __slots__ = [
+        "S_inf",
+        "S_inf_err",
+        "deltaH_S_inf",
+        "deltaH_S_inf_err",
+        "deltaH_D",
+        "deltaH_D_err",
+        "deltaH_b",
+        "deltaH_b_err",
+    ]
 
     def __init__(self):
         self.S_inf = None
@@ -177,7 +210,7 @@ class analysis:
 
 
 def save_gas_class(gas, filename):
-    '''Saves a Gas object to a .pkl file.
+    """Saves a Gas object to a .pkl file.
 
     Args:
         gas: An instance of the Gas class.
@@ -185,31 +218,31 @@ def save_gas_class(gas, filename):
 
     Returns:
         None
-    '''
+    """
 
-    print('Pickling Gas class')
-    with open(filename, 'wb') as f:
+    print("Pickling Gas class")
+    with open(filename, "wb") as f:
         pickle.dump(gas, f, protocol=pickle.HIGHEST_PROTOCOL)
-    print('Pickling successful')
-    print('--------------------------------------------------------------')
+    print("Pickling successful")
+    print("--------------------------------------------------------------")
 
 
 def load_gas_class(filename):
-    '''Loads a Gas object from a .pkl file.
+    """Loads a Gas object from a .pkl file.
 
     Args:
         filename: Name of the .pkl file to load the Gas instance from.
 
         Returns:
             A Gas instance loaded from the .pkl file.
-    '''
+    """
 
-    with open(filename, 'rb') as f:
+    with open(filename, "rb") as f:
         return pickle.load(f)
 
 
 def calculate_fugacity(gas):
-    '''Calculates the fugacity from Gas.p.
+    """Calculates the fugacity from Gas.p.
 
     If Gas.f is None, it will attempt to calculate the fugacity using
         (in order of priority):
@@ -223,48 +256,47 @@ def calculate_fugacity(gas):
 
     Returns:
         None
-    '''
-    print('------------------------Fugacity Check------------------------')
+    """
+    print("------------------------Fugacity Check------------------------")
     if gas.f is not None:
-        print('Fugacity data supplied in Gas.f by user')
+        print("Fugacity data supplied in Gas.f by user")
 
     elif gas.virial_coeff:
-        print('Calculating fugacity using user-supplied Virial coefficients')
+        print("Calculating fugacity using user-supplied Virial coefficients")
         fugacity.virial_eos(gas)
 
     elif gas.pr_coeff:
-        print('Calculating fugacity using user-supplied Peng-Robinson '
-              'coefficients')
+        print("Calculating fugacity using user-supplied Peng-Robinson " "coefficients")
         fugacity.peng_robinson_eos(gas)
 
     elif gas.formula in fugacity.virial_coeff:
-        print('Calculating fugacity using built-in Virial EoS')
+        print("Calculating fugacity using built-in Virial EoS")
         fugacity.virial_eos(gas)
 
     elif gas.formula in fugacity.pr_coeff:
-        print('Calculating fugacity using built-in Peng-Robinson EoS')
+        print("Calculating fugacity using built-in Peng-Robinson EoS")
         fugacity.peng_robinson_eos(gas)
 
     elif gas.f is None and gas.formula is None:
         pyDMS.warning_in_orange(
-            'Fugacity data and gas unspecified.\nFitting will be performed '
-            'with pressure data.')
+            "Fugacity data and gas unspecified.\nFitting will be performed " "with pressure data."
+        )
 
-    elif (gas.formula not in fugacity.virial_coeff and gas.formula not in
-          fugacity.pr_coeff):
+    elif gas.formula not in fugacity.virial_coeff and gas.formula not in fugacity.pr_coeff:
         pyDMS.warning_in_orange(
-            'Fugacity data unspecified and Gas.formula not found in built-in '
-            'data.\nSupply Gas.virial_coeff or Gas.pr_coeff to calculate'
-            'fugacity.\nFitting will be performed with pressure data.')
+            "Fugacity data unspecified and Gas.formula not found in built-in "
+            "data.\nSupply Gas.virial_coeff or Gas.pr_coeff to calculate"
+            "fugacity.\nFitting will be performed with pressure data."
+        )
 
     else:
         pyDMS.warning_in_orange(
-            'Something went wrong trying to calculate fugacity.\n Will use '
-            'gas.p')
+            "Something went wrong trying to calculate fugacity.\n Will use " "gas.p"
+        )
 
 
-def LFER_loss(x, gas, loss='chi2'):
-    '''Defines the loss function for the LFER optimization.
+def LFER_loss(x, gas, loss="chi2"):
+    """Defines the loss function for the LFER optimization.
 
     Args:
         x: An array of the variables to be optimized.
@@ -273,7 +305,7 @@ def LFER_loss(x, gas, loss='chi2'):
 
     Returns:
         The loss function result as a number.
-    '''
+    """
 
     # retriving gas data
     c_vec = gas.c
@@ -312,20 +344,20 @@ def LFER_loss(x, gas, loss='chi2'):
         # solving the DMS model
         calc = kd * p + ch * b * p / (1 + b * p)
 
-        if loss == 'chi2':
+        if loss == "chi2":
             # using the chi-squared error as the loss function
             ssr[i] = np.sum(((calc - c) ** 2) / (cerr**2))
         else:
-            return pyDMS.error_in_red('Loss function not recognized')
+            return pyDMS.error_in_red("Loss function not recognized")
     # Sum of all the errors as metric
     out = np.sum(ssr)
 
     # * see if scaling is really necessary
-    return out/1000
+    return out / 1000
 
 
-def vH_loss(x, gas, loss='chi2'):
-    '''Defines the loss function for the van't Hoff optimization.
+def vH_loss(x, gas, loss="chi2"):
+    """Defines the loss function for the van't Hoff optimization.
 
     Args:
         x: An array of the variables to be optimized.
@@ -334,7 +366,7 @@ def vH_loss(x, gas, loss='chi2'):
 
     Returns:
         The loss function result as a number.
-    '''
+    """
 
     # retriving gas data
     c_vec = gas.c
@@ -369,19 +401,19 @@ def vH_loss(x, gas, loss='chi2'):
         b_b0 = LFE_params[3]
 
         # defining van't Hoff expressions
-        kd0 = np.exp((dHD-b_kd0)/a_kd0)
-        b0 = np.exp((dHb-b_b0)/a_b0)
+        kd0 = np.exp((dHD - b_kd0) / a_kd0)
+        b0 = np.exp((dHb - b_b0) / a_b0)
         kd = kd0 * np.exp(-dHD * 1000 / (8.314 * T))
         b = b0 * np.exp(-dHb * 1000 / (8.314 * T))
 
         # solving the DMS model
         calc = kd * p + ch * b * p / (1 + b * p)
 
-        if loss == 'chi2':
+        if loss == "chi2":
             # using the chi-squared error as the loss function
             ssr[i] = np.sum(((calc - c) ** 2) / (cerr**2))
         else:
-            return pyDMS.error_in_red('Loss function not recognized')
+            return pyDMS.error_in_red("Loss function not recognized")
 
     # Sum of all the errors as metric
     out2 = np.sum(ssr)
@@ -390,7 +422,7 @@ def vH_loss(x, gas, loss='chi2'):
 
 
 def is_outlier(arr):
-    '''Finds otuliers in an array.
+    """Finds otuliers in an array.
 
     Utilizes the definition of isoutlier() from MATLAB
     (see https://www.mathworks.com/help/matlab/ref/isoutlier.html).
@@ -406,18 +438,18 @@ def is_outlier(arr):
 
             if arr is [0.1, 0.12, 0.11, 100], it will return
                 [False, False, False, True]
-    '''
+    """
 
     median = np.median(arr)
     mad = median_abs_deviation(arr)
-    c = -1 / (np.sqrt(2) * erfcinv(3/2))  # MATLAB's scaling factor
+    c = -1 / (np.sqrt(2) * erfcinv(3 / 2))  # MATLAB's scaling factor
     scaled_mad = c * mad
 
     return np.abs(arr - median) > 3 * scaled_mad  # Boolean mask for outliers
 
 
 def hess(gas, soln):
-    '''Solves the analytical Hessian for the vH_loss loss function
+    """Solves the analytical Hessian for the vH_loss loss function
 
     Args:
         gas: An instance of the Gas class
@@ -425,7 +457,7 @@ def hess(gas, soln):
 
     Returns:
         A matrix with the Hessian for the result of vH_loss
-    '''
+    """
 
     # retriving gas data
     c_vec = gas.c
@@ -451,7 +483,7 @@ def hess(gas, soln):
     dCdHD = np.zeros_like(c_vec)
     dCdHb = np.zeros_like(c_vec)
     dCdCH = np.zeros_like(c_vec)
-    hessian = np.zeros((len(c_vec)+2, len(c_vec)+2))/1e6
+    hessian = np.zeros((len(c_vec) + 2, len(c_vec) + 2)) / 1e6
 
     # looping through each concentration vector
     for i, _ in enumerate(c_vec):
@@ -464,31 +496,31 @@ def hess(gas, soln):
 
         # solving derivatives for the Hessian
         dCdHD[i] = (
-            np.exp(-120.279*dHD/T+(-b_kd0+dHD)/a_kd0)*p*(-120.279/T+1/a_kd0)
+            np.exp(-120.279 * dHD / T + (-b_kd0 + dHD) / a_kd0) * p * (-120.279 / T + 1 / a_kd0)
         )
-        dCdHb[i] = (ch*np.exp(1+(120.279*dHb/T)+(b_b0+dHb)/a_b0)
-                    * p*(T-120.279*a_b0))/((np.exp(b_b0/a_b0+120.279*dHb/T)
-                                           + np.exp(dHb/a_b0)*p)**2*T*a_b0)
-        dCdCH[i] = (1+(np.exp((b_b0-dHb)/a_b0+120.279*dHb/T))/p)**-1
+        dCdHb[i] = (
+            ch * np.exp(1 + (120.279 * dHb / T) + (b_b0 + dHb) / a_b0) * p * (T - 120.279 * a_b0)
+        ) / ((np.exp(b_b0 / a_b0 + 120.279 * dHb / T) + np.exp(dHb / a_b0) * p) ** 2 * T * a_b0)
+        dCdCH[i] = (1 + (np.exp((b_b0 - dHb) / a_b0 + 120.279 * dHb / T)) / p) ** -1
 
     # inserting values into Hessian
-    hessian[0, 0] = np.sum(2*1/cerr**2*dCdHD*dCdHD)
-    hessian[0, 1] = np.sum(2*1/cerr**2*dCdHD*dCdHb)
-    hessian[1, 0] = np.sum(2**1/cerr**2*dCdHD*dCdHb)
-    hessian[1, 1] = np.sum(2**1/cerr**2*dCdHb*dCdHb)
+    hessian[0, 0] = np.sum(2 * 1 / cerr**2 * dCdHD * dCdHD)
+    hessian[0, 1] = np.sum(2 * 1 / cerr**2 * dCdHD * dCdHb)
+    hessian[1, 0] = np.sum(2**1 / cerr**2 * dCdHD * dCdHb)
+    hessian[1, 1] = np.sum(2**1 / cerr**2 * dCdHb * dCdHb)
 
     for i, dCdCH_vec in enumerate(dCdCH):
-        hessian[0, i+2] = np.sum(2**1/cerr**2*dCdHD*dCdCH_vec)
-        hessian[i+2, 0] = np.sum(2**1/cerr**2*dCdHD*dCdCH_vec)
-        hessian[1, i+2] = np.sum(2**1/cerr**2*dCdHb*dCdCH_vec)
-        hessian[i+2, 1] = np.sum(2**1/cerr**2*dCdHb*dCdCH_vec)
-        hessian[i+2, i+2] = np.sum(2**1/cerr**2*dCdCH_vec*dCdCH_vec)
+        hessian[0, i + 2] = np.sum(2**1 / cerr**2 * dCdHD * dCdCH_vec)
+        hessian[i + 2, 0] = np.sum(2**1 / cerr**2 * dCdHD * dCdCH_vec)
+        hessian[1, i + 2] = np.sum(2**1 / cerr**2 * dCdHb * dCdCH_vec)
+        hessian[i + 2, 1] = np.sum(2**1 / cerr**2 * dCdHb * dCdCH_vec)
+        hessian[i + 2, i + 2] = np.sum(2**1 / cerr**2 * dCdCH_vec * dCdCH_vec)
 
     return hessian
 
 
 def calc_LFEs(gas, settings=None):
-    '''Implements the LFER_loss function to optimize the DMS model based on
+    """Implements the LFER_loss function to optimize the DMS model based on
         LFER constraints
 
     Args:
@@ -503,7 +535,7 @@ def calc_LFEs(gas, settings=None):
 
     Returns:
         Data in the Gas.LFER subclass
-    '''
+    """
 
     # retriving gas data
     c = gas.c
@@ -520,59 +552,57 @@ def calc_LFEs(gas, settings=None):
     if settings is None:
         settings = {}
 
-    settings.setdefault('dHD_guess', [-1, -30])
-    settings.setdefault('dHb_guess', [-1, -30])
-    settings.setdefault('kD0_guess', [0.001, 0.01])
-    settings.setdefault('b0_guess', [0.0001, 0.005])
-    settings.setdefault('CH_guess',
-                        np.array([[0, 100] for _ in range(len(c))]))
+    settings.setdefault("dHD_guess", [-1, -30])
+    settings.setdefault("dHb_guess", [-1, -30])
+    settings.setdefault("kD0_guess", [0.001, 0.01])
+    settings.setdefault("b0_guess", [0.0001, 0.005])
+    settings.setdefault("CH_guess", np.array([[0, 100] for _ in range(len(c))]))
 
-    settings.setdefault('dHD_bounds', [-50, 0])
-    settings.setdefault('dHb_bounds', [-50, 0])
-    settings.setdefault('kD0_bounds', [0, None])
-    settings.setdefault('b0_bounds', [0, None])
-    settings.setdefault('CH_bounds',
-                        np.array([[0, 150] for _ in range(len(c))]))
+    settings.setdefault("dHD_bounds", [-50, 0])
+    settings.setdefault("dHb_bounds", [-50, 0])
+    settings.setdefault("kD0_bounds", [0, None])
+    settings.setdefault("b0_bounds", [0, None])
+    settings.setdefault("CH_bounds", np.array([[0, 150] for _ in range(len(c))]))
 
-    settings.setdefault('trials', 1000)
-    settings.setdefault('solver_LFER', 'SLSQP')
-    settings.setdefault('ftol', 1E-12)
-    settings.setdefault('xtol', 1E-12)
-    settings.setdefault('gtol', 1E-12)
-    settings.setdefault('maxiter_LFER', 1000)
-    settings.setdefault('verbose', True)
-    settings.setdefault('solver_verbose', False)
+    settings.setdefault("trials", 1000)
+    settings.setdefault("solver_LFER", "SLSQP")
+    settings.setdefault("ftol", 1e-12)
+    settings.setdefault("xtol", 1e-12)
+    settings.setdefault("gtol", 1e-12)
+    settings.setdefault("maxiter_LFER", 1000)
+    settings.setdefault("verbose", True)
+    settings.setdefault("solver_verbose", False)
 
-    kd0_0_bnd = settings.get('kD0_guess')
-    dHD0_0_bnd = settings.get('dHD_guess')
-    b0_0_bnd = settings.get('b0_guess')
-    dHb_0_bnd = settings.get('dHb_guess')
-    ch_0_bnd = settings.get('CH_guess')
+    kd0_0_bnd = settings.get("kD0_guess")
+    dHD0_0_bnd = settings.get("dHD_guess")
+    b0_0_bnd = settings.get("b0_guess")
+    dHb_0_bnd = settings.get("dHb_guess")
+    ch_0_bnd = settings.get("CH_guess")
 
-    kd0_b_solver = settings.get('kD0_bounds')
-    dHD0_solver = settings.get('dHD_bounds')
-    b0_solver = settings.get('b0_bounds')
-    dHb_solver = settings.get('dHb_bounds')
-    ch_solver = settings.get('CH_bounds')
+    kd0_b_solver = settings.get("kD0_bounds")
+    dHD0_solver = settings.get("dHD_bounds")
+    b0_solver = settings.get("b0_bounds")
+    dHb_solver = settings.get("dHb_bounds")
+    ch_solver = settings.get("CH_bounds")
 
     trials = settings.get("trials")
     solver = settings.get("solver_LFER")
-    ftol_val = settings.get('xtol', 1E-12)
-    xtol_val = settings.get('xtol', 1E-12)
-    gtol_val = settings.get('gtol', 1E-12)
-    maxiter_LFER = settings.get('maxiter_LFER', 1000)
+    ftol_val = settings.get("xtol", 1e-12)
+    xtol_val = settings.get("xtol", 1e-12)
+    gtol_val = settings.get("gtol", 1e-12)
+    maxiter_LFER = settings.get("maxiter_LFER", 1000)
     verbose = settings.get("verbose")
     solver_verbose = settings.get("solver_verbose")
 
     # setting up the solver constraints: A*x <= b
     # (* consider allowing this to be turned off?)
-    A_con = np.zeros((len(c)-1, len(c)+4))
-    b_con = np.zeros(len(c)-1)
+    A_con = np.zeros((len(c) - 1, len(c) + 4))
+    b_con = np.zeros(len(c) - 1)
 
     # setting up the constraint so that each CH' is lower than the previous
-    for i in range(len(c)-1):
-        first_index = i+4
-        second_index = i+5
+    for i in range(len(c) - 1):
+        first_index = i + 4
+        second_index = i + 5
         A_con[i, first_index] = -1
         A_con[i, second_index] = 1
 
@@ -603,21 +633,21 @@ def calc_LFEs(gas, settings=None):
 
     # printing bounds to search through (*consider making it more table-like)
     if verbose:
-        print('---------------------LFER Initial Guesses---------------------')
-        print(f'kd0_0: {kd0_0_bnd}')
-        print(f'dHd0_0: {dHD0_0_bnd}')
-        print(f'b0_0: {b0_0_bnd}')
-        print(f'dHb0_0: {dHb_0_bnd}')
+        print("---------------------LFER Initial Guesses---------------------")
+        print(f"kd0_0: {kd0_0_bnd}")
+        print(f"dHd0_0: {dHD0_0_bnd}")
+        print(f"b0_0: {b0_0_bnd}")
+        print(f"dHb0_0: {dHb_0_bnd}")
         for i, ch_0_bnds in enumerate(ch_0_bnd):
-            print(f'C_H\'{i}: {ch_0_bnds}')
-        print('---------------------LFER Solver Bounds-----------------------')
-        print(f'kd0_0: {kd0_b_solver}')
-        print(f'dHd0_0: {dHD0_solver}')
-        print(f'b0_0: {b0_solver}')
-        print(f'dHb0_0: {dHb_solver}')
+            print(f"C_H'{i}: {ch_0_bnds}")
+        print("---------------------LFER Solver Bounds-----------------------")
+        print(f"kd0_0: {kd0_b_solver}")
+        print(f"dHd0_0: {dHD0_solver}")
+        print(f"b0_0: {b0_solver}")
+        print(f"dHb0_0: {dHb_solver}")
         for i, ch_0_bnds in enumerate(ch_solver):
-            print(f'C_H\'{i}: {ch_0_bnds}')
-        print('--------------------------------------------------------------')
+            print(f"C_H'{i}: {ch_0_bnds}")
+        print("--------------------------------------------------------------")
 
     # initializing random number generator
     rng = np.random.default_rng()
@@ -625,36 +655,38 @@ def calc_LFEs(gas, settings=None):
     for j in range(trials):
 
         if verbose and np.mod(j, 50) == 0:
-            print(f'LFER trial: {j}/{trials}')
+            print(f"LFER trial: {j}/{trials}")
 
         # picking a random number in each bound
-        kd0_0 = kd0_0_bnd[0] + kdval*rng.random()
-        dHD_0 = dHD0_0_bnd[0] + dHDval*rng.random()
-        b0_0 = b0_0_bnd[0] + b0val*rng.random()
-        dHb_0 = dHb_0_bnd[0] + dHbval*rng.random()
+        kd0_0 = kd0_0_bnd[0] + kdval * rng.random()
+        dHD_0 = dHD0_0_bnd[0] + dHDval * rng.random()
+        b0_0 = b0_0_bnd[0] + b0val * rng.random()
+        dHb_0 = dHb_0_bnd[0] + dHbval * rng.random()
 
         for i, bounds in enumerate(ch_0_bnd):
-            ch_0[i] = bounds[0]+ch0_vals[i]*rng.random()
+            ch_0[i] = bounds[0] + ch0_vals[i] * rng.random()
 
         # setting up initial guess for solver
         x0 = np.concatenate([[kd0_0, dHD_0, b0_0, dHb_0], ch_0])
 
         # Setting bounds for solver
-        solver_bounds = [(kd0_b_solver[0], kd0_b_solver[1]),  # kd0_0
-                         (dHD0_solver[0], dHD0_solver[1]),  # dHD_0
-                         (b0_solver[0], b0_solver[1]),  # b0_0
-                         (dHb_solver[0], dHb_solver[1])]  # dHb_0
+        solver_bounds = [
+            (kd0_b_solver[0], kd0_b_solver[1]),  # kd0_0
+            (dHD0_solver[0], dHD0_solver[1]),  # dHD_0
+            (b0_solver[0], b0_solver[1]),  # b0_0
+            (dHb_solver[0], dHb_solver[1]),
+        ]  # dHb_0
 
         solver_bounds.extend([(ch_s[0], ch_s[1]) for ch_s in ch_solver])
 
         # optimizing with the 'trust-constr' algorithm
-        if solver == 'trust-constr':
+        if solver == "trust-constr":
 
             options = {
-                    'maxiter': maxiter_LFER,  # maximum iterations
-                    'xtol': xtol_val,         # variable tolerance
-                    'gtol': gtol_val,         # function tolerance
-                    'disp': solver_verbose,   # display optimization progress
+                "maxiter": maxiter_LFER,  # maximum iterations
+                "xtol": xtol_val,  # variable tolerance
+                "gtol": gtol_val,  # function tolerance
+                "disp": solver_verbose,  # display optimization progress
             }
 
             # finding initial guess
@@ -668,18 +700,19 @@ def calc_LFEs(gas, settings=None):
                 LFER_loss,
                 x0,
                 args=(gas,),
-                method='trust-constr',
+                method="trust-constr",
                 bounds=solver_bounds,
-                constraints={'type': 'ineq', 'fun': linear_constraint},
-                options=options)
+                constraints={"type": "ineq", "fun": linear_constraint},
+                options=options,
+            )
 
         # optimizing with the 'SLQSP' algorithm
-        elif solver == 'SLSQP':
+        elif solver == "SLSQP":
 
             options = {
-                    'maxiter': maxiter_LFER,  # max iterations
-                    'ftol': ftol_val,         # function tolerance
-                    'disp': solver_verbose,   # display iteration results
+                "maxiter": maxiter_LFER,  # max iterations
+                "ftol": ftol_val,  # function tolerance
+                "disp": solver_verbose,  # display iteration results
             }
 
             # finding initial guess
@@ -690,10 +723,11 @@ def calc_LFEs(gas, settings=None):
                 LFER_loss,
                 x0,
                 args=(gas),
-                method='SLSQP',
+                method="SLSQP",
                 bounds=solver_bounds,
-                constraints={'type': 'ineq', 'fun': linear_constraint},
-                options=options)
+                constraints={"type": "ineq", "fun": linear_constraint},
+                options=options,
+            )
 
         # collecting optimization results
         flag[j] = result.status
@@ -726,19 +760,19 @@ def calc_LFEs(gas, settings=None):
     #    par = transposed_dms[i] # parameter of interest
     #    par_no_outliers = np.copy(par)
 
-        # TF = is_outlier(par) # finding if iteration parameter is an outlier
+    # TF = is_outlier(par) # finding if iteration parameter is an outlier
 
-        # par_no_outliers[TF] = 0
-        # par_outliers_removed[i][TF] = 0
-        # par = par[~TF]
+    # par_no_outliers[TF] = 0
+    # par_outliers_removed[i][TF] = 0
+    # par = par[~TF]
 
-        # outliers = np.where(TF == 1)[0]  # indices where outliers are present
-        # * removed an if statement and should still work: keep an eye an it
-        # outlier_track[i] = len(outliers)
+    # outliers = np.where(TF == 1)[0]  # indices where outliers are present
+    # * removed an if statement and should still work: keep an eye an it
+    # outlier_track[i] = len(outliers)
 
-        # avg_dms[i] = np.mean(par) # finding average of each cleaned parameter
-        # std_dev[i] = np.std(par)
-        # num_par_final[i] = len(par)
+    # avg_dms[i] = np.mean(par) # finding average of each cleaned parameter
+    # std_dev[i] = np.std(par)
+    # num_par_final[i] = len(par)
 
     # *TO DO: NEED TO EXAMINE THIS SOME MORE
     # par_outliers_removed = np.transpose(par_outliers_removed)
@@ -787,12 +821,14 @@ def calc_LFEs(gas, settings=None):
 
     X_kd = log_kd0.reshape(-1, 1)
     X_b = log_b0.reshape(-1, 1)
-    ransac_kd = RANSACRegressor(LinearRegression(), residual_threshold=0.5,
-                                max_trials=1000, random_state=0)
+    ransac_kd = RANSACRegressor(
+        LinearRegression(), residual_threshold=0.5, max_trials=1000, random_state=0
+    )
     ransac_kd.fit(X_kd, deltaHd)
 
-    ransac_b = RANSACRegressor(LinearRegression(), residual_threshold=0.25,
-                               max_trials=1000, random_state=0)
+    ransac_b = RANSACRegressor(
+        LinearRegression(), residual_threshold=0.25, max_trials=1000, random_state=0
+    )
     ransac_b.fit(X_b, deltaHb)
 
     # Get coefficients
@@ -845,14 +881,14 @@ def calc_LFEs(gas, settings=None):
 
 
 def calc_params(gas):
-    '''Implements the vH_loss function to optimize the DMS model based on
+    """Implements the vH_loss function to optimize the DMS model based on
         van't Hoff constraints.
     Args:
         gas: An instance of the Gas class.
 
     Returns:
         Data in the Gas.vH class
-    '''
+    """
 
     # pulling in data
     c = gas.c
@@ -867,44 +903,42 @@ def calc_params(gas):
     if settings is None:
         settings = {}
 
-    settings.setdefault('dHD_guess', [-1, -30])
-    settings.setdefault('dHb_guess', [-1, -30])
-    settings.setdefault('CH_guess',
-                        np.array([[0, 100] for _ in range(len(c))]))
+    settings.setdefault("dHD_guess", [-1, -30])
+    settings.setdefault("dHb_guess", [-1, -30])
+    settings.setdefault("CH_guess", np.array([[0, 100] for _ in range(len(c))]))
 
-    settings.setdefault('dHD_bounds', [-50, 0])
-    settings.setdefault('dHb_bounds', [-50, 0])
-    settings.setdefault('CH_bounds',
-                        np.array([[0, 150] for _ in range(len(c))]))
+    settings.setdefault("dHD_bounds", [-50, 0])
+    settings.setdefault("dHb_bounds", [-50, 0])
+    settings.setdefault("CH_bounds", np.array([[0, 150] for _ in range(len(c))]))
 
-    settings.setdefault('trials', 1000)
-    settings.setdefault('solver_vH', 'SLSQP')
-    settings.setdefault('ftol', 1E-12)
-    settings.setdefault('xtol', 1E-12)
-    settings.setdefault('gtol', 1E-12)
-    settings.setdefault('maxiter_vH', 1000)
-    settings.setdefault('solver_verbose', False)
+    settings.setdefault("trials", 1000)
+    settings.setdefault("solver_vH", "SLSQP")
+    settings.setdefault("ftol", 1e-12)
+    settings.setdefault("xtol", 1e-12)
+    settings.setdefault("gtol", 1e-12)
+    settings.setdefault("maxiter_vH", 1000)
+    settings.setdefault("solver_verbose", False)
 
-    dHD0_0_bnd = settings.get('dHD_guess')
-    dHb_0_bnd = settings.get('dHb_guess')
-    ch_0_bnd = settings.get('CH_guess')
+    dHD0_0_bnd = settings.get("dHD_guess")
+    dHb_0_bnd = settings.get("dHb_guess")
+    ch_0_bnd = settings.get("CH_guess")
 
-    dHD0_solver = settings.get('dHD_bounds')
-    dHb_solver = settings.get('dHb_bounds')
-    ch_solver = settings.get('CH_bounds')
+    dHD0_solver = settings.get("dHD_bounds")
+    dHb_solver = settings.get("dHb_bounds")
+    ch_solver = settings.get("CH_bounds")
 
     trials = settings.get("trials")
     solver = settings.get("solver_vH")
-    ftol_val = settings.get('xtol', 1E-12)
-    xtol_val = settings.get('xtol', 1E-12)
-    gtol_val = settings.get('gtol', 1E-12)
-    maxiter_vH = settings.get('maxiter_vH', 1000)
+    ftol_val = settings.get("xtol", 1e-12)
+    xtol_val = settings.get("xtol", 1e-12)
+    gtol_val = settings.get("gtol", 1e-12)
+    maxiter_vH = settings.get("maxiter_vH", 1000)
     verbose = settings.get("verbose")
     solver_verbose = settings.get("solver_verbose")
 
     # setting up the solver constraints: A*x <= b
-    A_con = np.zeros((len(c)-1, len(c)+2))
-    b_con = np.zeros(len(c)-1)
+    A_con = np.zeros((len(c) - 1, len(c) + 2))
+    b_con = np.zeros(len(c) - 1)
 
     # if np.shape(c) != np.shape(cerr) != np.shape(p):
     #    pyDMS.error_in_red('c, cerr, and p dimensions do not match')
@@ -919,7 +953,7 @@ def calc_params(gas):
     avg_dms = np.zeros(nOptVars)
     std_dev = np.zeros(nOptVars)
     num_par_final = np.zeros(nOptVars)
-    hessian_matrix = np.zeros((len(c)+2, len(c)+2, trials))
+    hessian_matrix = np.zeros((len(c) + 2, len(c) + 2, trials))
 
     # finding the range of each bound
     dHDval = dHD0_0_bnd[1] - dHD0_0_bnd[0]
@@ -930,17 +964,17 @@ def calc_params(gas):
 
     # printing bounds to search through
     if verbose:
-        print('------------------van\'t Hoff Initial Guesses------------------')
-        print(f'dHD0_0: {dHD0_0_bnd}')
-        print(f'dHb0_0: {dHb_0_bnd}')
+        print("------------------van't Hoff Initial Guesses------------------")
+        print(f"dHD0_0: {dHD0_0_bnd}")
+        print(f"dHb0_0: {dHb_0_bnd}")
         for i, ch_0_bnds in enumerate(ch_0_bnd):
-            print(f'C_H\'{i}: {ch_0_bnds}')
-        print('-------------------van\'t Hoff Solver Bounds-------------------')
-        print(f'dHD0_0: {dHD0_solver}')
-        print(f'dHb0_0: {dHb_solver}')
+            print(f"C_H'{i}: {ch_0_bnds}")
+        print("-------------------van't Hoff Solver Bounds-------------------")
+        print(f"dHD0_0: {dHD0_solver}")
+        print(f"dHb0_0: {dHb_solver}")
         for i, ch_0_bnds in enumerate(ch_solver):
-            print(f'C_H\'{i}: {ch_0_bnds}')
-        print('--------------------------------------------------------------')
+            print(f"C_H'{i}: {ch_0_bnds}")
+        print("--------------------------------------------------------------")
 
     # initializing random number generator
     rng = np.random.default_rng()
@@ -948,14 +982,14 @@ def calc_params(gas):
     for j in range(trials):
 
         if verbose and np.mod(j, 50) == 0:
-            print(f'van\'t Hoff trial: {j}/{trials}')
+            print(f"van't Hoff trial: {j}/{trials}")
 
         # picking a random number in each bound
-        dHD_0 = dHD0_0_bnd[0] + dHDval*rng.random()
-        dHb_0 = dHb_0_bnd[0] + dHbval*rng.random()
+        dHD_0 = dHD0_0_bnd[0] + dHDval * rng.random()
+        dHb_0 = dHb_0_bnd[0] + dHbval * rng.random()
 
         for i, bounds in enumerate(ch_0_bnd):
-            ch_0[i] = bounds[0]+ch0_vals[i]*rng.random()
+            ch_0[i] = bounds[0] + ch0_vals[i] * rng.random()
 
         # setting up initial guess for solver
         x1 = np.concatenate([[dHD_0, dHb_0], ch_0])
@@ -964,26 +998,25 @@ def calc_params(gas):
             return b_con - (A_con @ x)
 
         # * consider storing the inital guess inside initial_g
-        for i in range(len(c)-1):
-            first_index = i+2
-            second_index = i+3
+        for i in range(len(c) - 1):
+            first_index = i + 2
+            second_index = i + 3
             A_con[i, first_index] = -1
             A_con[i, second_index] = 1
 
         # Setting bounds for solver. Generally less rigorous than guesses
-        solver_bounds = [(dHD0_solver[0], dHD0_solver[1]),
-                         (dHb_solver[0], dHb_solver[1])]
+        solver_bounds = [(dHD0_solver[0], dHD0_solver[1]), (dHb_solver[0], dHb_solver[1])]
 
         solver_bounds.extend([(ch_s[0], ch_s[1]) for ch_s in ch_solver])
 
         # optimizing with the 'trust-constr' algorithm
-        if solver == 'trust-constr':
+        if solver == "trust-constr":
 
             options = {
-                    'maxiter': maxiter_vH,   # maximum iterations
-                    'xtol': xtol_val,        # variable tolerance
-                    'gtol': gtol_val,        # function tolerance
-                    'disp': solver_verbose,  # display optimization progress
+                "maxiter": maxiter_vH,  # maximum iterations
+                "xtol": xtol_val,  # variable tolerance
+                "gtol": gtol_val,  # function tolerance
+                "disp": solver_verbose,  # display optimization progress
             }
 
             # finding initial guess
@@ -998,18 +1031,19 @@ def calc_params(gas):
                 vH_loss,
                 x1,
                 args=(gas),
-                method='trust-constr',
+                method="trust-constr",
                 bounds=solver_bounds,
-                constraints={'type': 'ineq', 'fun': linear_constraint},
-                options=options)
+                constraints={"type": "ineq", "fun": linear_constraint},
+                options=options,
+            )
 
         # optimizing with the 'SLQSP' algorithm
-        elif solver == 'SLSQP':
+        elif solver == "SLSQP":
 
             options = {
-                    'maxiter': maxiter_vH,   # max iterations
-                    'ftol': ftol_val,        # function tolerance
-                    'disp': solver_verbose,  # display iteration results
+                "maxiter": maxiter_vH,  # max iterations
+                "ftol": ftol_val,  # function tolerance
+                "disp": solver_verbose,  # display iteration results
             }
 
             # finding initial guess
@@ -1023,10 +1057,11 @@ def calc_params(gas):
                 vH_loss,
                 x1,
                 args=(gas,),
-                method='SLSQP',
+                method="SLSQP",
                 bounds=solver_bounds,
-                constraints={'type': 'ineq', 'fun': linear_constraint},
-                options=options)
+                constraints={"type": "ineq", "fun": linear_constraint},
+                options=options,
+            )
 
         hessian_matrix[:, :, j] = hess(gas, result)
         flag[j] = result.status
@@ -1062,9 +1097,7 @@ def calc_params(gas):
         num_par_final[i] = len(par2)
 
     par2_outliers_removed = np.transpose(par2_outliers_removed)
-    par2_outliers_removed = par2_outliers_removed[
-        ~np.any(par2_outliers_removed == 0, axis=1)
-        ]
+    par2_outliers_removed = par2_outliers_removed[~np.any(par2_outliers_removed == 0, axis=1)]
 
     dHD_f = avg_dms[0]
     dHb_f = avg_dms[1]
@@ -1073,15 +1106,15 @@ def calc_params(gas):
     b_kd0_f = LFE_params[1]
     a_b0_f = LFE_params[2]
     b_b0_f = LFE_params[3]
-    kd0_f = np.exp((dHD_f-b_kd0_f)/a_kd0_f)
-    b0_f = np.exp((dHb_f-b_b0_f)/a_b0_f)
+    kd0_f = np.exp((dHD_f - b_kd0_f) / a_kd0_f)
+    b0_f = np.exp((dHb_f - b_b0_f) / a_b0_f)
 
     kd_f = np.zeros(len(T))
     b_f = np.zeros(len(T))
 
     for i, temp in enumerate(T):
-        kd_f[i] = kd0_f*np.exp(-dHD_f*1000/(8.314*temp))
-        b_f[i] = b0_f*np.exp(-dHb_f*1000/(8.314*temp))
+        kd_f[i] = kd0_f * np.exp(-dHD_f * 1000 / (8.314 * temp))
+        b_f[i] = b0_f * np.exp(-dHb_f * 1000 / (8.314 * temp))
 
     gas.kD = kd_f
     gas.b = b_f
@@ -1101,9 +1134,9 @@ def calc_params(gas):
 
 
 def chi2_error_fit(gas):
-    '''
+    """
     *
-    '''
+    """
 
     hessian_matrix = gas.vH.hessian_matrix
     res = gas.vH.residuals
@@ -1133,7 +1166,7 @@ def chi2_error_fit(gas):
     dHb_vec = np.linspace(avg_dms[1] - 1, avg_dms[1] + 1, 100)
 
     # finding C_H' +/- 1.5 away from optimal value
-    ch_vec = [np.linspace(v-1.5, v+1.5, 100) for v in avg_dms[2:]]
+    ch_vec = [np.linspace(v - 1.5, v + 1.5, 100) for v in avg_dms[2:]]
 
     # setting up more arrays for error analysis
     chi2_1 = np.zeros(len(dHD_vec))
@@ -1146,18 +1179,21 @@ def chi2_error_fit(gas):
         avg_dms2[1] = dHb_vec[i]
 
         for j in range(len(ch_vec_f)):
-            avg_dms_ch[j][j+2] = ch_vec[j][i]
+            avg_dms_ch[j][j + 2] = ch_vec[j][i]
 
         # solving for the chi-square distributions for each parameter as a
         # Taylor series expansion
-        chi2_1[i] = f + (1/2)*((avg_dms1-avg_dms) @ hessian_avg
-                               @ np.transpose((avg_dms1-avg_dms)))
-        chi2_2[i] = f + (1/2)*((avg_dms2-avg_dms) @ hessian_avg
-                               @ np.transpose((avg_dms2-avg_dms)))
+        chi2_1[i] = f + (1 / 2) * (
+            (avg_dms1 - avg_dms) @ hessian_avg @ np.transpose((avg_dms1 - avg_dms))
+        )
+        chi2_2[i] = f + (1 / 2) * (
+            (avg_dms2 - avg_dms) @ hessian_avg @ np.transpose((avg_dms2 - avg_dms))
+        )
 
         for j in range(len(ch_vec_f)):
-            chi2_ch[j][i] = f + (1/2)*((avg_dms_ch[j]-avg_dms) @ hessian_avg
-                                       @ np.transpose((avg_dms_ch[j]-avg_dms)))
+            chi2_ch[j][i] = f + (1 / 2) * (
+                (avg_dms_ch[j] - avg_dms) @ hessian_avg @ np.transpose((avg_dms_ch[j] - avg_dms))
+            )
 
     # fitting the chi-square distributions to parabolas
     chi2_1_fit = poly.polyfit(dHD_vec, chi2_1, 2)
@@ -1189,7 +1225,7 @@ def chi2_error_fit(gas):
     plusminus_ch = [np.zeros(2) for _ in range(len(ch_vec_f))]
 
     for j in range(len(ch_vec_f)):
-        plusminus_ch[j] = roots_ch[j] - avg_dms[j+2]
+        plusminus_ch[j] = roots_ch[j] - avg_dms[j + 2]
 
     ch_err = np.array([arr[1] for arr in plusminus_ch])  # error for C_H'
 
@@ -1205,7 +1241,7 @@ def chi2_error_fit(gas):
 
 
 def propogate_error(gas):
-    '''Determines error from the van't Hoff optimization and propagates
+    """Determines error from the van't Hoff optimization and propagates
         the error to further parameters
 
     Args:
@@ -1213,9 +1249,9 @@ def propogate_error(gas):
 
     Returns:
         Data in the Gas.vH subclass and Gas class
-    '''
-    print('--------------------------------------------------------------')
-    print('Optimization successful; starting error propagation')
+    """
+    print("--------------------------------------------------------------")
+    print("Optimization successful; starting error propagation")
 
     LFE_params = gas.LFER.fit
     LFE_error = gas.LFER.fit_err
@@ -1244,24 +1280,24 @@ def propogate_error(gas):
     kd_err = np.zeros(len(T_vec))
 
     for i, T in enumerate(T_vec):
-        delkddelT[i] = (
-            (1000*dHD_f/(8.314*T**2))
-            * np.exp(-1000*dHD_f/(8.314*T)+(dHD_f-b_kd0)/a_kd0)
-            )
-        delkddel_a_kd0[i] = (
-            ((b_kd0 - dHD_f)/a_kd0**2)
-            * np.exp(-1000*dHD_f/(8.314*T)+(dHD_f-b_kd0)/a_kd0)
-            )
-        delkddel_b_kd0[i] = (
-            (-1/a_kd0)*np.exp(-1000*dHD_f/(8.314*T)+(dHD_f-b_kd0)/a_kd0))
-        delkddelHd[i] = (
-            (1/a_kd0-1000/8.314/T)
-            * np.exp(-1000*dHD_f/(8.314*T)+(dHD_f-b_kd0)/a_kd0)
-            )
-        kd_err[i] = (
-            np.sqrt(0.01**2*delkddelT[i]**2+err_a_kd0**2*delkddel_a_kd0[i]**2
-                    + err_b_kd0**2*delkddel_b_kd0[i]**2 + plusminus_1[1]**2
-                    * delkddelHd[i]**2))
+        delkddelT[i] = (1000 * dHD_f / (8.314 * T**2)) * np.exp(
+            -1000 * dHD_f / (8.314 * T) + (dHD_f - b_kd0) / a_kd0
+        )
+        delkddel_a_kd0[i] = ((b_kd0 - dHD_f) / a_kd0**2) * np.exp(
+            -1000 * dHD_f / (8.314 * T) + (dHD_f - b_kd0) / a_kd0
+        )
+        delkddel_b_kd0[i] = (-1 / a_kd0) * np.exp(
+            -1000 * dHD_f / (8.314 * T) + (dHD_f - b_kd0) / a_kd0
+        )
+        delkddelHd[i] = (1 / a_kd0 - 1000 / 8.314 / T) * np.exp(
+            -1000 * dHD_f / (8.314 * T) + (dHD_f - b_kd0) / a_kd0
+        )
+        kd_err[i] = np.sqrt(
+            0.01**2 * delkddelT[i] ** 2
+            + err_a_kd0**2 * delkddel_a_kd0[i] ** 2
+            + err_b_kd0**2 * delkddel_b_kd0[i] ** 2
+            + plusminus_1[1] ** 2 * delkddelHd[i] ** 2
+        )
 
     b_err = np.zeros(len(T_vec))
     delbdel_a_b0 = np.zeros(len(T_vec))
@@ -1270,37 +1306,34 @@ def propogate_error(gas):
     delbdelHb = np.zeros(len(T_vec))
 
     for i, T in enumerate(T_vec):
-        delbdelT[i] = (
-            (1000*dHb_f/(8.314*T**2))*np.exp(-1000*dHb_f/(8.314*T)
-                                             + (dHb_f-b_b0)/a_b0)
-                                             )
-        delbdel_a_b0[i] = (
-            ((b_b0-dHb_f)/a_b0**2)*np.exp(-1000*dHb_f/(8.314*T)
-                                          + (dHb_f - b_b0)/a_b0)
-                                          )
-        delbdel_b_b0[i] = (
-            (-1/a_b0)*np.exp(-1000*dHb_f/(8.314*T)+(dHb_f-b_b0)/a_b0)
-            )
-        delbdelHb[i] = (
-            (1/a_b0-1000/8.314/T)*np.exp(-1000*dHb_f/(8.314*T)
-                                         + (dHb_f-b_b0)/a_b0)
-                                         )
-        b_err[i] = (
-            np.sqrt(0.01**2*delbdelT[i]**2+err_a_b0**2*delbdel_a_b0[i]**2
-                    + err_b_b0**2*delbdel_b_b0[i]**2 + plusminus_2[1]**2
-                    * delbdelHb[i]**2))
+        delbdelT[i] = (1000 * dHb_f / (8.314 * T**2)) * np.exp(
+            -1000 * dHb_f / (8.314 * T) + (dHb_f - b_b0) / a_b0
+        )
+        delbdel_a_b0[i] = ((b_b0 - dHb_f) / a_b0**2) * np.exp(
+            -1000 * dHb_f / (8.314 * T) + (dHb_f - b_b0) / a_b0
+        )
+        delbdel_b_b0[i] = (-1 / a_b0) * np.exp(-1000 * dHb_f / (8.314 * T) + (dHb_f - b_b0) / a_b0)
+        delbdelHb[i] = (1 / a_b0 - 1000 / 8.314 / T) * np.exp(
+            -1000 * dHb_f / (8.314 * T) + (dHb_f - b_b0) / a_b0
+        )
+        b_err[i] = np.sqrt(
+            0.01**2 * delbdelT[i] ** 2
+            + err_a_b0**2 * delbdel_a_b0[i] ** 2
+            + err_b_b0**2 * delbdel_b_b0[i] ** 2
+            + plusminus_2[1] ** 2 * delbdelHb[i] ** 2
+        )
 
     gas.kD_err = kd_err
     gas.b_err = b_err
 
-    print('Error propagation successful')
-    print('--------------------------------------------------------------')
+    print("Error propagation successful")
+    print("--------------------------------------------------------------")
 
     return gas
 
 
-def compute(gas, output='unnamed_file'):
-    '''Provides a wrapper to run the entire optimization procedure with a
+def compute(gas, output="unnamed_file"):
+    """Provides a wrapper to run the entire optimization procedure with a
         single function call.
 
     Args:
@@ -1309,7 +1342,7 @@ def compute(gas, output='unnamed_file'):
 
     Returns:
         None
-    '''
+    """
 
     calc_LFEs(gas)
     calc_params(gas)
@@ -1321,8 +1354,8 @@ def compute(gas, output='unnamed_file'):
     # vis.heat_of_sorption(gas)
 
     if output is not None:
-        print(f'Pickling {output}.pkl')
-        save_gas_class(gas, filename=output+'.pkl')
-        print('Pickling successful')
-        print('--------------------------------------------------------------')
-        report.generate(gas, report_name=output+'.pdf')
+        print(f"Pickling {output}.pkl")
+        save_gas_class(gas, filename=output + ".pkl")
+        print("Pickling successful")
+        print("--------------------------------------------------------------")
+        report.generate(gas, report_name=output + ".pdf")

@@ -44,3 +44,12 @@ include-package-data = true
 [tool.setuptools.package-data]
 "pyDMS.images" = ["*.png"]
 
+[tool.black]
+target-version = ["py312"]
+line-length = 100
+skip-magic-trailing-comma = true
+exclude = '''
+/(
+    examples
+)/
+'''

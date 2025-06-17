@@ -1,4 +1,4 @@
-r'''
+r"""
 pyDMS.dms
                  ____  __  ________
     ____  __  __/ __ \/  |/  / ___/
@@ -26,24 +26,24 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-'''
+"""
 
 import warnings
 
-__version__ = '0.0.1dev1'
+__version__ = "0.0.1dev1"
 
 
 def error_in_red(message):
-    '''
+    """
     Red error message
-    '''
+    """
     print("\033[91m" + message + "\033[0m")
     warnings.warn(message, UserWarning)
 
 
 def warning_in_orange(message):
-    '''
+    """
     Orange warning message
-    '''
+    """
     print("\033[38;2;255;165;0m" + message + "\033[0m")
     warnings.warn(message, UserWarning)
