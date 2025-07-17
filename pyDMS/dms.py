@@ -23,9 +23,6 @@ from . import report
 from . import evaluate
 from . import fugacity
 
-# pylint: disable=C0103
-# pylint: disable=C0302
-
 
 class Gas:
     """Holds all input and output data of a pyDMS optimization run
@@ -239,6 +236,64 @@ def load_gas_class(filename):
 
     with open(filename, "rb") as f:
         return pickle.load(f)
+
+
+def base_loss(x, p, c, cerr):
+    """Defines the loss function for
+    Args:
+
+    Returns:
+
+    """
+    ssr = 0
+
+    # initializing variables to solve for
+    kD = x[0]
+    CH = x[1]
+    b = x[2]
+
+    calc = kD * p + CH * b * p / (1 + b * p)
+
+    ssr = np.sum(((calc - c) ** 2) / (cerr**2))
+
+    return ssr
+
+
+def parameter_hints(gas):
+    # TODO
+
+    c = gas.c
+
+    calculate_fugacity(gas)
+
+    cerr_vec = gas.c_err
+
+    if gas.f is not None:
+        p_vec = gas.f
+    else:
+        p_vec = gas.p
+
+    T_vec = gas.temp
+
+    x0 = [4.0, 50.0, 1.0]
+
+    for i, p_i in enumerate(p_vec):
+        c_i = c[i]
+        cerr_i = cerr_vec[i]
+
+        base_loss(x0, p_i, c_i, cerr_i)
+
+        result = minimize(base_loss, x0, args=(p_i, c_i, cerr_i))
+
+        print(result.x)
+    # read in individual arrays
+
+    # optimize DMS
+
+    # save values
+
+    # run regressions
+    return
 
 
 def calculate_fugacity(gas):
@@ -480,9 +535,9 @@ def hess(gas, soln):
     ch_vec = soln.x[2:]
 
     # initializing arrays for the Hessian
-    dCdHD = np.zeros_like(c_vec)
-    dCdHb = np.zeros_like(c_vec)
-    dCdCH = np.zeros_like(c_vec)
+    dCdHD = [np.zeros_like(c_i) for c_i in c_vec]
+    dCdHb = [np.zeros_like(c_i) for c_i in c_vec]
+    dCdCH = [np.zeros_like(c_i) for c_i in c_vec]
     hessian = np.zeros((len(c_vec) + 2, len(c_vec) + 2)) / 1e6
 
     # looping through each concentration vector
@@ -504,17 +559,24 @@ def hess(gas, soln):
         dCdCH[i] = (1 + (np.exp((b_b0 - dHb) / a_b0 + 120.279 * dHb / T)) / p) ** -1
 
     # inserting values into Hessian
-    hessian[0, 0] = np.sum(2 * 1 / cerr**2 * dCdHD * dCdHD)
-    hessian[0, 1] = np.sum(2 * 1 / cerr**2 * dCdHD * dCdHb)
-    hessian[1, 0] = np.sum(2**1 / cerr**2 * dCdHD * dCdHb)
-    hessian[1, 1] = np.sum(2**1 / cerr**2 * dCdHb * dCdHb)
+    hessian[0, 0] = np.sum(
+        [np.sum(2 / cerr_vec[i] ** 2 * dCdHD[i] * dCdHD[i]) for i in range(len(c_vec))]
+    )
+    hessian[0, 1] = np.sum(
+        [np.sum(2 / cerr_vec[i] ** 2 * dCdHD[i] * dCdHb[i]) for i in range(len(c_vec))]
+    )
+    hessian[1, 0] = hessian[0, 1]  # symmetric
+    hessian[1, 1] = np.sum(
+        [np.sum(2 / cerr_vec[i] ** 2 * dCdHb[i] * dCdHb[i]) for i in range(len(c_vec))]
+    )
 
-    for i, dCdCH_vec in enumerate(dCdCH):
-        hessian[0, i + 2] = np.sum(2**1 / cerr**2 * dCdHD * dCdCH_vec)
-        hessian[i + 2, 0] = np.sum(2**1 / cerr**2 * dCdHD * dCdCH_vec)
-        hessian[1, i + 2] = np.sum(2**1 / cerr**2 * dCdHb * dCdCH_vec)
-        hessian[i + 2, 1] = np.sum(2**1 / cerr**2 * dCdHb * dCdCH_vec)
-        hessian[i + 2, i + 2] = np.sum(2**1 / cerr**2 * dCdCH_vec * dCdCH_vec)
+    for i in range(len(c_vec)):
+        cerr = cerr_vec[i]
+        hessian[0, i + 2] = np.sum(2 / cerr**2 * dCdHD[i] * dCdCH[i])
+        hessian[i + 2, 0] = hessian[0, i + 2]
+        hessian[1, i + 2] = np.sum(2 / cerr**2 * dCdHb[i] * dCdCH[i])
+        hessian[i + 2, 1] = hessian[1, i + 2]
+        hessian[i + 2, i + 2] = np.sum(2 / cerr**2 * dCdCH[i] * dCdCH[i])
 
     return hessian
 
@@ -627,6 +689,7 @@ def calc_LFEs(gas, settings=None):
     dHDval = dHD0_0_bnd[1] - dHD0_0_bnd[0]
     b0val = b0_0_bnd[1] - b0_0_bnd[0]
     dHbval = dHb_0_bnd[1] - dHb_0_bnd[0]
+    print(ch_0_bnd)
     ch0_vals = [bnd[1] - bnd[0] for bnd in ch_0_bnd]
 
     ch_0 = np.zeros(len(ch0_vals))  # holding ch_0 guesses
@@ -1165,8 +1228,8 @@ def chi2_error_fit(gas):
     dHD_vec = np.linspace(avg_dms[0] - 1, avg_dms[0] + 1, 100)
     dHb_vec = np.linspace(avg_dms[1] - 1, avg_dms[1] + 1, 100)
 
-    # finding C_H' +/- 1.5 away from optimal value
-    ch_vec = [np.linspace(v - 1.5, v + 1.5, 100) for v in avg_dms[2:]]
+    # finding C_H' +/- 1 away from optimal value
+    ch_vec = [np.linspace(v - 1, v + 1, 100) for v in avg_dms[2:]]
 
     # setting up more arrays for error analysis
     chi2_1 = np.zeros(len(dHD_vec))
@@ -1346,7 +1409,6 @@ def compute(gas, output="unnamed_file"):
 
     calc_LFEs(gas)
     calc_params(gas)
-
     chi2_error_fit(gas)
     propogate_error(gas)
 

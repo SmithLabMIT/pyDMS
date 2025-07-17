@@ -452,12 +452,12 @@ def generate(gas, report_name):
                 f"{gas.analysis.deltaH_S_inf[0]:.6f} ± {gas.analysis.deltaH_S_inf_err[0]:.6f}",
             ],
             [
-                "i = Langmuir",
+                "i = Henry",
                 f"{gas.analysis.deltaH_D[1]:.3e} ± {gas.analysis.deltaH_D_err[1]:.3e}",
                 f"{gas.analysis.deltaH_D[0]:.6f} ± {gas.analysis.deltaH_D_err[0]:.6f}",
             ],
             [
-                "i = Henry",
+                "i = Langmuir",
                 f"{gas.analysis.deltaH_b[1]:.3e} ± {gas.analysis.deltaH_b_err[1]:.3e}",
                 f"{gas.analysis.deltaH_b[0]:.6f} ± {gas.analysis.deltaH_b_err[0]:.6f}",
             ],

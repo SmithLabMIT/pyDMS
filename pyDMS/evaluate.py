@@ -30,14 +30,19 @@ def isotherm(gas, index, eos=None):
     ch = gas.CH[index]
     kd = gas.kD[index]
     b = gas.b[index]
-    ch_err = gas.CH_err[index]
-    kd_err = gas.kD_err[index]
-    b_err = gas.b_err[index]
+    ch_err = gas.CH_err[index] if gas.CH_err is not None else 0.0
+    kd_err = gas.kD_err[index] if gas.kD_err is not None else 0.0
+    b_err = gas.b_err[index] if gas.b_err is not None else 0.0
+
     if gas.f is not None:
         p_vec = gas.f
-    else:
+    elif gas.p is not None:
         p_vec = gas.p
-    p_val = np.linspace(1e-6, np.max(p_vec[index]), 1000)
+    else:
+        pyDMS.warning_in_orange("Neither p or f is defined, using isotherm range 0-40 atm")
+        p_vec = np.tile([0.0, 40.0], (len(gas.temp), 1))
+
+    p_val = np.linspace(1e-6, np.max(p_vec[index]), 300)
 
     c = kd * p_val + ch * b * p_val / (1 + b * p_val)
     c_err = np.sqrt(
@@ -121,12 +126,16 @@ def heat_of_sorption(gas, method="all"):
         int_deltak_D, slope_deltak_D = deltak_D_model.params
         int_deltak_D_err, slope_deltak_D_err = deltak_D_model.bse
 
-        # gas.analysis.deltaH_D = [-slope_deltak_D, np.exp(int_deltak_D)]
-        # gas.analysis.deltaH_D_err = [slope_deltak_D_err,
-        #   np.exp(int_deltak_D)*int_deltak_D_err]
-
-        gas.analysis.deltaH_D[1] = np.exp(int_deltak_D)
-        gas.analysis.deltaH_D_err[1] = np.exp(int_deltak_D) * int_deltak_D_err
+        if gas.analysis.deltaH_D:
+            gas.analysis.deltaH_D[1] = np.exp(int_deltak_D)
+            gas.analysis.deltaH_D_err[1] = np.exp(int_deltak_D) * int_deltak_D_err
+        else:
+            # print("pyDMS optimization not performed, using provided DMS parameters for Henry Energetics")
+            gas.analysis.deltaH_D = [-slope_deltak_D, np.exp(int_deltak_D)]
+            gas.analysis.deltaH_D_err = [
+                slope_deltak_D_err,
+                np.exp(int_deltak_D) * int_deltak_D_err,
+            ]
 
         return gas
 
@@ -147,9 +156,13 @@ def heat_of_sorption(gas, method="all"):
         # gas.analysis.deltaH_b = [-slope_deltab, np.exp(int_deltab)]
         # gas.analysis.deltaH_b_err = [slope_deltab_err,
         #   np.exp(int_deltab)*int_deltab_err]
-
-        gas.analysis.deltaH_b[1] = np.exp(int_deltab)
-        gas.analysis.deltaH_b_err[1] = np.exp(int_deltab) * int_deltab_err
+        if gas.analysis.deltaH_b:
+            gas.analysis.deltaH_b[1] = np.exp(int_deltab)
+            gas.analysis.deltaH_b_err[1] = np.exp(int_deltab) * int_deltab_err
+        else:
+            # print("pyDMS optimization not performed, using provided DMS parameters for Langmuir Energetics")
+            gas.analysis.deltaH_b = [-slope_deltab, np.exp(int_deltab)]
+            gas.analysis.deltaH_b_err = [slope_deltab_err, np.exp(int_deltab) * int_deltab_err]
 
         return gas
 

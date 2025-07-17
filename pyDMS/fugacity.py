@@ -185,11 +185,10 @@ def virial_eos(gas):
 
     gas_name = gas.formula
     temps = np.atleast_1d(gas.temp)  # ensure 1D array
-    p_grid = np.atleast_2d(gas.p)  # ensure 2D array
+    p_list = gas.p  # list of arrays
 
     R = 8.314e6  # cm³·Pa/(mol·K)
     atm_to_pa = 1.01325e5
-    p_grid_pa = p_grid * atm_to_pa
 
     if gas.virial_coeff:
         virial_data = gas.virial_coeff
@@ -207,6 +206,9 @@ def virial_eos(gas):
     C3 = virial_data.get("C3", 0)
     C4 = virial_data.get("C4", 0)
 
+    if len(temps) != len(p_list):
+        pyDMS.error_in_red("gas.temp and gas.p must have the same number of entries")
+
     if B0 == 0:
         pyDMS.warning_in_orange("B0 = 0. This is unusual.")
     if B1 == 0:
@@ -215,7 +217,7 @@ def virial_eos(gas):
     fugacities = []
 
     for i, T in enumerate(temps):
-        p_row = p_grid_pa[i]
+        p_row = np.array(p_list[i]) * atm_to_pa  # convert to Pa
         B = B0 + B1 / T + B2 / T**2 + B3 / T**3 + B4 / T**4
         C = C0 + C1 / T + C2 / T**2 + C3 / T**3 + C4 / T**4
         vm = R * T / p_row
@@ -225,7 +227,7 @@ def virial_eos(gas):
         f_atm = f_pa / atm_to_pa
         fugacities.append(f_atm)
 
-    gas.f = np.array(fugacities)  # shape: (n_conditions, n_pressures)
+    gas.f = [np.array(row) for row in fugacities]
     return gas
 
 
@@ -258,7 +260,7 @@ def peng_robinson_eos(gas):
     """
     gas_name = gas.formula
     temps = np.atleast_1d(gas.temp)  # (n_temps,)
-    p_grid = np.atleast_2d(gas.p)  # (n_temps, n_pressures)
+    p_list = gas.p  # list of arrays
 
     if gas.pr_coeff:
         pr_data = gas.pr_coeff
@@ -282,7 +284,7 @@ def peng_robinson_eos(gas):
     fugacities = []
 
     for i, T in enumerate(temps):
-        p_row = p_grid[i] / mpa_to_atm  # convert atm → MPa for this row
+        p_row = np.array(p_list[i]) / mpa_to_atm  # convert atm to MPa
         k = 0.375 + 1.542 * omega - 0.270 * omega**2
         alpha = (1 + k * (1 - np.sqrt(T / Tc))) ** 2
         a = 0.457 * alpha * R**2 * Tc**2 / Pc
@@ -322,5 +324,5 @@ def peng_robinson_eos(gas):
 
         fugacities.append(fug_row)
 
-    gas.f = np.array(fugacities)
+    gas.f = [np.array(row) for row in fugacities]
     return gas
