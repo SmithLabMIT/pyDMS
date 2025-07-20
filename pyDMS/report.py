@@ -9,6 +9,7 @@ Licensed under the MIT License
 import os
 import tempfile
 import time
+import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime
 from importlib.resources import files
@@ -534,9 +535,28 @@ def generate(gas, report_name):
 
         elements.append(table)
 
-        for i, val in enumerate(settings.get("CH_bounds")):
+        for i, val in enumerate(np.asarray(settings.get("CH_guess"))):
 
-            data = [[Paragraph(f"C'<sub>H</sub> #{i+1}", centered_para), val]]
+            data = [[Paragraph(f"C'<sub>H</sub> guess #{i+1}", centered_para), val]]
+
+            table = Table(data, colWidths=[inch * 3, inch * 2])
+            table.setStyle(
+                TableStyle(
+                    [
+                        ("BACKGROUND", (0, 0), (-1, 0), colors.white),
+                        ("TEXTCOLOR", (0, 0), (-1, 0), colors.black),
+                        ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                        ("GRID", (0, 0), (-1, -1), 1, colors.black),
+                        ("BACKGROUND", (0, 1), (-1, -1), colors.white),
+                    ]
+                )
+            )
+
+            elements.append(table)
+
+        for i, val in enumerate(np.asarray(settings.get("CH_bounds"))):
+
+            data = [[Paragraph(f"C'<sub>H</sub> bounds #{i+1}", centered_para), val]]
 
             table = Table(data, colWidths=[inch * 3, inch * 2])
             table.setStyle(

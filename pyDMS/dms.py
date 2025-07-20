@@ -689,7 +689,7 @@ def calc_LFEs(gas, settings=None):
     dHDval = dHD0_0_bnd[1] - dHD0_0_bnd[0]
     b0val = b0_0_bnd[1] - b0_0_bnd[0]
     dHbval = dHb_0_bnd[1] - dHb_0_bnd[0]
-    print(ch_0_bnd)
+
     ch0_vals = [bnd[1] - bnd[0] for bnd in ch_0_bnd]
 
     ch_0 = np.zeros(len(ch0_vals))  # holding ch_0 guesses
@@ -885,7 +885,7 @@ def calc_LFEs(gas, settings=None):
     X_kd = log_kd0.reshape(-1, 1)
     X_b = log_b0.reshape(-1, 1)
     ransac_kd = RANSACRegressor(
-        LinearRegression(), residual_threshold=0.5, max_trials=1000, random_state=0
+        LinearRegression(), residual_threshold=0.25, max_trials=1000, random_state=0
     )
     ransac_kd.fit(X_kd, deltaHd)
 
