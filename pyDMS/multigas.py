@@ -31,7 +31,7 @@ def mixed_isotherm(*gases, p_or_f, mol_frac, temp):
     # p_f_max_array = np.zeros(len(mol_frac))
 
     # *currently this just overwrites which is fine
-    # if every gas has the same location but we cant ensure that
+    # TODO: currently, it is assumed every gas will have the same index
     for i, gas in enumerate(gases):
         index = np.where(gas.temp == temp)[0][0]
     # this is somewhat useless but fine for now
@@ -84,12 +84,19 @@ def mixed_isotherm(*gases, p_or_f, mol_frac, temp):
 
 
 def selectivity(*isotherms, calc=None):
-    """
-    # calc options: 1_numerator, 2_numerator*
+    """Computes the binary or ternary sorption selectivity from isotherm data
+    isotherms: isotherm data in tuple: [partial pressure or fugacity, concentration, concentration error].
+        This data is in the form returned by evaluate.isotherm()
+    calc: Style to use when three isotherms are provided. Options are either 1_numerator, 2_numerator.
+        1_numerator: alpha = (c1/p1) / ((c2/p2) + (c3*p3))
+        2_numerator: alpha = ((c1/p1) + (c2/p2)) / (c3 * p3)
+
+    Returns: [total pressure or total fugacity, selectivity, selectivity error]
+
     """
 
     if len(isotherms) not in [2, 3]:
-        pyDMS.error_in_red("selectivity() requires 2 or 3 gas objects.")
+        pyDMS.error_in_red("selectivity() requires 2 or 3 isothrerm tuples.")
 
     if len(isotherms) == 3 and calc is None:
         pyDMS.error_in_red(

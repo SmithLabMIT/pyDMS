@@ -16,6 +16,7 @@ import statsmodels.api as sm
 from scipy.optimize import minimize
 from scipy.special import erfcinv
 from scipy.stats import median_abs_deviation, chi2
+from scipy.linalg import cho_factor, cho_solve
 from sklearn.linear_model import RANSACRegressor, LinearRegression
 
 import pyDMS
@@ -35,7 +36,9 @@ class Gas:
         p: An array of pressures. Defined as
             np.array([[Array 1], [Array 2], ...]).
         f: An array of fugacities. Defined as
-            np.array([[Array 1], [Array 2], ...]).
+            [[Array 1], [Array 2], ...].
+        Z: An array of compressibility factors. Defined as
+            [Array 1], [Array 2], ...].
         c_err: An array of uncertainties in concentration. Defined as
             np.array([[Array 1], [Array 2], ...]).
         temp: An array of temperatures in K. Defined as
@@ -70,6 +73,7 @@ class Gas:
         "c",
         "p",
         "f",
+        "Z",
         "c_err",
         "temp",
         "kD",
@@ -92,6 +96,7 @@ class Gas:
         self.c = None
         self.p = None
         self.f = None
+        self.Z = None
         self.c_err = None
         self.temp = None
         self.CH = None
@@ -109,6 +114,25 @@ class Gas:
         self.vH = vH()
 
         self.analysis = analysis()
+
+        def __str__(self):
+            lines = [f"{self.__class__.__name__}("]
+            for attr in self.__slots__:
+                value = getattr(self, attr)
+                if isinstance(value, np.ndarray):
+                    array_str = np.array2string(
+                        value,
+                        precision=3,
+                        suppress_small=True,
+                        threshold=10,
+                        separator=", ",
+                        max_line_width=80,
+                    )
+                    lines.append(f"  {attr} = {array_str}")
+                else:
+                    lines.append(f"  {attr} = {str(value)}")
+            lines.append(")")
+            return "\n".join(lines)
 
 
 class LFER:
@@ -133,6 +157,25 @@ class LFER:
         self.out = None
         self.out_outliers = None
 
+    def __str__(self):
+        lines = [f"{self.__class__.__name__}("]
+        for attr in self.__slots__:
+            value = getattr(self, attr)
+            if isinstance(value, np.ndarray):
+                array_str = np.array2string(
+                    value,
+                    precision=3,
+                    suppress_small=True,
+                    threshold=10,
+                    separator=", ",
+                    max_line_width=80,
+                )
+                lines.append(f"  {attr} = {array_str}")
+            else:
+                lines.append(f"  {attr} = {str(value)}")
+        lines.append(")")
+        return "\n".join(lines)
+
 
 class vH:
     """Holds output from the LFER fitting optimization.
@@ -144,7 +187,7 @@ class vH:
             [slope_kd_err, int_kd_err, slope_b_err, int_b_err]
         out: LFER inlier output
             [log_kd0, deltaHd, log_b0, deltaHb]
-        out_outliers: LFER inlier and ouitlier output
+        out_outliers: LFER inlier and outlier output
             [log_kd0, deltaHd, log_b0, deltaHb]
     dms:
     dms_no_out:
@@ -180,9 +223,28 @@ class vH:
         self.residuals = None
         self.hessian_matrix = None
 
+    def __str__(self):
+        lines = [f"{self.__class__.__name__}("]
+        for attr in self.__slots__:
+            value = getattr(self, attr)
+            if isinstance(value, np.ndarray):
+                array_str = np.array2string(
+                    value,
+                    precision=3,
+                    suppress_small=True,
+                    threshold=10,
+                    separator=", ",
+                    max_line_width=80,
+                )
+                lines.append(f"  {attr} = {array_str}")
+            else:
+                lines.append(f"  {attr} = {str(value)}")
+        lines.append(")")
+        return "\n".join(lines)
+
 
 class analysis:
-    """*"""
+    """TODO"""
 
     __slots__ = [
         "S_inf",
@@ -205,6 +267,25 @@ class analysis:
         self.deltaH_b = None
         self.deltaH_b_err = None
 
+    def __str__(self):
+        lines = [f"{self.__class__.__name__}("]
+        for attr in self.__slots__:
+            value = getattr(self, attr)
+            if isinstance(value, np.ndarray):
+                array_str = np.array2string(
+                    value,
+                    precision=3,
+                    suppress_small=True,
+                    threshold=10,
+                    separator=", ",
+                    max_line_width=80,
+                )
+                lines.append(f"  {attr} = {array_str}")
+            else:
+                lines.append(f"  {attr} = {str(value)}")
+        lines.append(")")
+        return "\n".join(lines)
+
 
 def save_gas_class(gas, filename):
     """Saves a Gas object to a .pkl file.
@@ -217,7 +298,6 @@ def save_gas_class(gas, filename):
         None
     """
 
-    print("Pickling Gas class")
     with open(filename, "wb") as f:
         pickle.dump(gas, f, protocol=pickle.HIGHEST_PROTOCOL)
     print("Pickling successful")
@@ -239,7 +319,7 @@ def load_gas_class(filename):
 
 
 def base_loss(x, p, c, cerr):
-    """Defines the loss function for
+    """Defines the loss function for TODO
     Args:
 
     Returns:
@@ -407,7 +487,7 @@ def LFER_loss(x, gas, loss="chi2"):
     # Sum of all the errors as metric
     out = np.sum(ssr)
 
-    # * see if scaling is really necessary
+    # TODO: see if scaling is really necessary (yes it is I think)
     return out / 1000
 
 
@@ -420,7 +500,7 @@ def vH_loss(x, gas, loss="chi2"):
         loss: The loss function to use. Currently, only 'chi2' is supported.
 
     Returns:
-        The loss function result as a number.
+        The final value of the loss function.
     """
 
     # retriving gas data
@@ -694,7 +774,7 @@ def calc_LFEs(gas, settings=None):
 
     ch_0 = np.zeros(len(ch0_vals))  # holding ch_0 guesses
 
-    # printing bounds to search through (*consider making it more table-like)
+    # printing bounds to search through (TODO: consider making it more table-like)
     if verbose:
         print("---------------------LFER Initial Guesses---------------------")
         print(f"kd0_0: {kd0_0_bnd}")
@@ -1125,8 +1205,11 @@ def calc_params(gas):
                 constraints={"type": "ineq", "fun": linear_constraint},
                 options=options,
             )
-
+        # print("STATUS")
+        # print(result.status)
         hessian_matrix[:, :, j] = hess(gas, result)
+        # print("=======HESSIAN========")
+        # print(hessian_matrix[:, :, j])
         flag[j] = result.status
         res[j] = result.fun
         dms[j, :] = result.x
@@ -1136,11 +1219,17 @@ def calc_params(gas):
 
     outlier_track = np.zeros(nOptVars)
 
+    n_trials = transposed_dms.shape[1]  # == dms.shape[0] FOR HESS
+    keep = np.ones(n_trials, dtype=bool)  # start by keeping all trials FOR HESS
+
     for i in range(len(x1)):
 
         par2 = transposed_dms[i]
 
         TF = is_outlier(par2)
+
+        keep &= ~TF  # drop any trial that was an outlier for parameter i THIS IS FOR HESS
+
         par2 = par2[~TF]
 
         # setting outliers to zero in complete array as well
@@ -1161,6 +1250,23 @@ def calc_params(gas):
 
     par2_outliers_removed = np.transpose(par2_outliers_removed)
     par2_outliers_removed = par2_outliers_removed[~np.any(par2_outliers_removed == 0, axis=1)]
+
+    valid_idx = np.where(keep)[0]
+
+    # keep only fully valid trials (no outlier in any parameter)
+    # dms_valid = dms[valid_idx, :] # HESS
+    hessian_matrix_valid = hessian_matrix[:, :, valid_idx]  # HESS
+    hessian_matrix_valid = 0.5 * (hessian_matrix_valid + hessian_matrix_valid.swapaxes(0, 1))
+    hessian_mean = np.mean(hessian_matrix_valid, axis=2)
+    # res_valid = res[valid_idx] # HESS
+    # flag_valid = flag[valid_idx] # HESS
+
+    # n_valid = int(keep.sum()) # HESS
+    # valid_idx = np.flatnonzero(keep) # HESS
+
+    # print("Number of valid optimizations:", n_valid) # HESS
+    # LOOK INTO RUBIN FACTOR
+    # print(hessian_sum)
 
     dHD_f = avg_dms[0]
     dHb_f = avg_dms[1]
@@ -1186,7 +1292,8 @@ def calc_params(gas):
     gas.vH.out = par2_outliers_removed
     gas.vH.avg_dms = avg_dms
     gas.vH.residuals = res
-    gas.vH.hessian_matrix = hessian_matrix
+    # gas.vH.hessian_matrix = hessian_matrix
+    gas.vH.hessian_matrix = hessian_mean
 
     gas.settings = settings
 
@@ -1201,7 +1308,7 @@ def chi2_error_fit(gas):
     *
     """
 
-    hessian_matrix = gas.vH.hessian_matrix
+    hessian_avg = gas.vH.hessian_matrix
     res = gas.vH.residuals
 
     ch_vec_f = gas.CH
@@ -1210,95 +1317,131 @@ def chi2_error_fit(gas):
     avg_dms = np.concatenate(([dHD_f, dHb_f], ch_vec_f))
 
     # mean of the Hessians across all trials
-    hessian_avg = np.mean(hessian_matrix, axis=2)
+    # hessian_avg = np.mean(hessian_matrix, axis=2)
+    # print(hessian_avg)
 
-    # mean of the residuals across all trials
-    f = np.mean(res)
+    hess_smoothed = 0.5 * (hessian_avg + np.transpose(hessian_avg))
 
-    # mean of the residuals shifted by the critical chi-square value
-    chi_crit = f + chi2.isf(0.05, len(avg_dms))
-
-    # setting up arrays for error analysis
-    avg_dms1 = np.copy(avg_dms)
-    avg_dms2 = np.copy(avg_dms)
-    # making sure arrays are not linked
-    avg_dms_ch = [np.copy(avg_dms) for _ in range(len(ch_vec_f))]
-
-    # finding dHD and dHb +/- 1 away from optimal value
-    dHD_vec = np.linspace(avg_dms[0] - 1, avg_dms[0] + 1, 100)
-    dHb_vec = np.linspace(avg_dms[1] - 1, avg_dms[1] + 1, 100)
-
-    # finding C_H' +/- 1 away from optimal value
-    ch_vec = [np.linspace(v - 1, v + 1, 100) for v in avg_dms[2:]]
-
-    # setting up more arrays for error analysis
-    chi2_1 = np.zeros(len(dHD_vec))
-    chi2_2 = np.zeros(len(dHD_vec))
-    chi2_ch = [np.zeros(len(dHD_vec)) for _ in range(len(ch_vec_f))]
-
-    # perturbijng the parameters to create a chi-square distribution
-    for i, dHD_val in enumerate(dHD_vec):
-        avg_dms1[0] = dHD_val
-        avg_dms2[1] = dHb_vec[i]
-
-        for j in range(len(ch_vec_f)):
-            avg_dms_ch[j][j + 2] = ch_vec[j][i]
-
-        # solving for the chi-square distributions for each parameter as a
-        # Taylor series expansion
-        chi2_1[i] = f + (1 / 2) * (
-            (avg_dms1 - avg_dms) @ hessian_avg @ np.transpose((avg_dms1 - avg_dms))
-        )
-        chi2_2[i] = f + (1 / 2) * (
-            (avg_dms2 - avg_dms) @ hessian_avg @ np.transpose((avg_dms2 - avg_dms))
+    try:
+        c, lower = cho_factor(hess_smoothed, check_finite=False)
+    except Exception:
+        lam = 1e-10 * np.trace(hess_smoothed) / hess_smoothed.shape[0]
+        c, lower = c, lower = cho_factor(
+            hess_smoothed + lam * np.eye(hess_smoothed.shape[0]), check_finite=False
         )
 
-        for j in range(len(ch_vec_f)):
-            chi2_ch[j][i] = f + (1 / 2) * (
-                (avg_dms_ch[j] - avg_dms) @ hessian_avg @ np.transpose((avg_dms_ch[j] - avg_dms))
-            )
+    p = hess_smoothed.shape[0]
+    diag_hess_inv = np.empty(p)
 
-    # fitting the chi-square distributions to parabolas
-    chi2_1_fit = poly.polyfit(dHD_vec, chi2_1, 2)
-    chi2_2_fit = poly.polyfit(dHb_vec, chi2_2, 2)
-    chi2_ch_fit = [np.zeros(3) for _ in range(len(ch_vec_f))]
+    for m in range(p):
+        e = np.zeros(p)
+        e[m] = 1.0
+        y = cho_solve((c, lower), e, check_finite=False)
+        diag_hess_inv[m] = y[m]
 
-    for j in range(len(ch_vec_f)):
-        chi2_ch_fit[j] = poly.polyfit(ch_vec[j], chi2_ch[j], 2)
+    var = (1 / 2) * diag_hess_inv
+    std_dev = np.sqrt(var)
 
-    # shifting the fits by the chi-square minimum
-    chi2_1_fit[0] = chi2_1_fit[0] - chi_crit
-    chi2_2_fit[0] = chi2_2_fit[0] - chi_crit
-
-    for j in range(len(ch_vec_f)):
-        chi2_ch_fit[j][0] = chi2_ch_fit[j][0] - chi_crit
-
-    # finding where the distributions are equal to the crit. chi-square value
-    roots_1 = poly.polyroots(chi2_1_fit)
-    roots_2 = poly.polyroots(chi2_2_fit)
-
-    roots_ch = [np.zeros(2) for _ in range(len(ch_vec_f))]
-
-    for j in range(len(ch_vec_f)):
-        roots_ch[j] = poly.polyroots(chi2_ch_fit[j])
-
-    plusminus_1 = roots_1 - avg_dms[0]  # error for dHD
-    plusminus_2 = roots_2 - avg_dms[1]  # error for dHb
-
-    plusminus_ch = [np.zeros(2) for _ in range(len(ch_vec_f))]
-
-    for j in range(len(ch_vec_f)):
-        plusminus_ch[j] = roots_ch[j] - avg_dms[j + 2]
-
-    ch_err = np.array([arr[1] for arr in plusminus_ch])  # error for C_H'
+    plusminus_1 = [std_dev[0], std_dev[0]]
+    plusminus_2 = [std_dev[1], std_dev[1]]
 
     gas.vH.plusminus_1 = plusminus_1
     gas.vH.plusminus_2 = plusminus_2
-    gas.vH.plusminus_ch = plusminus_ch
-    gas.CH_err = ch_err
+    gas.CH_err = np.array(std_dev[2:])
 
     gas.analysis.deltaH_D_err = [plusminus_1[1], None]
     gas.analysis.deltaH_b_err = [plusminus_2[1], None]
+
+    # LEGACY VERSION OF COLLECTING CONFIDENCE INTERVALS USING CHI^2 PERTURBATION
+    # gas.analysis.deltaH_D_err = [plusminus_1[1], None]
+    # gas.analysis.deltaH_b_err = [plusminus_2[1], None]
+    # mean of the residuals across all trials
+    # f = np.mean(res)
+
+    # mean of the residuals shifted by the critical chi-square value
+    # chi_crit = f + chi2.isf(0.05, len(avg_dms))
+
+    # setting up arrays for error analysis
+    # avg_dms1 = np.copy(avg_dms)
+    # avg_dms2 = np.copy(avg_dms)
+    # making sure arrays are not linked
+    # avg_dms_ch = [np.copy(avg_dms) for _ in range(len(ch_vec_f))]
+
+    # finding dHD and dHb +/- 1 away from optimal value
+    # dHD_vec = np.linspace(avg_dms[0] - 1, avg_dms[0] + 1, 100)
+    # dHb_vec = np.linspace(avg_dms[1] - 1, avg_dms[1] + 1, 100)
+
+    # finding C_H' +/- 1 away from optimal value
+    # ch_vec = [np.linspace(v - 1, v + 1, 100) for v in avg_dms[2:]]
+
+    # setting up more arrays for error analysis
+    # chi2_1 = np.zeros(len(dHD_vec))
+    # chi2_2 = np.zeros(len(dHD_vec))
+    # chi2_ch = [np.zeros(len(dHD_vec)) for _ in range(len(ch_vec_f))]
+
+    # perturbing the parameters to create a chi-square distribution
+    # for i, dHD_val in enumerate(dHD_vec):
+    #    avg_dms1[0] = dHD_val
+    #    avg_dms2[1] = dHb_vec[i]
+
+    #    for j in range(len(ch_vec_f)):
+    #        avg_dms_ch[j][j + 2] = ch_vec[j][i]
+
+    # solving for the chi-square distributions for each parameter as a
+    # Taylor series expansion
+    #    chi2_1[i] = f + (1 / 2) * (
+    #        (avg_dms1 - avg_dms) @ hessian_avg @ np.transpose((avg_dms1 - avg_dms))
+    #    )
+    #    chi2_2[i] = f + (1 / 2) * (
+    #        (avg_dms2 - avg_dms) @ hessian_avg @ np.transpose((avg_dms2 - avg_dms))
+    #    )
+
+    #    for j in range(len(ch_vec_f)):
+    #        chi2_ch[j][i] = f + (1 / 2) * (
+    #            (avg_dms_ch[j] - avg_dms) @ hessian_avg @ np.transpose((avg_dms_ch[j] - avg_dms))
+    #        )
+
+    # fitting the chi-square distributions to parabolas
+    # chi2_1_fit = poly.polyfit(dHD_vec, chi2_1, 2)
+    # chi2_2_fit = poly.polyfit(dHb_vec, chi2_2, 2)
+    # chi2_ch_fit = [np.zeros(3) for _ in range(len(ch_vec_f))]
+
+    # for j in range(len(ch_vec_f)):
+    #    chi2_ch_fit[j] = poly.polyfit(ch_vec[j], chi2_ch[j], 2)
+
+    # shifting the fits by the chi-square minimum
+    # chi2_1_fit[0] = chi2_1_fit[0] - chi_crit
+    # chi2_2_fit[0] = chi2_2_fit[0] - chi_crit
+
+    # for j in range(len(ch_vec_f)):
+    #    chi2_ch_fit[j][0] = chi2_ch_fit[j][0] - chi_crit
+
+    # finding where the distributions are equal to the crit. chi-square value
+    # roots_1 = poly.polyroots(chi2_1_fit)
+    # roots_2 = poly.polyroots(chi2_2_fit)
+
+    # roots_ch = [np.zeros(2) for _ in range(len(ch_vec_f))]
+
+    # for j in range(len(ch_vec_f)):
+    #    roots_ch[j] = poly.polyroots(chi2_ch_fit[j])
+
+    # plusminus_1 = roots_1 - avg_dms[0]  # error for dHD
+    # plusminus_2 = roots_2 - avg_dms[1]  # error for dHb
+
+    # plusminus_ch = [np.zeros(2) for _ in range(len(ch_vec_f))]
+
+    # for j in range(len(ch_vec_f)):
+    #    plusminus_ch[j] = roots_ch[j] - avg_dms[j + 2]
+
+    # ch_err = np.array([arr[1] for arr in plusminus_ch])  # error for C_H'
+
+    # gas.vH.plusminus_1 = plusminus_1
+    # gas.vH.plusminus_2 = plusminus_2
+    # gas.vH.plusminus_ch = plusminus_ch
+    # gas.CH_err = ch_err
+
+    # gas.analysis.deltaH_D_err = [plusminus_1[1], None]
+    # gas.analysis.deltaH_b_err = [plusminus_2[1], None]
 
     return gas
 
@@ -1406,7 +1549,19 @@ def compute(gas, output="unnamed_file"):
     Returns:
         None
     """
+    print(
+        r"""
+===================================================================
+              ___  __  _______
+   ___  __ __/ _ \/  |/  / __/      Copyright (c) 2025
+  / _ \/ // / // / /|_/ /\ \        Massachusetts Institute
+ / .__/\_, /____/_/  /_/___/        of Technology
+/_/   /___/                    
 
+Authors: B.C. Tapia, P.A. Dean, J.Y. Yeo, A.X. Wu, Z.P. Smith
+===================================================================          
+"""
+    )
     calc_LFEs(gas)
     calc_params(gas)
     chi2_error_fit(gas)
@@ -1414,10 +1569,9 @@ def compute(gas, output="unnamed_file"):
 
     evaluate.heat_of_sorption(gas)
     # vis.heat_of_sorption(gas)
-
     if output is not None:
         print(f"Pickling {output}.pkl")
         save_gas_class(gas, filename=output + ".pkl")
         print("Pickling successful")
-        print("--------------------------------------------------------------")
+        print("==============================================================")
         report.generate(gas, report_name=output + ".pdf")

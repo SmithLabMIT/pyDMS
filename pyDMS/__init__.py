@@ -7,7 +7,7 @@ pyDMS.dms
  / .___/\__, /_____/_/  /_//____/
 /_/    /____/
 
-Copyright 2025 Brandon C. Tapia
+Copyright 2025 Brandon C. Tapia, Pablo A. Dean, Jing Ying Yeo, Albert X. Wu, Zachary p. Smith
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the “Software”),
@@ -30,7 +30,7 @@ SOFTWARE.
 
 import warnings
 
-__version__ = "0.0.1dev1"
+__version__ = "0.1.0"
 
 
 def error_in_red(message):

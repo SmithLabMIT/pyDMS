@@ -9,11 +9,12 @@ Licensed under the MIT License
 import numpy as np
 import statsmodels.api as sm
 import warnings
-
+import copy
 import pyDMS
+from scipy.optimize import minimize_scalar
 
 
-def isotherm(gas, index, eos=None):
+def isotherm(gas, index):
     """Computes an isotherm from the optimized DMS parameters at
             the specified temperature.
 
@@ -26,6 +27,8 @@ def isotherm(gas, index, eos=None):
         An array of the isotherm
             [pressure or fugacity, concentration, concentration error].
     """
+
+    # TODO: determine whether we should switch from index to temp <- user inout needed
 
     ch = gas.CH[index]
     kd = gas.kD[index]
@@ -42,7 +45,7 @@ def isotherm(gas, index, eos=None):
         pyDMS.warning_in_orange("Neither p or f is defined, using isotherm range 0-40 atm")
         p_vec = np.tile([0.0, 40.0], (len(gas.temp), 1))
 
-    p_val = np.linspace(1e-6, np.max(p_vec[index]), 300)
+    p_val = np.linspace(1e-6, np.max(p_vec[index]), 3000)
 
     c = kd * p_val + ch * b * p_val / (1 + b * p_val)
     c_err = np.sqrt(
@@ -55,7 +58,8 @@ def isotherm(gas, index, eos=None):
 
 
 def S_inf(gas):
-    """Computes the sorption coefficient at infinite dilution
+    """Computes the sorption coefficient at infinite dilution along with the corresponding uncertainty
+    Results can be found in Gas.analysis.S_inf and Gas.analysis.S_inf_err
 
     Args:
         gas: an instance of the Gas class
@@ -67,10 +71,16 @@ def S_inf(gas):
     k_D = gas.kD
     b = gas.b
     ch = gas.CH
+
+    k_D_err = gas.kD_err
+    b_err = gas.b_err
+    ch_err = gas.CH_err
+
     S_inf_calc = k_D + ch * b
+    S_inf_err_calc = np.sqrt(ch**2 * b_err**2 + ch_err**2 * b**2 + k_D_err)
 
     gas.analysis.S_inf = S_inf_calc
-    gas.analysis.S_inf_err = "Not yet implemented*"
+    gas.analysis.S_inf_err = S_inf_err_calc
 
 
 def heat_of_sorption(gas, method="all"):
@@ -185,3 +195,56 @@ def heat_of_sorption(gas, method="all"):
         pyDMS.error_in_red(f"Unknown method {method} for heat of sorption")
 
     return gas
+
+
+def isosteric_heat(gas, n_points):
+    """ """
+
+    def minimize(p, C_target, kD, CH, b):
+        C_DMS = kD * p + CH * b * p / (1 + b * p)
+        return (C_target - C_DMS) ** 2
+
+    max_C = np.max(gas.C)
+
+    C_target_low = np.linspace(0.001, 1, n_points)
+    C_target_high = np.linspace(1.01, max_C, n_points)
+    C_target = np.union1d(C_target_low, C_target_high)
+
+    # p_guess = copy.deepcopy(C_target)
+
+    p_iso = np.zeros((len(gas.temp), len(C_target)))
+    C_iso = np.zeros(len(gas.temp), len(C_target))
+    deltaH_iso = np.zeros(len(gas.temp), len(C_target))
+    deltaH_iso_err = np.zeros(len(gas.temp), len(C_target))
+
+    for i, C_val in enumerate(C_target):
+
+        p_results = np.zeros(len(gas.temp))
+        for j, temp_val in enumerate(gas.temp):
+            kD = gas.kD[j]
+            CH = gas.CH[j]
+            b = gas.b[j]
+            result = minimize_scalar(
+                minimize, args=(C_val, kD, CH, b), bounds=(1e-6, 1000), method="bounded"
+            )
+            p_results[j] = result.x
+
+        ln_p = np.log(p_results)
+        inv_temp = 1 / gas.temp
+        inv_temp_with_const = sm.add_constant(inv_temp)
+        isosteric_model = sm.OLS(ln_p, inv_temp_with_const).fit()
+
+        int_isosteric, slope_isosteric = isosteric_model.params
+        int_isosteric_err, slope_isosteric_err = isosteric_model.bse
+        deltaH_isosteric = -slope_isosteric * 8.313 * 10**-3  # *z
+        deltaH_isosteric_err = slope_isosteric_err * 8.314 * 10**-3  # *z
+        p_avg = np.mean(p_results)
+
+        p_iso[i, j] = p_avg
+        C_iso[i, j] = C_val
+        deltaH_iso[i, j] = deltaH_isosteric
+        deltaH_iso_err[i, j] = deltaH_isosteric_err
+
+    gas.analysis.C_iso = C_iso
+    gas.analysis.deltaH_iso = deltaH_iso
+    gas.analysis.deltaH_iso_err = deltaH_iso_err
