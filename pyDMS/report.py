@@ -1,8 +1,7 @@
 """
 pyDMS.report
 
-Copyright 2025 Brandon C. Tapia
-
+Copyright 2025 Massachusetts Institute of Technology
 Licensed under the MIT License
 """
 
@@ -167,8 +166,17 @@ def isotherms(gas, tmpdir):
 
 
 def heat_of_sorption(gas, tmpdir="."):
-    """
-    *
+    """Plots and saves the heats of sorption
+
+    report.heat_of_sorption should be reserved specifically for printing in the
+        report.
+    For general plotting of the isotherms, use visualization.heat_of_sorption
+
+    Args:
+        gas: An instance of the Gas class with Gas populated
+
+    Returns:
+        The name of the file that was saved
     """
 
     vis.heat_of_sorption(gas)
@@ -269,7 +277,7 @@ def generate(gas, report_name):
 
         elements.append(Paragraph("pyDMS", styles["Title"]))
 
-        elements.append(Paragraph("Reproducible Dual-Mode Sorption Parameters", centered_style))
+        elements.append(Paragraph("Reproducible Dual–Mode Sorption Parameters", centered_style))
         elements.append(Spacer(1, 12))
 
         elements.append(Paragraph(f"Analysis performed at {formatted_datetime}", styles["Normal"]))
@@ -288,7 +296,7 @@ def generate(gas, report_name):
             ]
         )
 
-        header_data = [["Temperature", "Parameter", "Result ± Error"]]
+        header_data = [["Temperature", "Parameter", "Result ± Std. Dev."]]
         header_table = Table(header_data, colWidths=col_widths, rowHeights=20)
         header_table.setStyle(table_style)
         header_table.hAlign = "LEFT"
@@ -306,9 +314,9 @@ def generate(gas, report_name):
             C_H_paragraph = Paragraph(C_H_text, styles["Normal"])
 
             data = [
-                [label, kD_paragraph, f"{kD[i]} ± {kD_err[i]}"],
-                ["", C_H_paragraph, f"{C_H[i]} ± {C_H_err[i]}"],
-                ["", "b", f"{b[i]} ± {b_err[i]}"],
+                [label, kD_paragraph, f"{kD[i]:.5f} ± {kD_err[i]:.5f}"],
+                ["", C_H_paragraph, f"{C_H[i]:.5f} ± {C_H_err[i]:.5f}"],
+                ["", "b", f"{b[i]:.5f} ± {b_err[i]:.5f}"],
             ]
 
             table = Table(data, colWidths=col_widths, rowHeights=20)
@@ -449,18 +457,18 @@ def generate(gas, report_name):
             ],
             [
                 "i = Infinite Dilution",
-                f"{gas.analysis.deltaH_S_inf[1]:.3e}±{gas.analysis.deltaH_S_inf_err[1]:.3e}",
-                f"{gas.analysis.deltaH_S_inf[0]:.6f} ± {gas.analysis.deltaH_S_inf_err[0]:.6f}",
+                f"{gas.analysis.deltaH_S_inf[1]:.2e}±{gas.analysis.deltaH_S_inf_err[1]:.2e}",
+                f"{gas.analysis.deltaH_S_inf[0]:.4f} ± {gas.analysis.deltaH_S_inf_err[0]:.4f}",
             ],
             [
                 "i = Henry",
-                f"{gas.analysis.deltaH_D[1]:.3e} ± {gas.analysis.deltaH_D_err[1]:.3e}",
-                f"{gas.analysis.deltaH_D[0]:.6f} ± {gas.analysis.deltaH_D_err[0]:.6f}",
+                f"{gas.analysis.deltaH_D[1]:.2e} ± {gas.analysis.deltaH_D_err[1]:.2e}",
+                f"{gas.analysis.deltaH_D[0]:.4f} ± {gas.analysis.deltaH_D_err[0]:.4f}",
             ],
             [
                 "i = Langmuir",
-                f"{gas.analysis.deltaH_b[1]:.3e} ± {gas.analysis.deltaH_b_err[1]:.3e}",
-                f"{gas.analysis.deltaH_b[0]:.6f} ± {gas.analysis.deltaH_b_err[0]:.6f}",
+                f"{gas.analysis.deltaH_b[1]:.2e} ± {gas.analysis.deltaH_b_err[1]:.2e}",
+                f"{gas.analysis.deltaH_b[0]:.4f} ± {gas.analysis.deltaH_b_err[0]:.4f}",
             ],
         ]
 
@@ -473,6 +481,7 @@ def generate(gas, report_name):
                     ("ALIGN", (0, 0), (-1, -1), "LEFT"),
                     ("GRID", (0, 0), (-1, -1), 1, colors.black),
                     ("BACKGROUND", (0, 1), (-1, -1), colors.white),
+                    ("BOTTOMPADDING", (0, 0), (-1, 0), 4),
                 ]
             )
         )
@@ -620,7 +629,7 @@ def generate(gas, report_name):
         elements.append(Paragraph("License", styles["Heading2"]))
         elements.append(
             Paragraph(
-                "Copyright 2025 Brandon C. Tapia, Jing Ying Yeo, Pablo Dean, Albert X. Wu, Zachary P. Smith."
+                "Copyright (C) 2025 Massachusetts Institute of Technology"
             )
         )
         elements.append(Spacer(1, 12))

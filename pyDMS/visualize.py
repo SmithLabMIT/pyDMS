@@ -1,8 +1,7 @@
 """
 pyDMS.visualize
 
-Copyright 2025 Brandon C. Tapia
-
+Copyright 2025 Massachusetts Institute of Technology
 Licensed under the MIT License
 """
 
@@ -12,8 +11,6 @@ import matplotlib.cm as cm
 import matplotlib.colors as mcolors
 
 from . import evaluate
-
-# pylint: disable=C0103
 
 small_txt = 9
 medium_txt = 12
@@ -74,16 +71,16 @@ def LFER(gas, outliers=False, show=False):
     ax[0].plot(
         x_fit_kd, lin_fit(x_fit_kd, slope_kd, int_kd), label="RANSAC fit", color=cmap(norm(1))
     )
-    ax[0].set_xlabel(r"$\mathrm{ln}(k_{D,0})$")
-    ax[0].set_ylabel(r"$\Delta H_D \; (\mathrm{kJ \; mol^{-1}})$")
+    ax[0].set_xlabel(r"$\mathrm{ln}(k_{\mathrm{D},0})$")
+    ax[0].set_ylabel(r"$\Delta H_\mathrm{D} \; (\mathrm{kJ \; mol^{-1}})$")
 
     if outliers:
         ax[1].plot(log_b0_out, deltaHb_out, "o", color="gray", alpha=0.7)
     ax[1].plot(log_b0, deltaHb, "o", color="black")
     x_fit_b = np.linspace(np.min(log_b0), np.max(log_b0), 100)
     ax[1].plot(x_fit_b, lin_fit(x_fit_b, slope_b, int_b), label="RANSAC fit", color=cmap(norm(5)))
-    ax[1].set_xlabel(r"$\mathrm{ln}(b_0)$")
-    ax[1].set_ylabel(r"$\Delta H_b \; (\mathrm{kJ \; mol^{-1}})$")
+    ax[1].set_xlabel(r"$\mathrm{ln}(\mathrm{b}_0)$")
+    ax[1].set_ylabel(r"$\Delta H_\mathrm{b} \; (\mathrm{kJ \; mol^{-1}})$")
 
     plt.tight_layout()
 
@@ -121,11 +118,11 @@ def histograms(gas, show=False):
         row, col = divmod(i, ncols)
 
         if i == 0:
-            label = r"$\Delta H_{D}-\overline{\Delta H_{D}} \; (\mathrm{kJ \; mol^{-1}})$"
+            label = r"$\Delta H_{\mathrm{D}}-\overline{\Delta H_{\mathrm{D}}} \; (\mathrm{kJ \; mol^{-1}})$"
         elif i == 1:
-            label = r"$\Delta H_b-\overline{\Delta H_b} \; (\mathrm{kJ \; mol^{-1}})$"
+            label = r"$\Delta H_\mathrm{b}-\overline{\Delta H_\mathrm{b}} \; (\mathrm{kJ \; mol^{-1}})$"
         else:
-            tex = "$C_H^{\\prime}-\\overline{C_H^{\\prime}}$"
+            tex = "$C_\\mathrm{H}^{\\prime}-\\overline{C_\\mathrm{H}^{\\prime}}$"
             label = f"({tex}) ({temps[i-2]} K)"
 
         ax[row, col].set_xlabel(label)
@@ -210,8 +207,17 @@ def isotherms(gas, show=False):
 
 
 def heat_of_sorption(gas, show=False):
-    """
-    *
+    """Plots and saves the heats of sorption
+
+    report.heat_of_sorption should be reserved specifically for printing in the
+        report.
+    For general plotting of the isotherms, use visualization.heat_of_sorption
+
+    Args:
+        gas: An instance of the Gas class with Gas populated
+
+    Returns:
+        The name of the file that was saved
     """
 
     temp = gas.temp
@@ -255,17 +261,17 @@ def heat_of_sorption(gas, show=False):
     ax[0].plot(inv_RT, ln_S_inf, "o", color="black")
     ax[0].plot(inv_RT, lin_fit(inv_RT, -deltaH_S_inf, ln_S_inf_0), label="OLS", color=cmap(norm(1)))
     ax[0].set_ylabel(r"$\mathrm{ln}(S_\infty)$")
-    ax[0].set_xlabel(r"$(RT)^{-1} \; \mathrm{mol \; kJ^{-1}}$")
+    ax[0].set_xlabel(r"$(RT)^{-1} \; (\mathrm{mol \; kJ^{-1}})$")
 
     ax[1].plot(inv_RT, ln_k_D, "o", color="black")
     ax[1].plot(inv_RT, lin_fit(inv_RT, -deltaH_D, ln_k_D_0), label="OLS", color=cmap(norm(2)))
-    ax[1].set_ylabel(r"$\mathrm{ln}(k_D)$")
-    ax[1].set_xlabel(r"$(RT)^{-1} \; \mathrm{mol \; kJ^{-1}}$")
+    ax[1].set_ylabel(r"$\mathrm{ln}(k_\mathrm{D})$")
+    ax[1].set_xlabel(r"$(RT)^{-1} \; (\mathrm{mol \; kJ^{-1}})$")
 
     ax[2].plot(inv_RT, ln_b, "o", color="black")
     ax[2].plot(inv_RT, lin_fit(inv_RT, -deltaH_b, ln_b_0), label="OLS", color=cmap(norm(3)))
     ax[2].set_ylabel(r"$\mathrm{ln}(b)$")
-    ax[2].set_xlabel(r"$(RT)^{-1} \; \mathrm{mol \; kJ^{-1}}$")
+    ax[2].set_xlabel(r"$(RT)^{-1} \; (\mathrm{mol \; kJ^{-1}})$")
 
     plt.tight_layout()
 

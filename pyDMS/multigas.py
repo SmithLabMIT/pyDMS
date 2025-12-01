@@ -1,8 +1,7 @@
 """
 pyDMS.multigas
 
-Copyright 2025 Brandon C. Tapia
-
+Copyright 2025 Massachusetts Institute of Technology
 Licensed under the MIT License
 """
 
@@ -85,14 +84,16 @@ def mixed_isotherm(*gases, p_or_f, mol_frac, temp):
 
 def selectivity(*isotherms, calc=None):
     """Computes the binary or ternary sorption selectivity from isotherm data
-    isotherms: isotherm data in tuple: [partial pressure or fugacity, concentration, concentration error].
-        This data is in the form returned by evaluate.isotherm()
-    calc: Style to use when three isotherms are provided. Options are either 1_numerator, 2_numerator.
-        1_numerator: alpha = (c1/p1) / ((c2/p2) + (c3*p3))
-        2_numerator: alpha = ((c1/p1) + (c2/p2)) / (c3 * p3)
 
-    Returns: [total pressure or total fugacity, selectivity, selectivity error]
+    Args:
+        isotherms: isotherm data in tuple: [partial pressure or fugacity, concentration, concentration error].
+            This data is in the form returned by evaluate.isotherm()
+        calc: Style to use when three isotherms are provided. Options are either 1_numerator, 2_numerator.
+            1_numerator: alpha = (c1/p1) / ((c2/p2) + (c3*p3))
+            2_numerator: alpha = ((c1/p1) + (c2/p2)) / (c3 * p3)
 
+    Returns:
+        [total pressure or total fugacity, selectivity, selectivity error]
     """
 
     if len(isotherms) not in [2, 3]:

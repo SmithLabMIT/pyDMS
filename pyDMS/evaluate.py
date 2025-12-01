@@ -1,8 +1,7 @@
 r"""
 pyDMS.evaluate
 
-Copyright 2025 Brandon C. Tapia
-
+Copyright 2025 Massachusetts Institute of Technology
 Licensed under the MIT License
 """
 
@@ -28,7 +27,7 @@ def isotherm(gas, index):
             [pressure or fugacity, concentration, concentration error].
     """
 
-    # TODO: determine whether we should switch from index to temp <- user inout needed
+    # TODO: determine whether we should switch from index to temp <- user input needed
 
     ch = gas.CH[index]
     kd = gas.kD[index]
@@ -84,7 +83,14 @@ def S_inf(gas):
 
 
 def heat_of_sorption(gas, method="all"):
-    """Computes heats of sorption"""
+    """Computes heats of sorption
+    
+    Args:
+        gas: an instance of the Gas class
+
+    Returns:
+        an instance of the Gas class
+    """
 
     temp = gas.temp
 
@@ -97,7 +103,15 @@ def heat_of_sorption(gas, method="all"):
     inv_RT = 1 / (0.008314 * temp)
 
     def infinite_dilution_heat(gas):
-        """ """
+        """Computes the infinite dilution heat of sorption
+        
+        Args:
+            gas: an instance of the Gas class
+
+        Returns:
+            an instance of the Gas class
+        """
+
         S_inf(gas)
 
         S_inf_calc = gas.analysis.S_inf
@@ -121,8 +135,13 @@ def heat_of_sorption(gas, method="all"):
         return gas
 
     def henry_heat(gas):
-        """
-        *
+        """Computes the Henry heat of sorption
+        
+        Args:
+            gas: an instance of the Gas class
+
+        Returns:
+            an instance of the Gas class
         """
 
         k_D = gas.kD
@@ -150,7 +169,14 @@ def heat_of_sorption(gas, method="all"):
         return gas
 
     def langmuir_heat(gas):
-        """ """
+        """Computes the Langmuir heat of sorption
+        
+        Args:
+            gas: an instance of the Gas class
+
+        Returns:
+            an instance of the Gas class
+        """
 
         b = gas.b
 
@@ -198,7 +224,14 @@ def heat_of_sorption(gas, method="all"):
 
 
 def isosteric_heat(gas, n_points):
-    """ """
+    """Computes the isosteric heats of sorption
+    
+    Args:
+        gas: An instance of the gas class
+
+    Returns:
+        None
+    """
 
     def minimize(p, C_target, kD, CH, b):
         C_DMS = kD * p + CH * b * p / (1 + b * p)

@@ -1,11 +1,9 @@
 """
 pyDMS.dms
-
-Copyright 2025 Brandon C. Tapia
-
-Licensed under the MIT License
-
 Fitting the dual-mode sorption (DMS) model with LFER and van't Hoff constraints
+
+Copyright 2025 Massachusetts Institute of Technology
+Licensed under the MIT License
 """
 
 import warnings
@@ -300,8 +298,8 @@ def save_gas_class(gas, filename):
 
     with open(filename, "wb") as f:
         pickle.dump(gas, f, protocol=pickle.HIGHEST_PROTOCOL)
-    print("Pickling successful")
-    print("--------------------------------------------------------------")
+    # print("Pickling successful")
+    # print("--------------------------------------------------------------")
 
 
 def load_gas_class(filename):
@@ -667,13 +665,7 @@ def calc_LFEs(gas, settings=None):
 
     Args:
         gas: An instance of the Gas class
-        trials: The number of optimization cycles to run with randomly chosen
-            initial guesses
-        bounds: The bounds for each guess to be chosen between
-        solver: The scipy.minimize solver (SLSQP or trust-constr) to use
-        verbose: Whether information should be printed to the display
-        solve_verbose: Whether individual solver iterations should be printed
-            to the display
+        settings: A dictionary of settings for the optimization
 
     Returns:
         Data in the Gas.LFER subclass
@@ -729,7 +721,7 @@ def calc_LFEs(gas, settings=None):
 
     trials = settings.get("trials")
     solver = settings.get("solver_LFER")
-    ftol_val = settings.get("xtol", 1e-12)
+    ftol_val = settings.get("ftol", 1e-12)
     xtol_val = settings.get("xtol", 1e-12)
     gtol_val = settings.get("gtol", 1e-12)
     maxiter_LFER = settings.get("maxiter_LFER", 1000)
@@ -1304,10 +1296,14 @@ def calc_params(gas):
 
 
 def chi2_error_fit(gas):
-    """
-    *
-    """
+    """Calculates uncertainty via determination of the covariance materix.
+    Args:
+        gas: An instance of the Gas class.
 
+    Returns:
+        Data in the Gas and Gas.analysis classes
+    """
+    
     hessian_avg = gas.vH.hessian_matrix
     res = gas.vH.residuals
 
@@ -1551,15 +1547,16 @@ def compute(gas, output="unnamed_file"):
     """
     print(
         r"""
-===================================================================
+==============================================================
               ___  __  _______
-   ___  __ __/ _ \/  |/  / __/      Copyright (c) 2025
+   ___  __ __/ _ \/  |/  / __/      Copyright (C) 2025
   / _ \/ // / // / /|_/ /\ \        Massachusetts Institute
  / .__/\_, /____/_/  /_/___/        of Technology
 /_/   /___/                    
 
 Authors: B.C. Tapia, P.A. Dean, J.Y. Yeo, A.X. Wu, Z.P. Smith
-===================================================================          
+Web: smithlab.mit.edu
+==============================================================
 """
     )
     calc_LFEs(gas)

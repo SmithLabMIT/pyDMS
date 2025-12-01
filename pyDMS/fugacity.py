@@ -1,8 +1,7 @@
 r"""
 pyDMS.fugacity
 
-Copyright 2025 Brandon C. Tapia
-
+Copyright 2025 Massachusetts Institute of Technology
 Licensed under the MIT License
 """
 
@@ -193,7 +192,7 @@ def virial_eos(gas):
     temps = np.atleast_1d(gas.temp)  # ensure 1D array
     p_list = gas.p  # list of arrays
 
-    R = 8.314e6  # cm³·Pa/(mol·K)
+    R = 8.314e6  # cm3*Pa/(mol*K)
     atm_to_pa = 1.01325e5
 
     if gas.virial_coeff:
@@ -346,4 +345,5 @@ def peng_robinson_eos(gas):
 
     gas.f = [np.array(row) for row in fugacities]
     gas.Z = [np.array(row) for row in Z_values]
+
     return gas
