@@ -223,9 +223,9 @@ def heat_of_sorption(gas, method="all"):
     return gas
 
 
-def isosteric_heat(gas, n_points):
+def isosteric_heat(gas, n_points=1000):
     """Computes the isosteric heats of sorption
-    
+
     Args:
         gas: An instance of the gas class
 
@@ -233,51 +233,111 @@ def isosteric_heat(gas, n_points):
         None
     """
 
-    def minimize(p, C_target, kD, CH, b):
+    def minimize_obj(p, C_target, kD, CH, b):
         C_DMS = kD * p + CH * b * p / (1 + b * p)
         return (C_target - C_DMS) ** 2
 
-    max_C = np.max(gas.C)
+    max_C = np.max(gas.c)
 
-    C_target_low = np.linspace(0.001, 1, n_points)
+    C_target_low = np.linspace(0.1, 1, n_points)
     C_target_high = np.linspace(1.01, max_C, n_points)
     C_target = np.union1d(C_target_low, C_target_high)
 
-    # p_guess = copy.deepcopy(C_target)
+    nT = len(gas.temp)
+    nC = len(C_target)
+    
+    # storing p(T,C), C_iso(C), dH_iso(C)
+    # p_iso = np.zeros((nT, nC))
+    C_iso = np.zeros(nC)
+    deltaH_iso = np.zeros(nC)
+    deltaH_iso_err = np.zeros(nC)
+    
+    inv_temp = 1 / np.asarray(gas.temp)
 
-    p_iso = np.zeros((len(gas.temp), len(C_target)))
-    C_iso = np.zeros(len(gas.temp), len(C_target))
-    deltaH_iso = np.zeros(len(gas.temp), len(C_target))
-    deltaH_iso_err = np.zeros(len(gas.temp), len(C_target))
+    # we now need to compute z
+    if gas.virial_coeff:
+        print("Calculating z using user-supplied Virial coefficients")
+        calc_z = True
+
+    elif gas.pr_coeff:
+        print("Calculating z using user-supplied Peng-Robinson " "coefficients")
+        calc_z = True
+
+    elif gas.formula in pyDMS.fugacity.virial_coeff:
+        print("Calculating z using built-in Virial EoS")
+        calc_z = True
+
+    elif gas.formula in pyDMS.fugacity.pr_coeff:
+        print("Calculating z using built-in Peng-Robinson EoS")
+        calc_z = True
+
+    elif gas.formula is None:
+        pyDMS.warning_in_orange(
+            "Gas.formula is not specfied. Assuming z=1"
+        )
+        calc_z = False
+
+    else:
+        pyDMS.warning_in_orange(
+            "Something went wrong trying to calculate z.\n Will use z=1"
+        )
+        calc_z = False
 
     for i, C_val in enumerate(C_target):
 
-        p_results = np.zeros(len(gas.temp))
-        for j, temp_val in enumerate(gas.temp):
+        p_results = np.zeros(nT)
+        z_vals = np.zeros(nT)
+
+        for j, T in enumerate(gas.temp):
             kD = gas.kD[j]
             CH = gas.CH[j]
             b = gas.b[j]
+
             result = minimize_scalar(
-                minimize, args=(C_val, kD, CH, b), bounds=(1e-6, 1000), method="bounded"
+                minimize_obj, args=(C_val, kD, CH, b), bounds=(1e-6, 1000), method="bounded"
             )
-            p_results[j] = result.x
+            
+            p = result.x
+            p_results[j] = p
+
+            # we now need to compute z
+            if calc_z:
+                if gas.virial_coeff:
+                    z_vals[j] = pyDMS.fugacity.virial_eos_z(gas, p, T)
+                elif gas.pr_coeff:
+                    z_vals[j] = pyDMS.fugacity.peng_robinson_eos_z(gas, p, T)
+                elif gas.formula in pyDMS.fugacity.virial_coeff:
+                    z_vals[j] = pyDMS.fugacity.virial_eos_z(gas, p, T)
+                elif gas.formula in pyDMS.fugacity.pr_coeff:
+                    z_vals[j] = pyDMS.fugacity.peng_robinson_eos_z(gas, p, T)
 
         ln_p = np.log(p_results)
-        inv_temp = 1 / gas.temp
         inv_temp_with_const = sm.add_constant(inv_temp)
         isosteric_model = sm.OLS(ln_p, inv_temp_with_const).fit()
 
+        if calc_z is True:
+            #print(z_vals)
+            z = np.mean(z_vals)
+            #print(z)
+            #print(np.std(z_vals))
+        else:
+            z = 1.0
+
         int_isosteric, slope_isosteric = isosteric_model.params
         int_isosteric_err, slope_isosteric_err = isosteric_model.bse
-        deltaH_isosteric = -slope_isosteric * 8.313 * 10**-3  # *z
-        deltaH_isosteric_err = slope_isosteric_err * 8.314 * 10**-3  # *z
-        p_avg = np.mean(p_results)
+        deltaH_isosteric = slope_isosteric * 8.314 * 10**-3 * z
+        deltaH_isosteric_err = slope_isosteric_err * 8.314 * 10**-3 * z
+        
 
-        p_iso[i, j] = p_avg
-        C_iso[i, j] = C_val
-        deltaH_iso[i, j] = deltaH_isosteric
-        deltaH_iso_err[i, j] = deltaH_isosteric_err
-
-    gas.analysis.C_iso = C_iso
+        #p_iso[:, ] = p_avg
+        C_iso[i] = C_val
+        deltaH_iso[i] = deltaH_isosteric
+        deltaH_iso_err[i] = deltaH_isosteric_err
+    #from matplotlib import pyplot as plt
+    #plt.errorbar(C_iso, deltaH_iso, yerr=deltaH_iso_err)
+    #plt.show()
+    gas.analysis.c_iso = C_iso
     gas.analysis.deltaH_iso = deltaH_iso
     gas.analysis.deltaH_iso_err = deltaH_iso_err
+
+    return gas

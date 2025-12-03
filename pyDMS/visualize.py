@@ -209,15 +209,11 @@ def isotherms(gas, show=False):
 def heat_of_sorption(gas, show=False):
     """Plots and saves the heats of sorption
 
-    report.heat_of_sorption should be reserved specifically for printing in the
-        report.
-    For general plotting of the isotherms, use visualization.heat_of_sorption
-
     Args:
         gas: An instance of the Gas class with Gas populated
 
     Returns:
-        The name of the file that was saved
+        None
     """
 
     temp = gas.temp
@@ -274,6 +270,35 @@ def heat_of_sorption(gas, show=False):
     ax[2].set_xlabel(r"$(RT)^{-1} \; (\mathrm{mol \; kJ^{-1}})$")
 
     plt.tight_layout()
+
+    if show:
+        plt.show()
+
+
+def isosteric_heat(gas, show=False):
+    """Plots and saves the isosteric heat of sorption
+
+    Args:
+        gas: An instance of the Gas class with Gas populated
+        show: Whether the plot should be printed to the screen
+
+    Returns:
+        None
+    """
+    C_iso = gas.analysis.c_iso
+    deltaH_iso = gas.analysis.deltaH_iso
+    deltaH_iso_err = gas.analysis.deltaH_iso_err
+
+    cmap = cm.plasma
+    norm = mcolors.Normalize(vmin=0, vmax=5)
+
+    plt.ylabel(r"$\Delta H_{\mathrm{iso}} \; (\mathrm{kJ \; mol^{-1}})$")
+    plt.xlabel(r"$C \; \mathrm{(cm^3_{STP} \; cm^{-3}_{pol})}$")
+
+    plt.plot(C_iso, deltaH_iso, color=cmap(norm(0)))
+    plt.fill_between(
+        C_iso, deltaH_iso - deltaH_iso_err / 2, deltaH_iso + deltaH_iso_err / 2, color=cmap(norm(0)), alpha=0.5
+    )
 
     if show:
         plt.show()

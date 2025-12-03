@@ -90,7 +90,7 @@ def LFER(gas, tmpdir, outliers=False):
         outliers: whether the plot should contain all outlier data
 
     Returns:
-        The name of the file that was saved
+        The path of the file that was saved
     """
 
     vis.LFER(gas, outliers)
@@ -112,7 +112,7 @@ def LFER_outliers(gas, tmpdir, outliers=True):
         outliers: whether the plot should contain all outlier data
 
     Returns:
-        The name of the file that was saved
+        The path of the file that was saved
     """
 
     vis.LFER(gas, outliers)
@@ -134,7 +134,7 @@ def histograms(gas, tmpdir):
         gas: An instance of the Gas class with Gas.vH populated
 
     Returns:
-        The name of the file that was saved
+        The path of the file that was saved
     """
 
     vis.histograms(gas)
@@ -155,7 +155,7 @@ def isotherms(gas, tmpdir):
         gas: An instance of the Gas class with Gas populated
 
     Returns:
-        The name of the file that was saved
+        The path of the file that was saved
     """
 
     vis.isotherms(gas)
@@ -170,17 +170,38 @@ def heat_of_sorption(gas, tmpdir="."):
 
     report.heat_of_sorption should be reserved specifically for printing in the
         report.
-    For general plotting of the isotherms, use visualization.heat_of_sorption
+    For general plotting of the isotherms, use visualize.heat_of_sorption
 
     Args:
         gas: An instance of the Gas class with Gas populated
 
     Returns:
-        The name of the file that was saved
+        The path of the file that was saved
     """
 
     vis.heat_of_sorption(gas)
     path = os.path.join(tmpdir, "heat_of_sorption.tmp.png")
+    plt.savefig(path, bbox_inches="tight", dpi=300)
+    plt.close()
+    return path
+
+
+def isosteric_heat(gas, tmpdir="."):
+    """Plots and saves the isosteric heat of sorption
+
+    report.isosteric_heat should be reserved specifically for printing in the
+        report.
+    For general plotting of the isotherms, use visualize.isosteric_heat
+
+    Args:
+        gas: An instance of the Gas class with Gas populated
+
+    Returns:
+        The path of the file that was saved
+    """
+
+    vis.isosteric_heat(gas)
+    path = os.path.join(tmpdir, "isosteric_heat.tmp.png")
     plt.savefig(path, bbox_inches="tight", dpi=300)
     plt.close()
     return path
@@ -487,6 +508,23 @@ def generate(gas, report_name):
         )
 
         elements.append(table)
+
+        elements.append(Spacer(1, 12))
+        elements.append(Spacer(1, 12))
+
+        plot_path = isosteric_heat(gas, tmpdir=tmpdir)
+
+        wait_for_file(plot_path)
+
+        with Image.open(plot_path) as img:
+            width, height = img.size
+            aspect_ratio = width / height
+
+            desired_width = 4 * inch
+            desired_height = desired_width / aspect_ratio
+
+        elements.append(PlatypusImage(plot_path, width=desired_width, height=desired_height))
+
         elements.append(PageBreak())
 
         centered_para = ParagraphStyle(name="CenteredCell", parent=styles["Normal"], alignment=1)
@@ -591,6 +629,7 @@ def generate(gas, report_name):
             ["ftol (SLSQP)", f"{settings.get('ftol')}"],
             ["xtol (trust-constr)", f"{settings.get('xtol')}"],
             ["gtol (trust-constr)", f"{settings.get('gtol')}"],
+            ["Seed", f"{settings.get('seed')}"]
         ]
 
         table = Table(data, colWidths=[inch * 3, inch * 2])
@@ -638,6 +677,3 @@ def generate(gas, report_name):
         )
 
         doc.build(elements, onFirstPage=footer, onLaterPages=footer)
-
-    print("pyDMS successful!")
-    print("-----------------------END OF PROGRAM------------------------")

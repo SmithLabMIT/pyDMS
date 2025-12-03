@@ -253,6 +253,9 @@ class analysis:
         "deltaH_D_err",
         "deltaH_b",
         "deltaH_b_err",
+        "c_iso",
+        "deltaH_iso",
+        "deltaH_iso_err",
     ]
 
     def __init__(self):
@@ -264,6 +267,9 @@ class analysis:
         self.deltaH_D_err = None
         self.deltaH_b = None
         self.deltaH_b_err = None
+        self.c_iso = None
+        self.deltaH_iso = None
+        self.deltaH_iso_err = None
 
     def __str__(self):
         lines = [f"{self.__class__.__name__}("]
@@ -700,12 +706,13 @@ def calc_LFEs(gas, settings=None):
 
     settings.setdefault("trials", 1000)
     settings.setdefault("solver_LFER", "SLSQP")
-    settings.setdefault("ftol", 1e-12)
-    settings.setdefault("xtol", 1e-12)
-    settings.setdefault("gtol", 1e-12)
+    settings.setdefault("ftol", 1e-7)
+    settings.setdefault("xtol", 1e-7)
+    settings.setdefault("gtol", 1e-7)
     settings.setdefault("maxiter_LFER", 1000)
     settings.setdefault("verbose", True)
     settings.setdefault("solver_verbose", False)
+    settings.setdefault("seed", None)
 
     kd0_0_bnd = settings.get("kD0_guess")
     dHD0_0_bnd = settings.get("dHD_guess")
@@ -721,12 +728,13 @@ def calc_LFEs(gas, settings=None):
 
     trials = settings.get("trials")
     solver = settings.get("solver_LFER")
-    ftol_val = settings.get("ftol", 1e-12)
-    xtol_val = settings.get("xtol", 1e-12)
-    gtol_val = settings.get("gtol", 1e-12)
-    maxiter_LFER = settings.get("maxiter_LFER", 1000)
+    ftol_val = settings.get("ftol")
+    xtol_val = settings.get("xtol")
+    gtol_val = settings.get("gtol")
+    maxiter_LFER = settings.get("maxiter_LFER")
     verbose = settings.get("verbose")
-    solver_verbose = settings.get("solver_verbose")
+    solver_verbose = settings.get("solver_verbose")    
+    rng_seed = settings.get("seed")
 
     # setting up the solver constraints: A*x <= b
     # (* consider allowing this to be turned off?)
@@ -785,7 +793,7 @@ def calc_LFEs(gas, settings=None):
         print("--------------------------------------------------------------")
 
     # initializing random number generator
-    rng = np.random.default_rng()
+    rng = np.random.default_rng(rng_seed)
 
     for j in range(trials):
 
@@ -1048,11 +1056,13 @@ def calc_params(gas):
 
     settings.setdefault("trials", 1000)
     settings.setdefault("solver_vH", "SLSQP")
-    settings.setdefault("ftol", 1e-12)
-    settings.setdefault("xtol", 1e-12)
-    settings.setdefault("gtol", 1e-12)
+    settings.setdefault("ftol", 1e-7)
+    settings.setdefault("xtol", 1e-7)
+    settings.setdefault("gtol", 1e-7)
     settings.setdefault("maxiter_vH", 1000)
+    settings.setdefault("verbose", True)
     settings.setdefault("solver_verbose", False)
+    settings.setdefault("seed", None)
 
     dHD0_0_bnd = settings.get("dHD_guess")
     dHb_0_bnd = settings.get("dHb_guess")
@@ -1064,12 +1074,13 @@ def calc_params(gas):
 
     trials = settings.get("trials")
     solver = settings.get("solver_vH")
-    ftol_val = settings.get("xtol", 1e-12)
-    xtol_val = settings.get("xtol", 1e-12)
-    gtol_val = settings.get("gtol", 1e-12)
+    ftol_val = settings.get("xtol")
+    xtol_val = settings.get("xtol")
+    gtol_val = settings.get("gtol")
     maxiter_vH = settings.get("maxiter_vH", 1000)
     verbose = settings.get("verbose")
     solver_verbose = settings.get("solver_verbose")
+    rng_seed = settings.get("seed")
 
     # setting up the solver constraints: A*x <= b
     A_con = np.zeros((len(c) - 1, len(c) + 2))
@@ -1112,7 +1123,7 @@ def calc_params(gas):
         print("--------------------------------------------------------------")
 
     # initializing random number generator
-    rng = np.random.default_rng()
+    rng = np.random.default_rng(rng_seed)
 
     for j in range(trials):
 
@@ -1528,9 +1539,6 @@ def propogate_error(gas):
     gas.kD_err = kd_err
     gas.b_err = b_err
 
-    print("Error propagation successful")
-    print("--------------------------------------------------------------")
-
     return gas
 
 
@@ -1563,12 +1571,18 @@ Web: smithlab.mit.edu
     calc_params(gas)
     chi2_error_fit(gas)
     propogate_error(gas)
-
+    print("Error propagation successful")
+    print("--------------------------------------------------------------")
+    print("Computing sorption energetics")
     evaluate.heat_of_sorption(gas)
+    evaluate.isosteric_heat(gas)
+    print("--------------------------------------------------------------")
     # vis.heat_of_sorption(gas)
     if output is not None:
         print(f"Pickling {output}.pkl")
         save_gas_class(gas, filename=output + ".pkl")
         print("Pickling successful")
-        print("==============================================================")
+        print("--------------------------------------------------------------")
         report.generate(gas, report_name=output + ".pdf")
+        print("pyDMS successful!")
+        print("=======================END OF PROGRAM========================")
