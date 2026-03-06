@@ -13,21 +13,26 @@ import pyDMS
 from scipy.optimize import minimize_scalar
 
 
-def isotherm(gas, index):
+def isotherm(gas, temp):
     """Computes an isotherm from the optimized DMS parameters at
             the specified temperature.
 
     Args:
         gas: An instance of the Gas class.
-        index: A float of the index of the temperature to compute
-            the sorption isotherm at.
+        temp: The temperature of the desired isotherm.
 
     Returns:
         An array of the isotherm
             [pressure or fugacity, concentration, concentration error].
     """
 
-    # TODO: determine whether we should switch from index to temp <- user input needed
+    idx = np.where(gas.temp == temp)[0]
+
+    if idx.size:
+        index = idx[0]
+    else:
+        index = int(np.argmin(np.abs(gas.temp - temp)))
+        pyDMS.warning_in_orange(f"Requested temperature {temp} not found. Using nearest value {gas.temp[index]} instead.")
 
     ch = gas.CH[index]
     kd = gas.kD[index]
@@ -237,7 +242,7 @@ def isosteric_heat(gas, n_points=1000):
         C_DMS = kD * p + CH * b * p / (1 + b * p)
         return (C_target - C_DMS) ** 2
 
-    max_C = np.max(gas.c)
+    max_C = max(np.max(np.asarray(ci, dtype=float)) for ci in gas.c)
 
     C_target_low = np.linspace(0.1, 1, n_points)
     C_target_high = np.linspace(1.01, max_C, n_points)
@@ -245,41 +250,41 @@ def isosteric_heat(gas, n_points=1000):
 
     nT = len(gas.temp)
     nC = len(C_target)
-    
+
     # storing p(T,C), C_iso(C), dH_iso(C)
     # p_iso = np.zeros((nT, nC))
     C_iso = np.zeros(nC)
     deltaH_iso = np.zeros(nC)
     deltaH_iso_err = np.zeros(nC)
-    
+
     inv_temp = 1 / np.asarray(gas.temp)
 
-    # we now need to compute z
+    # can we compute Z?
     if gas.virial_coeff:
-        print("Calculating z using user-supplied Virial coefficients")
+        print("Calculating Z using user-supplied Virial coefficients")
         calc_z = True
 
     elif gas.pr_coeff:
-        print("Calculating z using user-supplied Peng-Robinson " "coefficients")
+        print("Calculating Z using user-supplied Peng-Robinson " "coefficients")
         calc_z = True
 
     elif gas.formula in pyDMS.fugacity.virial_coeff:
-        print("Calculating z using built-in Virial EoS")
+        print("Calculating Z using built-in Virial EoS")
         calc_z = True
 
     elif gas.formula in pyDMS.fugacity.pr_coeff:
-        print("Calculating z using built-in Peng-Robinson EoS")
+        print("Calculating Z using built-in Peng-Robinson EoS")
         calc_z = True
 
     elif gas.formula is None:
         pyDMS.warning_in_orange(
-            "Gas.formula is not specfied. Assuming z=1"
+            "Gas.formula is not specfied. Assuming Z=1"
         )
         calc_z = False
 
     else:
         pyDMS.warning_in_orange(
-            "Something went wrong trying to calculate z.\n Will use z=1"
+            "Something went wrong trying to calculate Z.\n Will use Z=1"
         )
         calc_z = False
 
@@ -296,11 +301,11 @@ def isosteric_heat(gas, n_points=1000):
             result = minimize_scalar(
                 minimize_obj, args=(C_val, kD, CH, b), bounds=(1e-6, 1000), method="bounded"
             )
-            
+
             p = result.x
             p_results[j] = p
 
-            # we now need to compute z
+            # computing Z
             if calc_z:
                 if gas.virial_coeff:
                     z_vals[j] = pyDMS.fugacity.virial_eos_z(gas, p, T)

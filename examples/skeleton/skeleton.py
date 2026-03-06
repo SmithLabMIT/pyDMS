@@ -23,7 +23,7 @@ GAS_NAME.c = [np.array([5, 10, 15, 20]), np.array([2, 7, 10, 13])]
 GAS_NAME.c_err = [np.array([0.5, 0.7, 0.9, 1.0]), np.array([0.2, 0.3, 0.5, 0.7])]
 
 # The temperatures (K) each isotherm was run at.
-GAS_NAME.temp = [308, 328]
+GAS_NAME.temp = np.array([308, 328])
 
 # The formula of the gas (e.g., "CO2").
 # Use this if you wish to convert provided pressures to fugacities.
@@ -34,7 +34,6 @@ GAS_NAME.formula = "FORMULA_HERE"
 # These are all the settings that you can change within pyDMS.
 # If you do not provide any settings, these settings will automatically be applied
 # The manual explains the role of each settings.
-# The manual shows settings used for CO2 sorption in different polymers.
 GAS_NAME.settings = {"dHD_guess":      [-30, -1],
                      "dHD_bounds":     [-50,  0],
                      "dHb_guess":      [-30, -1],
@@ -43,18 +42,19 @@ GAS_NAME.settings = {"dHD_guess":      [-30, -1],
                      "kD0_bounds":     [0.001, 0.01],
                      "b0_guess":       [0, None],
                      "b0_bounds":      [0.001, 0.01],
-                     "CH_guess":       [0, 100],
-                     "CH_bounds":      [0, 100],
+                     "CH_guess":       [[0, 100], [0, 100]],  # One subarray per temp
+                     "CH_bounds":      [[0, 150], [0, 150]],  # One subarray per temp
                      "trials":         1000,
                      "solver_LFER":    "SLSQP",
                      "solver_vH":      "SLSQP",
                      "maxiter_LFER":   1000,
                      "maxiter_vH":     1000,
-                     "ftol":           1E-12,
-                     "xtol":           1E-12,
-                     "gtol":           1E-12,
+                     "ftol":           1E-7,
+                     "xtol":           1E-7,
+                     "gtol":           1E-7,
                      "verbose":        True,
-                     "solver_verbose": False}
+                     "solver_verbose": False,
+                     "seed":           None}
 
 # If you supply pressure and want to compute fugacity using a Virial expansion but
 # your gas is not He, H2, N2, O2, CH4, CO2, C2H6, C2H4, C3H8, or C3H6, then

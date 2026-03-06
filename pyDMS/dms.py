@@ -29,18 +29,18 @@ class Gas:
     Attributes:
         formula: a string indicating the chemical formula of the gas
             (e.g., 'CO2').
-        c: An array of concentrations. Defined as
-            np.array([[Array 1],[Array 2], ...]).
+        temp: An array of temperatures in K. Defined as
+            np.array([Temp 1, Temp 2, ...]).
         p: An array of pressures. Defined as
             np.array([[Array 1], [Array 2], ...]).
         f: An array of fugacities. Defined as
+        c: An array of concentrations. Defined as
+            np.array([[Array 1],[Array 2], ...]).
             [[Array 1], [Array 2], ...].
-        Z: An array of compressibility factors. Defined as
-            [Array 1], [Array 2], ...].
         c_err: An array of uncertainties in concentration. Defined as
             np.array([[Array 1], [Array 2], ...]).
-        temp: An array of temperatures in K. Defined as
-            np.array([Temp 1, Temp 2, ...]).
+        Z: An array of compressibility factors. Defined as
+            [Array 1], [Array 2], ...].
         kD:  An array of DMS parameter kD. Defined as
             np.array([Param 1, Param 2, ...]).
         b: An array of DMS parameter b. Defined as
@@ -1563,9 +1563,8 @@ def compute(gas, output="unnamed_file"):
 /_/   /___/                    
 
 Authors: B.C. Tapia, P.A. Dean, J.Y. Yeo, A.X. Wu, Z.P. Smith
-Web: smithlab.mit.edu
-==============================================================
-"""
+Web: https://smithlab.mit.edu
+=============================================================="""
     )
     calc_LFEs(gas)
     calc_params(gas)

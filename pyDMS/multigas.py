@@ -12,15 +12,6 @@ import pyDMS
 
 def mixed_isotherm(*gases, p_or_f, mol_frac, temp):
     """
-    Computes the mixed gas DMS isotherm
-    p: total pressure to compute DMS at
-    params: DMS parameters in a dictionary format
-    x: mole fractions of mixture
-    eos: Compute fugacity from provided p if desired using a virial approach
-        or Peng-Robinson EOS
-    T: temperature to compute fugacity at
-    gases: gases to compute fugacities of
-
     Returns: [partial pressure/fugacity, concentration, concentration error]
     """
 
@@ -29,10 +20,17 @@ def mixed_isotherm(*gases, p_or_f, mol_frac, temp):
 
     # p_f_max_array = np.zeros(len(mol_frac))
 
-    # *currently this just overwrites which is fine
-    # TODO: currently, it is assumed every gas will have the same index
+    idx_list = []
+
     for i, gas in enumerate(gases):
-        index = np.where(gas.temp == temp)[0][0]
+        idx = np.where(gas.temp == temp)[0]
+        if idx.size:
+            idx_single = idx[0]
+        else:
+            idx_single = int(np.argmin(np.abs(gas.temp - temp)))
+            pyDMS.warning_in_orange(f"Requested temperature {temp} not found. Using nearest value {gas.temp[idx_single]} instead.")
+        idx_list.append(idx_single)
+
     # this is somewhat useless but fine for now
     p_use = np.ones((len(gases), len(p_or_f))) * p_or_f
     p_partial = np.zeros_like(p_use)
@@ -47,6 +45,8 @@ def mixed_isotherm(*gases, p_or_f, mol_frac, temp):
     term2_partial_err_prop = 0  # initializing the error propogation
 
     for i, gas in enumerate(gases):
+
+        index = idx_list[i]
 
         if i == 0:
             ch = gas.CH[index]
@@ -63,6 +63,7 @@ def mixed_isotherm(*gases, p_or_f, mol_frac, temp):
     # error propogation
     for i, gas in enumerate(gases):
         if i != 0:
+            index = idx_list[i]
             b = gas.b[index]
             b_err = gas.b_err[index]
             term3_err_prop += (
@@ -129,7 +130,7 @@ def selectivity(*isotherms, calc=None):
 
     elif calc == "2_numerator":
         alpha = ((c1 / p1) + (c2 / p2)) / (c3 * p3)
-        alpha_err = np.zeros(len(c1))
+        alpha_err = np.sqrt(p3**2 * (c3**2 * (p2**2 * c1err**2 + p1**2 * c2err**2) + (c2 * p1 + c1 * p2)**2 * c3err**2) / (c3**4 * p1**2 * p2**2))
 
     elif calc == "1_numerator":
         alpha = (c1 / p1) / ((c2 / p2) + (c3 * p3))
@@ -141,7 +142,7 @@ def selectivity(*isotherms, calc=None):
 
     else:
         pyDMS.error_in_red(
-            'calc="1_numerator" or "2_numerator" required ' "for ternary selectivity"
+            'calc="1_numerator" or "2_numerator" required for ternary selectivity'
         )
 
     return [p_tot, alpha, alpha_err]

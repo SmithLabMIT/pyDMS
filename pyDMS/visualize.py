@@ -9,6 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import matplotlib.colors as mcolors
+from matplotlib.ticker import ScalarFormatter, MaxNLocator
 
 from . import evaluate
 
@@ -129,18 +130,32 @@ def histograms(gas, show=False):
         ax[row, col].set_ylabel("Trials")
         color = cmap(norm(i))
 
-        ax[row, col].hist(
-            transposed_dms[i] - np.mean(transposed_dms[i]), color="gray", bins="sqrt", alpha=0.5
-        )
-        ax[row, col].hist(
-            transposed_dms_no_out[i] - np.mean(transposed_dms_no_out[i]), color=color, bins="sqrt"
-        )
+        data_all = np.asarray(transposed_dms[i], dtype=float)
+        data_no = np.asarray(transposed_dms_no_out[i], dtype=float)
+        data_all = data_all[np.isfinite(data_all)]
+        data_no  = data_no[np.isfinite(data_no)]
+
+        if data_all.size == 0 and data_no.size == 0:
+            ax[row, col].text(0.5, 0.5, "No data", ha="center", va="center", transform=ax[row, col].transAxes)
+            continue
+
+        if data_all.size:
+            ax[row, col].hist(data_all - data_all.mean(), color="gray", bins="sqrt", alpha=0.5)
+        if data_no.size:
+            ax[row, col].hist(data_no - data_no.mean(), color=color, bins="sqrt")
 
     # Turn off unused axes
     total_axes = nrows * ncols
     for k in range(n, total_axes):
         r, c = divmod(k, ncols)
         ax[r, c].axis("off")
+
+    formatter = ScalarFormatter(useMathText=True)
+    formatter.set_powerlimits((0, 0))
+    for a in ax.flat[:n]:
+        a.xaxis.set_major_locator(MaxNLocator(nbins=5, integer=True))
+        a.xaxis.set_major_formatter(formatter)
+
 
     plt.tight_layout()
     if show:
@@ -182,7 +197,7 @@ def isotherms(gas, show=False):
     for i, temp in enumerate(T):
         row, col = divmod(i, ncols)
 
-        press, c_model, c_model_err = evaluate.isotherm(gas, i)
+        press, c_model, c_model_err = evaluate.isotherm(gas, temp)
         linecolor = cmap(norm(i))
 
         ax[row, col].set_ylabel(r"$C \; \mathrm{(cm^3_{STP} \; cm^{-3}_{pol})}$")
