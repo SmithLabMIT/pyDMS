@@ -1,7 +1,7 @@
 """
 pyDMS.report
 
-Copyright 2025 Massachusetts Institute of Technology
+Copyright 2026 Massachusetts Institute of Technology
 Licensed under the MIT License
 """
 
@@ -652,7 +652,7 @@ def generate(gas, report_name):
         elements.append(Paragraph("Questions or Comments?", styles["Heading2"]))
         elements.append(
             Paragraph(
-                "Please reach out through the pyDMS GitHub page (*INSERT LINK*)", styles["Normal"]
+                "Please reach out through the pyDMS GitHub page (github.com/SmithLabMIT/pyDMS) or via email at smithlab_software@mit.edu.", styles["Normal"]
             )
         )
 
@@ -663,17 +663,17 @@ def generate(gas, report_name):
                 styles["Normal"],
             )
         )
-        elements.append(Paragraph("*INSERT PAPER*", styles["Normal"]))
+        elements.append(Paragraph("Citation TBD, please cite the GitHub page currently", styles["Normal"]))
 
         elements.append(Paragraph("License", styles["Heading2"]))
         elements.append(
             Paragraph(
-                "Copyright (C) 2025 Massachusetts Institute of Technology"
+                "Copyright &copy; 2026 Massachusetts Institute of Technology"
             )
         )
         elements.append(Spacer(1, 12))
         elements.append(
-            Paragraph("pyDMS is covered under the MIT License (https://opensource.org/license/mit)")
+            Paragraph("pyDMS is covered under the 3-clause BSD License (https://opensource.org/license/bsd-3-clause)", styles["Normal"])
         )
 
         doc.build(elements, onFirstPage=footer, onLaterPages=footer)

@@ -322,8 +322,8 @@ def load_gas_class(filename):
         return pickle.load(f)
 
 
-def base_loss(x, p, c, cerr):
-    """Defines the loss function for TODO
+def unconstrained_loss(x, p, c, cerr):
+    """The loss function for an unconstrained DMS optimization
     Args:
 
     Returns:
@@ -343,9 +343,13 @@ def base_loss(x, p, c, cerr):
     return ssr
 
 
-def parameter_hints(gas):
-    # TODO
+def parameter_assist(gas):
+    """Helps to provide a reasonable range of initial parameter values. Ideally, this assists with trying to manually choose optimization ranges
+    Args:
 
+    Returns:
+    """
+    #user_verbose = gas.settings.get("verbose")
     c = gas.c
 
     calculate_fugacity(gas)
@@ -359,24 +363,119 @@ def parameter_hints(gas):
 
     T_vec = gas.temp
 
-    x0 = [4.0, 50.0, 1.0]
+    # initial guesses for kD, CH, b. This should be fairly insensitive to individual isotherms
+    x0 = [2.0, 30.0, 0.5]
 
+    kD = []
+    CH = []
+    b = []
     for i, p_i in enumerate(p_vec):
         c_i = c[i]
         cerr_i = cerr_vec[i]
 
-        base_loss(x0, p_i, c_i, cerr_i)
+        # solve the unconstrained optimization
+        bounds = [(1e-12, None), (1e-12, None), (1e-12, None)]
+        result = minimize(unconstrained_loss, x0, args=(p_i, c_i, cerr_i), bounds=bounds)
 
-        result = minimize(base_loss, x0, args=(p_i, c_i, cerr_i))
+        kD.append(result.x[0])
+        CH.append(result.x[1])
+        b.append(result.x[2])
 
-        print(result.x)
-    # read in individual arrays
+    kD = np.array(kD)
+    CH = np.array(CH)
+    b = np.array(b)
 
-    # optimize DMS
+    # van't Hoff regressions
+    inv_T = 1 / np.array(T_vec)
 
-    # save values
+    # Global fit (would work if constrained properly as we do later!)
+    # kd_fit = poly.polyfit(inv_T, np.log(kD), 1)
+    # b_fit = poly.polyfit(inv_T, np.log(b), 1)
+    # kD0_uncon = np.exp(kd_fit[0])
+    # dHD_uncon = -kd_fit[1] * 0.0083144
+    # b0_uncon = np.exp(b_fit[0])
+    # dHb_uncon = -b_fit[1] * 0.0083144
 
-    # run regressions
+    ln_kD = np.log(kD)
+    ln_b = np.log(b)
+    kd_grad = np.gradient(ln_kD, inv_T)
+    b_grad  = np.gradient(ln_b, inv_T)
+    dHD_local = -kd_grad * 0.0083144
+    dHb_local = -b_grad * 0.0083144
+
+    ln_kD0_local = ln_kD - kd_grad * inv_T
+    ln_b0_local  = ln_b  - b_grad  * inv_T
+    kD0_local = np.exp(ln_kD0_local)
+    b0_local  = np.exp(ln_b0_local)
+
+    # guess "true" CH' bounds: [0.75CH'min, 1.25CH'max]
+    # guess "true" CH' guess: [CH'min, CH'max]
+    ch_bounds = np.array([[0.05*np.min(CH), 1.5*np.max(CH)] for _ in range(len(c))])
+    ch_guess = np.array([[0.1*np.min(CH), 1.25*np.max(CH)] for _ in range(len(c))])
+
+    # i = D or b
+    # guess "true" deltaHi bounds: [1.5deltaHimin, 0.5deltaHimax]
+    # guess "true" deltaHi guess: [1.25deltaHimin, 0.75deltaHimax]
+    # Force deltaHi between [0, -200 regardless]
+    mask_kD = (dHD_local <= 0) & (dHD_local >= -75)
+    mask_b  = (dHb_local <= 0) & (dHb_local >= -75)
+    kD0_local = kD0_local[mask_kD]
+    b0_local = b0_local[mask_b]
+    if kD0_local.size == 0:
+        kD0_local = np.array([1e-6, 1.0])
+
+    if b0_local.size == 0:
+        b0_local = np.array([1e-6, 1.0])
+
+    dHD_local = np.clip(dHD_local, -75, 0)
+    dHb_local = np.clip(dHb_local, -75, 0)
+    dHD_min = np.min(dHD_local)
+    dHD_max = np.max(dHD_local)
+    dHb_min = np.min(dHb_local) 
+    dHb_max = np.max(dHb_local)
+    dhd_bounds = [dHD_min*1.5, dHD_max*0.5]
+    dhd_guess = [dHD_min*1.25, dHD_max*0.75]
+    dhb_bounds = [dHb_min*1.5, dHb_max*0.5]
+    dhb_guess = [dHb_min*1.25, dHb_max*0.75]
+
+    dhd_bounds = np.clip(dhd_bounds, -75, 0)
+    dhd_guess  = np.clip(dhd_guess,  -50, -1)
+    dhb_bounds = np.clip(dhb_bounds, -75, 0)
+    dhb_guess  = np.clip(dhb_guess,  -50, -1)
+
+    # i = kD0 or b0
+    # guess "true" i bounds [0.5imin, 1.5imax]
+    # guess "true" i guess: [0.75imin, 1.25imax]
+    # Force deltaHi between [1E-7, 1 regardless] 
+    #kD0_local = np.clip(kD0_local, 1E-6, 1)
+    #b0_local = np.clip(b0_local, 1E-6, 1)
+    #kD0_min = np.min(kD0_local)
+    #kD0_max = np.max(kD0_local)
+    #b0_min = np.min(b0_local) 
+    #b0_max = np.max(b0_local)
+    #kD0_bounds = [kD0_min*0.5, kD0_max*1.5]
+    #kD0_guess = [kD0_min*0.75, kD0_max*1.25]
+    #b0_bounds = [b0_min*0.5, b0_max*1.5]
+    #b0_guess = [b0_min*0.75, b0_max*1.25]
+
+    if gas.settings is None:
+        gas.settings = {}
+
+    gas.settings.update({
+        "CH_bounds": ch_bounds,
+        "CH_guess": ch_guess,
+        "dHD_bounds": dhd_bounds,
+        "dHb_bounds": dhb_bounds,
+        "dHD_guess": dhd_guess,
+        "dHb_guess": dhb_guess,
+        # "kD0_bounds": kD0_bounds,
+        # "b0_bounds": b0_bounds,
+        # "kD0_guess": kD0_guess,
+        # "b0_guess": b0_guess,
+    })
+
+    #print(gas.settings)
+
     return
 
 
@@ -385,10 +484,10 @@ def calculate_fugacity(gas):
 
     If Gas.f is None, it will attempt to calculate the fugacity using
         (in order of priority):
-    (1) user-supplied Virial coefficients
-    (2) user-supplied Peng-Robinson coefficients
-    (3) built-in Virial coefficients (Gas.formula must be specified)
-    (4) built-in Peng-Robinson coefficients (Gas.formula must be specified)
+        (1) user-supplied Virial coefficients
+        (2) user-supplied Peng-Robinson coefficients
+        (3) built-in Virial coefficients (Gas.formula must be specified)
+        (4) built-in Peng-Robinson coefficients (Gas.formula must be specified)
 
     Args:
         gas: An instance of the Gas class.
@@ -797,7 +896,7 @@ def calc_LFEs(gas, settings=None):
 
     for j in range(trials):
 
-        if verbose and np.mod(j, 50) == 0:
+        if verbose and np.mod(j, 100) == 0:
             print(f"LFER trial: {j}/{trials}")
 
         # picking a random number in each bound
@@ -817,8 +916,8 @@ def calc_LFEs(gas, settings=None):
             (kd0_b_solver[0], kd0_b_solver[1]),  # kd0_0
             (dHD0_solver[0], dHD0_solver[1]),  # dHD_0
             (b0_solver[0], b0_solver[1]),  # b0_0
-            (dHb_solver[0], dHb_solver[1]),
-        ]  # dHb_0
+            (dHb_solver[0], dHb_solver[1]),  # dHb_0
+        ]
 
         solver_bounds.extend([(ch_s[0], ch_s[1]) for ch_s in ch_solver])
 
@@ -1127,7 +1226,7 @@ def calc_params(gas):
 
     for j in range(trials):
 
-        if verbose and np.mod(j, 50) == 0:
+        if verbose and np.mod(j, 100) == 0:
             print(f"van't Hoff trial: {j}/{trials}")
 
         # picking a random number in each bound
@@ -1557,7 +1656,7 @@ def compute(gas, output="unnamed_file"):
         r"""
 ==============================================================
               ___  __  _______
-   ___  __ __/ _ \/  |/  / __/      Copyright (C) 2025
+   ___  __ __/ _ \/  |/  / __/      Copyright (C) 2026
   / _ \/ // / // / /|_/ /\ \        Massachusetts Institute
  / .__/\_, /____/_/  /_/___/        of Technology
 /_/   /___/                    

@@ -14,14 +14,14 @@ The paper describing pyDMS can be found [here](LINK)
 ### Features
 - Compute reproducible DMS parameters: $C_\mathrm{H}^\prime$, $k_\mathrm{D}$, and $\mathrm{b}$ *with* uncertainty via LFERs and van't Hoff constraints.
 - Access computed results in Python objects or via the automatically output PDF.
-- Compute pure and mixed-gas sorption isotherms from the DMS parameters *with* error propogation
-- Calculate ideal and mixed-gas sorption selectivities *with* error uncertainty
+- Compute pure and mixed-gas sorption isotherms from the DMS parameters *with* uncertainty values
+- Calculate ideal and mixed-gas sorption selectivities *with* uncertainty values
 - Calculate fugacity from pressure via Virial and Peng-Robinson implementation
 
 
 ## Citation(s)
 #### If you used pyDMS, please cite:
-Tapia, B. C.; Dean, P. A.; Yeo, J. Y.; Smith, Z. P. pyDMS: A Python package for the determination of physics-informed, reproducible dual-mode sorption (DMS) parameters. *AIChE J.* **2026**.
+Tapia, B. C.; Dean, P. A.; Yeo, J. Y.; Smith, Z. P. pyDMS: A Python package for the determination of physics-informed, reproducible dual-mode sorption (DMS) parameters. *In prep.* **2026**.
 
 #### We also recommend citing the following works which provide relevant background and theory on van't Hoff sorption energetics, LFERs, and their application to constraied DMS optimization, respectively:
 Koros, W. J.; Paul, D. R.; Huvard, G. S. Energetics of Gas Sorption in Glassy Polymers. *Polymer* **1979**, *20* (8), 956–960. https://doi.org/10.1016/0032-3861(79)90192-7.
@@ -33,7 +33,7 @@ Wu, A. X.; Drayton, J. A.; Mizrahi Rodriguez, K.; Benedetti, F. M.; Qian, Q.; Li
 ## License
 Copyright (C) 2026 The Massachusetts Institute of Technology
 
-This work is licensed under the MIT License (see "LICENSE")
+This work is licensed under the 3-clause BSD license (see "LICENSE")
 
 
 
