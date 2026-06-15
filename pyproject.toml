@@ -15,7 +15,7 @@ authors = [
   { name = "Pablo A. Dean" },
   { name = "Jing Ying Yeo" },
   { name = "Albert X. Wu" },
-  { name = "Zachary P. Smith", email = "smithlabmit@gmail.com" }
+  { name = "Zachary P. Smith", email = "smithlab_software@gmit.edu" }
 ]
 
 dependencies = [
@@ -35,6 +35,7 @@ classifiers = [
   "Intended Audience :: Science/Research",
   "Topic :: Scientific/Engineering :: Chemistry",
   "Topic :: Scientific/Engineering :: Physics"]
+
 
 [project.optional-dependencies]
 dev = ["pytest", "black", "build", "twine"]

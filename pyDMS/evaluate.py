@@ -1,29 +1,26 @@
-r"""
+"""
 pyDMS.evaluate
 
-Copyright 2025 Massachusetts Institute of Technology
-Licensed under the MIT License
+Copyright 2026 Massachusetts Institute of Technology
+Licensed under the 3-clause BSD license
 """
 
 import numpy as np
 import statsmodels.api as sm
 import warnings
-import copy
+#import copy
 import pyDMS
 from scipy.optimize import minimize_scalar
 
 
 def isotherm(gas, temp):
-    """Computes an isotherm from the optimized DMS parameters at
-            the specified temperature.
+    """Computes an isotherm from the optimized DMS parameters at the specified temperature.
 
     Args:
-        gas: An instance of the Gas class.
+        gas: An instance of the `Gas` class.
         temp: The temperature of the desired isotherm.
 
-    Returns:
-        An array of the isotherm
-            [pressure or fugacity, concentration, concentration error].
+    Returns: An array of the isotherm [pressure or fugacity, concentration, concentration error].
     """
 
     idx = np.where(gas.temp == temp)[0]
@@ -62,14 +59,13 @@ def isotherm(gas, temp):
 
 
 def S_inf(gas):
-    """Computes the sorption coefficient at infinite dilution along with the corresponding uncertainty
-    Results can be found in Gas.analysis.S_inf and Gas.analysis.S_inf_err
+    """Computes the sorption coefficient at infinite dilution along with the corresponding
+    uncertainty. Results can be found in `Gas.analysis.S_inf` and `Gas.analysis.S_inf_err`.
 
     Args:
-        gas: an instance of the Gas class
+        gas: an instance of the `Gas` class
 
-    Returns:
-        None
+    Returns: None
     """
 
     k_D = gas.kD
@@ -88,13 +84,18 @@ def S_inf(gas):
 
 
 def heat_of_sorption(gas, method="all"):
-    """Computes heats of sorption
-    
-    Args:
-        gas: an instance of the Gas class
+    """Computes heats of sorption. Results can be found in `Gas.analysis.deltaH_S_inf`,
+    `Gas.analysis.deltaH_D`, and `Gas.analysis.deltaH_b` for the infinite dilution, Henry, and
+    Langmuir heats of sorption, respectively. Results are stored as lists of the form
+    [slope, intercept] where slope is the heat of sorption and intercept is the pre-exponential
+    factor. Uncertainties are stored in `Gas.analysis.deltaH_S_inf_err`,
+    `Gas.analysis.deltaH_D_err`, and `Gas.analysis.deltaH_b_err` as lists of the form
+    [slope error, intercept error].
 
-    Returns:
-        an instance of the Gas class
+    Args:
+        gas: an instance of the `Gas` class
+
+    Returns: an instance of the `Gas` class
     """
 
     temp = gas.temp
@@ -108,13 +109,14 @@ def heat_of_sorption(gas, method="all"):
     inv_RT = 1 / (0.008314 * temp)
 
     def infinite_dilution_heat(gas):
-        """Computes the infinite dilution heat of sorption
-        
+        """Computes the infinite dilution heat of sorption. Results are stored in
+        `Gas.analysis.deltaH_S_inf` and `Gas.analysis.deltaH_S_inf_err
+
         Args:
-            gas: an instance of the Gas class
+            gas: an instance of the `Gas` class
 
         Returns:
-            an instance of the Gas class
+            an instance of the `Gas` class
         """
 
         S_inf(gas)
@@ -140,13 +142,14 @@ def heat_of_sorption(gas, method="all"):
         return gas
 
     def henry_heat(gas):
-        """Computes the Henry heat of sorption
-        
+        """Computes the Henry heat of sorption. Results are stored in `Gas.analysis.deltaH_D` and
+        `Gas.analysis.deltaH_D_err`
+
         Args:
-            gas: an instance of the Gas class
+            gas: an instance of the `Gas` class
 
         Returns:
-            an instance of the Gas class
+            an instance of the `Gas` class
         """
 
         k_D = gas.kD
@@ -174,13 +177,13 @@ def heat_of_sorption(gas, method="all"):
         return gas
 
     def langmuir_heat(gas):
-        """Computes the Langmuir heat of sorption
-        
+        """Computes the Langmuir heat of sorption. Results are stored in `Gas.analysis.deltaH_b` and `Gas.analysis.deltaH_b_err`
+
         Args:
-            gas: an instance of the Gas class
+            gas: an instance of the `Gas` class
 
         Returns:
-            an instance of the Gas class
+            an instance of the `Gas` class
         """
 
         b = gas.b
@@ -229,10 +232,17 @@ def heat_of_sorption(gas, method="all"):
 
 
 def isosteric_heat(gas, n_points=1000):
-    """Computes the isosteric heats of sorption
+    """Computes the isosteric heats of sorption. Results are stored in `Gas.analysis.deltaH_iso`
+    and `Gas.analysis.deltaH_iso_err` as arrays of the same length as `Gas.analysis.c_iso` which
+    contains the corresponding concentrations. The isosteric heat of sorption is computed by first
+    determining the pressure/fugacity at which a given concentration is achieved at each
+    temperature, then performing a van't Hoff analysis to determine the isosteric heat of sorption
+    at that concentration. Uncertainties are determined from the standard error of the slope of the
+    van't Hoff analysis.
 
     Args:
-        gas: An instance of the gas class
+        gas: An instance of the `Gas` class
+        n_points: The number of points to use in the isosteric heat calculation
 
     Returns:
         None
@@ -332,7 +342,7 @@ def isosteric_heat(gas, n_points=1000):
         int_isosteric_err, slope_isosteric_err = isosteric_model.bse
         deltaH_isosteric = slope_isosteric * 8.314 * 10**-3 * z
         deltaH_isosteric_err = slope_isosteric_err * 8.314 * 10**-3 * z
-        
+
 
         #p_iso[:, ] = p_avg
         C_iso[i] = C_val

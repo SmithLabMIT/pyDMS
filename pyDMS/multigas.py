@@ -1,17 +1,16 @@
 """
 pyDMS.multigas
 
-Copyright 2025 Massachusetts Institute of Technology
-Licensed under the MIT License
+Copyright 2026 Massachusetts Institute of Technology
+Licensed under the 3-clause BSD license
 """
 
 import numpy as np
-
 import pyDMS
 
 
 def mixed_isotherm(*gases, p_or_f, mol_frac, temp):
-    """
+    """TODO
     Returns: [partial pressure/fugacity, concentration, concentration error]
     """
 
@@ -88,13 +87,12 @@ def selectivity(*isotherms, calc=None):
 
     Args:
         isotherms: isotherm data in tuple: [partial pressure or fugacity, concentration, concentration error].
-            This data is in the form returned by evaluate.isotherm()
-        calc: Style to use when three isotherms are provided. Options are either 1_numerator, 2_numerator.
+            This data is in the form returned by `evaluate.isotherm()`
+        calc: Style to use when three isotherms are provided. Options are either "1_numerator", "2_numerator".
             1_numerator: alpha = (c1/p1) / ((c2/p2) + (c3*p3))
             2_numerator: alpha = ((c1/p1) + (c2/p2)) / (c3 * p3)
 
-    Returns:
-        [total pressure or total fugacity, selectivity, selectivity error]
+    Returns: [total pressure or total fugacity, selectivity, selectivity error]
     """
 
     if len(isotherms) not in [2, 3]:

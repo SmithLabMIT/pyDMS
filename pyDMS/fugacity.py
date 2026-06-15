@@ -1,8 +1,8 @@
-r"""
+"""
 pyDMS.fugacity
 
-Copyright 2025 Massachusetts Institute of Technology
-Licensed under the MIT License
+Copyright 2026 Massachusetts Institute of Technology
+Licensed under the 3-clause BSD license
 """
 
 import numpy as np
@@ -245,10 +245,10 @@ def virial_eos(gas):
 
 def peng_robinson_eos(gas):
     """Computes the fugacity of a gas at a given temperature and pressure
-            using the Peng-Robinson EoS
+    using the Peng-Robinson EoS
 
     Built-in Virial coefficients are from the NIST Chemistry Webbook
-        (https://webbook.nist.gov/chemistry/):
+    (https://webbook.nist.gov/chemistry/):
         Linstrom, P. J.; Mallard, W. G. The NIST Chemistry WebBook:
         A Chemical Data Resource on the Internet.
         J. Chem. Eng. Data 2001, 46 (5), 1059-1063.
@@ -256,19 +256,14 @@ def peng_robinson_eos(gas):
 
 
     Args:
-        gas: An instance of the Gas class with
-            Gas.formula, Gas.T, Gas.p populated
-        params: A dictionary containing the Peng-Robinson parameters of a
-            custom gas, for example:
-
+        gas: An instance of the `Gas` class with `Gas.formula`, `Gas.T`, and `Gas.p` populated
+        params: A dictionary containing the Peng-Robinson parameters of a custom gas, for example:
             'params = {
             'Tc':373.1,
             'Pc':9, #MPa
             'omega': 0.1}
-
-    Returns:
-        A numpy array in gas.f with the fugacities at the corresponding
-            pressures provided in gas.p
+    Returns: A numpy array in `gas.f` with the fugacities at the corresponding pressures provided
+    in `gas.p`
     """
     gas_name = gas.formula
 
@@ -355,7 +350,7 @@ def peng_robinson_eos(gas):
 
 def virial_eos_z(gas, p, T):
     """Computes the compressibility factor of a gas at a given temperature and pressure
-            using a Virial expansion
+    using a Virial expansion
 
     Built-in Virial coefficients are from: Virial Coefficients of Pure Gases;
         Frenkel, M., Marsh, K. N., Eds.;
@@ -365,11 +360,9 @@ def virial_eos_z(gas, p, T):
 
 
     Args:
-        gas: An instance of the Gas class with
-            Gas.formulapopulated
+        gas: An instance of the `Gas` class with `Gas.formula` populated
         params: A dictionary containing the Virial coefficients of
             a custom gas, for example:
-
             'params = {
             'B0':1*10**2,
             'B1':-7*10**4,
@@ -409,13 +402,11 @@ def virial_eos_z(gas, p, T):
     C3 = virial_data.get("C3", 0)
     C4 = virial_data.get("C4", 0)
 
-
     if B0 == 0:
         pyDMS.warning_in_orange("B0 = 0. This is unusual.")
     if B1 == 0:
         pyDMS.warning_in_orange("B1 = 0. This is unusual.")
 
-    
     p_row = p * atm_to_pa  # convert to Pa
     B = B0 + B1 / T + B2 / T**2 + B3 / T**3 + B4 / T**4
     B_star = B / (R * T)
@@ -428,7 +419,7 @@ def virial_eos_z(gas, p, T):
 
 def peng_robinson_eos_z(gas, p, T):
     """Computes the compressibility factor of a gas at a given temperature and pressure
-            using the Peng-Robinson EoS
+    using the Peng-Robinson EoS
 
     Built-in Virial coefficients are from the NIST Chemistry Webbook
         (https://webbook.nist.gov/chemistry/):
@@ -439,11 +430,8 @@ def peng_robinson_eos_z(gas, p, T):
 
 
     Args:
-        gas: An instance of the Gas class with
-            Gas.formula populated
-        params: A dictionary containing the Peng-Robinson parameters of a
-            custom gas, for example:
-
+        gas: An instance of the `Gas` class with `Gas.formula` populated
+        params: A dictionary containing the Peng-Robinson parameters of a custom gas, for example:
             'params = {
             'Tc':373.1,
             'Pc':9, #MPa
@@ -498,7 +486,7 @@ def peng_robinson_eos_z(gas, p, T):
         coeffs = [1, -(1 - Bij), Aij - 3 * Bij**2 - 2 * Bij, -Aij * Bij + Bij**2 + Bij**3]
         z_roots = np.roots(coeffs)
         z_real = np.real(z_roots[np.isreal(z_roots)])
-        
+
         zf = z_real[np.argmax(z_real)]  # use largest Z (vapor phase)
 
     return zf

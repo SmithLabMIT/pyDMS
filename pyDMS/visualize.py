@@ -1,8 +1,8 @@
 """
 pyDMS.visualize
 
-Copyright 2025 Massachusetts Institute of Technology
-Licensed under the MIT License
+Copyright 2026 Massachusetts Institute of Technology
+Licensed under the 3-clause BSD license
 """
 
 import numpy as np
@@ -28,16 +28,12 @@ plt.rc("legend", fontsize=small_txt)
 def LFER(gas, outliers=False, show=False):
     """Plots the linear LFER fits
 
-    report.LFER should be reserved specifically for printing in the report.
-    For general plotting of the LFERs, use visualization.LFER
-
     Args:
-        gas: An instance of the Gas class with Gas.LFER populated
+        gas: An instance of the `Gas` class with `Gas.LFER` populated
         outliers: whether the plot should contain all outlier data
         show: whether the plot should be printed to the screen
 
-    Returns:
-        None
+    Returns: None
     """
 
     slope_kd, int_kd, slope_b, int_b = gas.LFER.fit
@@ -93,11 +89,10 @@ def histograms(gas, show=False):
     """Plots and saves the histograms from the van't Hoff fits
 
     Args:
-        gas: An instance of the Gas class with Gas.vH populated
+        gas: An instance of the `Gas` class with `Gas.vH` populated
         show: whether the plot should be printed to the screen
 
-    Returns:
-        None
+    Returns: None
     """
 
     dms = gas.vH.out_outliers
@@ -166,11 +161,10 @@ def isotherms(gas, show=False):
     """Plots and saves the sorption isotherms with DMS parameters
 
     Args:
-        gas: An instance of the Gas class with Gas populated
+        gas: An instance of the `Gas` class with `Gas` populated
         show: Whether the plot should be printed to the screen
 
-    Returns:
-        None
+    Returns: None
     """
 
     T = gas.temp
@@ -225,10 +219,9 @@ def heat_of_sorption(gas, show=False):
     """Plots and saves the heats of sorption
 
     Args:
-        gas: An instance of the Gas class with Gas populated
+        gas: An instance of the `Gas` class with `Gas` populated
 
-    Returns:
-        None
+    Returns: None
     """
 
     temp = gas.temp
@@ -294,11 +287,10 @@ def isosteric_heat(gas, show=False):
     """Plots and saves the isosteric heat of sorption
 
     Args:
-        gas: An instance of the Gas class with Gas populated
+        gas: An instance of the `Gas` class with `Gas` populated
         show: Whether the plot should be printed to the screen
 
-    Returns:
-        None
+    Returns: None
     """
     C_iso = gas.analysis.c_iso
     deltaH_iso = gas.analysis.deltaH_iso

@@ -1,9 +1,11 @@
 """
 pyDMS.dms
+
 Fitting the dual-mode sorption (DMS) model with LFER and van't Hoff constraints
 
-Copyright 2025 Massachusetts Institute of Technology
-Licensed under the MIT License
+Copyright 2026 Massachusetts Institute of Technology
+
+Licensed under the 3-clause BSD license
 """
 
 import warnings
@@ -24,56 +26,63 @@ from . import fugacity
 
 
 class Gas:
-    """Holds all input and output data of a pyDMS optimization run
+    r"""Holds all input and output data of a pyDMS optimization run.
+    Initialization of a `Gas` instance will create empty attributes that either get populated by the
+    user (e.g., `Gas.temp`) or by the optimization functions.
 
     Attributes:
         formula: a string indicating the chemical formula of the gas
-            (e.g., 'CO2').
+            (e.g., ``"CO2"``).
         temp: An array of temperatures in K. Defined as
-            np.array([Temp 1, Temp 2, ...]).
-        p: An array of pressures. Defined as
-            np.array([[Array 1], [Array 2], ...]).
-        f: An array of fugacities. Defined as
-        c: An array of concentrations. Defined as
-            np.array([[Array 1],[Array 2], ...]).
-            [[Array 1], [Array 2], ...].
-        c_err: An array of uncertainties in concentration. Defined as
-            np.array([[Array 1], [Array 2], ...]).
+            ``np.array([Temp 1, Temp 2, ...])``.
+        p: An array of pressures in atm. Defined as
+            ``np.array([[Array 1], [Array 2], ...])``.
+        f: An array of fugacities in atm. Defined as
+            ``np.array([[Array 1], [Array 2], ...])``.
+        c: An array of concentrations in cm^3_STP cm^-3_pol. Defined as
+            ``np.array([[Array 1],[Array 2], ...])``.
+        c_err: An array of standard deviations of concentration in :math:`\mathrm{cm^3_{STP} cm^{-3}_{pol}}`. Defined as
+            ``np.array([[Array 1], [Array 2], ...])``.
         Z: An array of compressibility factors. Defined as
-            [Array 1], [Array 2], ...].
-        kD:  An array of DMS parameter kD. Defined as
-            np.array([Param 1, Param 2, ...]).
-        b: An array of DMS parameter b. Defined as
-            np.array([Param 1, Param 2, ...]).
-        CH: An array of DMS parameter CH'. Defined as
-            np.array([Param 1, Param 2, ...]).
-        kD_err: An array of uncertainties in kD. Defined as
-            np.array([Param 1, Param 2, ...]).
-        b_err: An array of uncertainties in b. Defined as
-            np.array([Param 1, Param 2, ...]).
-        CH_err: An array of uncertainties in CH'. Defined as
-            np.array([Param 1, Param 2, ...]).
+            ``np.array([[Array 1], [Array 2], ...])``.
+        kD:  An array of DMS parameter kD in :math:`\mathrm{cm^3 cm^{-3} atm^{-1}}`. Defined as
+            ``np.array([Param 1, Param 2, ...])``.
+        b: An array of DMS parameter b in :math:`\mathrm{cm^3 cm^{-3}}`. Defined as
+            ``np.array([Param 1, Param 2, ...])``.
+        CH: An array of DMS parameter CH' in :math:`\mathrm{atm^{-1}}`. Defined as
+            ``np.array([Param 1, Param 2, ...])``.
+        kD_err: An array of uncertainties in kD in :math:`\mathrm{cm^3 cm^{-3} atm^{-1}}`. Defined as
+            ``np.array([Param 1, Param 2, ...])``.
+        b_err: An array of uncertainties in b in :math:`\mathrm{cm^3 cm^{-3}}`. Defined as
+            ``np.array([Param 1, Param 2, ...])``.
+        CH_err: An array of uncertainties in CH' in :math:`\mathrm{atm^{-1}}`. Defined as
+            ``np.array([Param 1, Param 2, ...])``.
         LFER: An instance of the LFER class containing results from
-            the LFER fitting.
+            the LFER fitting (see ``pyDMS.LFER``).
         vH: An instance of the vH class containing results from
-            the van't Hoff fitting.
+            the van't Hoff fitting (see ``pyDMS.vH``).
         analysis: An instance of the analysis class containing results
-            from post-optimization analysis.
+            from post-optimization analysis (see ``pyDMS.analysis``).
         settings: A dictionary of settings used for the optimization runs.
+            Available settings are: ``dHD_guess``, ``dHD_bounds``, ``dHb_guess``, ``dHb_bounds``, ``kD0_guess``,
+            ``kD0_bounds``, ``b0_guess``, ``b0_bounds``, ``CH_guess``, ``CH_bounds``, ``trials``, ``solver_LFER``, ``solver_vH``,
+            ``maxiter_LFER``, ``maxiter_vH``, ``ftol``, ``xtol``, ``gtol``, ``verbose``, ``solver_verbose``, ``seed``
         virial_coeff: A dictionary containing user-supplied Virial
-            coefficients.
+            coefficients in the form:
+            TODO: add format here
         pr_coeff: A dictionary containing user-supplied Peng-Robinson
-            coefficients.
+            coefficients in the form:
+            TODO: add format here
     """
 
     __slots__ = [
         "formula",
-        "c",
+        "temp",
         "p",
         "f",
-        "Z",
+        "c",
         "c_err",
-        "temp",
+        "Z",
         "kD",
         "b",
         "CH",
@@ -91,18 +100,18 @@ class Gas:
     def __init__(self):
 
         self.formula = None
-        self.c = None
+        self.temp = None
         self.p = None
         self.f = None
         self.Z = None
+        self.c = None
         self.c_err = None
-        self.temp = None
-        self.CH = None
         self.kD = None
         self.b = None
-        self.CH_err = None
+        self.CH = None
         self.kD_err = None
         self.b_err = None
+        self.CH_err = None
         self.settings = None
         self.virial_coeff = None
         self.pr_coeff = None
@@ -134,17 +143,19 @@ class Gas:
 
 
 class LFER:
-    """Holds output from the LFER fitting optimization.
+    """Holds output from the LFER fitting optimization. These attributes will be populated
+    automatically and can be accessed by calling ``Gas.LFER.PROPERTY`` (e.g., ``Gas.LFER.fit``) after
+    running ``pyDMS.dms.compute()``.
 
     Attributes:
         fit: An array of the linear fit results
-            [slope_kd, int_kd, slope_b, int_b]
+            [alpha_D, beta_D, alpha_b, beta_b]
         fit_err: An array of the uncertainty
-            [slope_kd_err, int_kd_err, slope_b_err, int_b_err]
+            [alpha_D_err, beta_D_err, alpha_b_err, beta_b_err]
         out: LFER inlier output
-            [log_kd0, deltaHd, log_b0, deltaHb]
+            [log_kd0, deltaH_D, log_b0, deltaH_b]
         out_outliers: LFER inlier and ouitlier output
-            [log_kd0, deltaHd, log_b0, deltaHb]
+            [log_kd0, deltaH_D, log_b0, deltaH_b]
     """
 
     __slots__ = ["fit", "fit_err", "out", "out_outliers"]
@@ -176,17 +187,11 @@ class LFER:
 
 
 class vH:
-    """Holds output from the LFER fitting optimization.
-    # * need to check this
+    """Holds output from the Van't Hoff fitting optimization. These attributes will be populated
+    automatically and can be accessed by calling `Gas.vH.PROPERTY` (e.g., `Gas.vH.dms`) after running `pyDMS.dms.compute()`.
+
     Attributes:
-        fit: An array of the linear fit results
-            [slope_kd, int_kd, slope_b, int_b]
-        fit_err: An array of the uncertainty
-            [slope_kd_err, int_kd_err, slope_b_err, int_b_err]
-        out: LFER inlier output
-            [log_kd0, deltaHd, log_b0, deltaHb]
-        out_outliers: LFER inlier and outlier output
-            [log_kd0, deltaHd, log_b0, deltaHb]
+    TODO: update these attributes
     dms:
     dms_no_out:
     avg_dms:
@@ -195,9 +200,9 @@ class vH:
     plusminus_3:
     plusminus_4:
     plusminus_ch:
-    'c_f':
+    c_f:
     res:
-    'hessian_average'
+    hessian_average:
     """
 
     __slots__ = [
@@ -242,7 +247,22 @@ class vH:
 
 
 class analysis:
-    """TODO"""
+    """Output from post-optimization analysis. These attributes will be populated automatically and
+    can be accessed by calling ``Gas.analysis.PROPERTY`` (e.g., ``Gas.analysis.S_inf``) after ``running pyDMS.dms.compute()``.
+
+    Attributes:
+        S_inf: Infinite dilution sorption coefficient (:math:`\mathrm{cm^3 cm^{-3} atm^{-1}}`)
+        S_inf_err: Uncertainty in infinite dilution sorption coefficient (:math:`\mathrm{cm^3_{STP} cm^{-3}_{pol} atm^{-1}}`)
+        deltaH_S_inf: Heat of infinite dilution sorption (:math:`\mathrm{kJ mol^{-1}}`)
+        deltaH_S_inf_err: Uncertainty in heat of infinite dilution sorption (:math:`\mathrm{kJ mol^{-1}}`)
+        deltaH_D: Heat of Henry sorption (:math:`\mathrm{kJ mol^{-1}}`)
+        deltaH_D_err: Uncertainty in heat of Henry sorption (:math:`\mathrm{kJ mol^{-1}}`)
+        deltaH_b: Heat of Langmuir sorption (:math:`\mathrm{kJ mol^{-1}}`)
+        deltaH_b_err: Uncertainty in heat of Langmuir sorption (:math:`\mathrm{kJ mol^{-1}}`)
+        c_iso: Isosteric concentration (:math:`\mathrm{cm^3_{STP} cm^{-3}_{pol}}`)
+        deltaH_iso: Isosteric heat of sorption (:math:`\mathrm{kJ mol^{-1}}`)
+        deltaH_iso_err: Uncertainty in isosteric heat of sorption (:math:`\mathrm{kJ mol^{-1}}`)
+    """
 
     __slots__ = [
         "S_inf",
@@ -295,27 +315,24 @@ def save_gas_class(gas, filename):
     """Saves a Gas object to a .pkl file.
 
     Args:
-        gas: An instance of the Gas class.
-        filename: Name of the .pkl file to save the Gas instance to.
+        gas: An instance of the ``Gas`` class.
+        filename: Name of the .pkl file to save the Gas instance to (e.g., ``"gas_instance.pkl"``).
 
-    Returns:
-        None
+    Returns: None
     """
 
     with open(filename, "wb") as f:
         pickle.dump(gas, f, protocol=pickle.HIGHEST_PROTOCOL)
-    # print("Pickling successful")
-    # print("--------------------------------------------------------------")
 
 
 def load_gas_class(filename):
     """Loads a Gas object from a .pkl file.
 
     Args:
-        filename: Name of the .pkl file to load the Gas instance from.
+        filename: Name of the .pkl file to load the Gas instance from (e.g., ``"gas_instance.pkl"``).
 
-        Returns:
-            A Gas instance loaded from the .pkl file.
+    Returns:
+        A ``Gas`` instance loaded from the .pkl file.
     """
 
     with open(filename, "rb") as f:
@@ -323,13 +340,17 @@ def load_gas_class(filename):
 
 
 def unconstrained_loss(x, p, c, cerr):
-    """The loss function for an unconstrained DMS optimization
+    """The chi2 loss function for an unconstrained DMS optimization
+
     Args:
+        x: An array of the variables to be optimized. Defined as [kD, CH, b].
+        p: Pressure or fugacity data corresponding to the concentration data being fitted.
+        c: Concentration data being fitted.
+        cerr: Uncertainty in the concentration data being fitted.
 
-    Returns:
-
+    Returns: The chi2 loss function result as a float.
     """
-    ssr = 0
+    chi2_loss = 0
 
     # initializing variables to solve for
     kD = x[0]
@@ -338,16 +359,21 @@ def unconstrained_loss(x, p, c, cerr):
 
     calc = kD * p + CH * b * p / (1 + b * p)
 
-    ssr = np.sum(((calc - c) ** 2) / (cerr**2))
+    chi2_loss = np.sum(((calc - c) ** 2) / (cerr**2))
 
-    return ssr
+    return chi2_loss
 
 
 def parameter_assist(gas):
-    """Helps to provide a reasonable range of initial parameter values. Ideally, this assists with trying to manually choose optimization ranges
-    Args:
+    """Helps to provide a reasonable range of initial parameter guesses and bounds for the
+    optimization based on the input data.
 
-    Returns:
+    Args:
+        gas: An instance of the ``Gas`` class with input data (e.g., ``Gas.temp``, ``Gas.p`/``Gas.f``,
+        ``Gas.c``, ``Gas.c_err``, ``Gas.formula``) populated by the user.
+
+    Returns: None, but updates the ``Gas.settings`` dictionary for the following parameters:
+    ``dHd_guess``, ``dHd_bounds``, ``dHb_guess``, ``dHb_bounds``, ``CH_guess``, ``CH_bounds``.
     """
     #user_verbose = gas.settings.get("verbose")
     c = gas.c
@@ -474,53 +500,55 @@ def parameter_assist(gas):
         # "b0_guess": b0_guess,
     })
 
-    #print(gas.settings)
-
-    return
+    return None
 
 
-def calculate_fugacity(gas):
-    """Calculates the fugacity from Gas.p.
+def calculate_fugacity(gas, verbose=True):
+    """Calculates the fugacity from `Gas.p`.
 
-    If Gas.f is None, it will attempt to calculate the fugacity using
+    If `Gas.f` is None, it will attempt to calculate the fugacity using
         (in order of priority):
         (1) user-supplied Virial coefficients
         (2) user-supplied Peng-Robinson coefficients
-        (3) built-in Virial coefficients (Gas.formula must be specified)
-        (4) built-in Peng-Robinson coefficients (Gas.formula must be specified)
+        (3) built-in Virial coefficients (`Gas.formula` must be specified)
+        (4) built-in Peng-Robinson coefficients (`Gas.formula` must be specified)
 
     Args:
-        gas: An instance of the Gas class.
+        gas: An instance of the `Gas` class.
 
-    Returns:
-        None
+    Returns: None
     """
-    print("------------------------Fugacity Check------------------------")
-    if gas.f is not None:
+    if verbose:
+        print("------------------------Fugacity Check------------------------")
+    if gas.f is not None and verbose:
         print("Fugacity data supplied in Gas.f by user")
 
     elif gas.virial_coeff:
-        print("Calculating fugacity using user-supplied Virial coefficients")
+        if verbose:
+            print("Calculating fugacity using user-supplied Virial coefficients")
         fugacity.virial_eos(gas)
 
     elif gas.pr_coeff:
-        print("Calculating fugacity using user-supplied Peng-Robinson " "coefficients")
+        if verbose:
+            print("Calculating fugacity using user-supplied Peng-Robinson " "coefficients")
         fugacity.peng_robinson_eos(gas)
 
     elif gas.formula in fugacity.virial_coeff:
-        print("Calculating fugacity using built-in Virial EoS")
+        if verbose:
+            print("Calculating fugacity using built-in Virial EoS")
         fugacity.virial_eos(gas)
 
     elif gas.formula in fugacity.pr_coeff:
-        print("Calculating fugacity using built-in Peng-Robinson EoS")
+        if verbose:
+            print("Calculating fugacity using built-in Peng-Robinson EoS")
         fugacity.peng_robinson_eos(gas)
 
-    elif gas.f is None and gas.formula is None:
+    elif gas.f is None and gas.formula is None and verbose:
         pyDMS.warning_in_orange(
-            "Fugacity data and gas unspecified.\nFitting will be performed " "with pressure data."
+            "Fugacity data and gas unspecified.\nFitting will be performed with pressure data."
         )
 
-    elif gas.formula not in fugacity.virial_coeff and gas.formula not in fugacity.pr_coeff:
+    elif gas.formula not in fugacity.virial_coeff and gas.formula not in fugacity.pr_coeff and verbose:
         pyDMS.warning_in_orange(
             "Fugacity data unspecified and Gas.formula not found in built-in "
             "data.\nSupply Gas.virial_coeff or Gas.pr_coeff to calculate"
@@ -538,11 +566,10 @@ def LFER_loss(x, gas, loss="chi2"):
 
     Args:
         x: An array of the variables to be optimized.
-        gas: An instance of the Gas class.
-        loss: The loss function to use. Currently, only 'chi2' is supported.
+        gas: An instance of the `Gas` class.
+        loss: The loss function to use. Currently, only "chi2" is supported.
 
-    Returns:
-        The loss function result as a number.
+    Returns: The loss function result as a number.
     """
 
     # retriving gas data
@@ -590,7 +617,7 @@ def LFER_loss(x, gas, loss="chi2"):
     # Sum of all the errors as metric
     out = np.sum(ssr)
 
-    # TODO: see if scaling is really necessary (yes it is I think)
+    # TODO: see if scaling is really necessary (yes it is)
     return out / 1000
 
 
@@ -599,11 +626,10 @@ def vH_loss(x, gas, loss="chi2"):
 
     Args:
         x: An array of the variables to be optimized.
-        gas: An instance of the Gas class with data from LFER_loss populated.
-        loss: The loss function to use. Currently, only 'chi2' is supported.
+        gas: An instance of the `Gas` class with data from LFER_loss populated.
+        loss: The loss function to use. Currently, only "chi2" is supported.
 
-    Returns:
-        The final value of the loss function.
+    Returns: The final value of the loss function.
     """
 
     # retriving gas data
@@ -666,16 +692,9 @@ def is_outlier(arr):
     (see https://www.mathworks.com/help/matlab/ref/isoutlier.html).
 
     Args:
-        arr: An array to find outliers in
+        arr: An array to find outliers in.
 
-    Returns:
-        An array with a Boolean mask for whether an entry is an outlier
-            (TRUE) or not (FALSE).
-
-        For example:
-
-            if arr is [0.1, 0.12, 0.11, 100], it will return
-                [False, False, False, True]
+    Returns: An array with a Boolean mask for whether an entry is an outlier (TRUE) or not (FALSE).
     """
 
     median = np.median(arr)
@@ -687,14 +706,13 @@ def is_outlier(arr):
 
 
 def hess(gas, soln):
-    """Solves the analytical Hessian for the vH_loss loss function
+    """Solves the analytical Hessian for `vH_loss()`
 
     Args:
-        gas: An instance of the Gas class
-        soln: The object from a scipy.minimize call with loss function vH_loss
+        gas: An instance of the `Gas` class
+        soln: The object from a `scipy.minimize` call with loss function `vH_loss()`
 
-    Returns:
-        A matrix with the Hessian for the result of vH_loss
+    Returns: A matrix with the analytical Hessian for the result of `vH_loss()`
     """
 
     # retriving gas data
@@ -765,15 +783,13 @@ def hess(gas, soln):
 
 
 def calc_LFEs(gas, settings=None):
-    """Implements the LFER_loss function to optimize the DMS model based on
-        LFER constraints
+    """Implements `LFER_loss()` to optimize the DMS model based on LFER constraints
 
     Args:
-        gas: An instance of the Gas class
+        gas: An instance of the `Gas` class
         settings: A dictionary of settings for the optimization
 
-    Returns:
-        Data in the Gas.LFER subclass
+    Returns: Data in the `Gas.LFER` subclass
     """
 
     # retriving gas data
@@ -836,7 +852,8 @@ def calc_LFEs(gas, settings=None):
     rng_seed = settings.get("seed")
 
     # setting up the solver constraints: A*x <= b
-    # (* consider allowing this to be turned off?)
+    # TODO: consider allowing this to be turned off?
+    # TODO: consider allowing for more strict constraints (e.g., CH' must be linear with T (and zero at Tg?))
     A_con = np.zeros((len(c) - 1, len(c) + 4))
     b_con = np.zeros(len(c) - 1)
 
@@ -995,58 +1012,43 @@ def calc_LFEs(gas, settings=None):
     # keeping in case we ever want to retry it
     # outlier_track = np.zeros(nOptVars)
     # par_outliers_removed = np.copy(transposed_dms)
-
     # finding outliers for each parameter
     # for i in range(nOptVars):
-
     #    par = transposed_dms[i] # parameter of interest
     #    par_no_outliers = np.copy(par)
-
     # TF = is_outlier(par) # finding if iteration parameter is an outlier
-
     # par_no_outliers[TF] = 0
     # par_outliers_removed[i][TF] = 0
     # par = par[~TF]
-
     # outliers = np.where(TF == 1)[0]  # indices where outliers are present
     # * removed an if statement and should still work: keep an eye an it
     # outlier_track[i] = len(outliers)
-
     # avg_dms[i] = np.mean(par) # finding average of each cleaned parameter
     # std_dev[i] = np.std(par)
     # num_par_final[i] = len(par)
-
-    # *TO DO: NEED TO EXAMINE THIS SOME MORE
     # par_outliers_removed = np.transpose(par_outliers_removed)
     # par_outliers_removed = par_outliers_removed[~np.any(
     #     par_outliers_removed == 0, axis=1)]
     # par_outliers_removed = np.transpose(par_outliers_removed)
-
     # FINDING LFER PARAMETERS
     # deltaHD = aD*ln(kd0) + bD
     # log_kd0 = np.log(par_outliers_removed[0])
     # deltaHd = par_outliers_removed[1]
     # log_b0 = np.log(par_outliers_removed[2])
     # deltaHb = par_outliers_removed[3]
-
     # ensuring an intercept is fitted as well
     # log_kd0_with_const = sm.add_constant(log_kd0)
     # log_b0_with_const = sm.add_constant(log_b0)
-
     # fitting linear regressions
     # deltaHd_model = sm.OLS(deltaHd, log_kd0_with_const).fit()
     # deltaHb_model = sm.OLS(deltaHb, log_b0_with_const).fit()
-
     # int_kd, slope_kd = deltaHd_model.params # int_kd = aD, slope_kD = bD
     # int_kd_err, slope_kd_err = deltaHd_model.bse
     # int_b, slope_b = deltaHb_model.params # int_b= ab, slope_b = bb
     # int_b_err, slope_b_err = deltaHb_model.bse # errors in int_b and slope_b
-
     # out = [slope_kd, int_kd, slope_b, int_b] # collecting slopes, intercepts
     # SE = [slope_kd_err, int_kd_err, slope_b_err, int_b_err]
-
     # collecting data
-    # * keep an eye on this. Changed from len(c) to 4
     # pars = np.zeros((len(log_kd0), 4))
     # pars[:,0] = log_kd0
     # pars[:,1] = deltaHd
@@ -1105,7 +1107,6 @@ def calc_LFEs(gas, settings=None):
     pars[inliers_b, 3] = deltaHb[inliers_b]
 
     # collecting data with outliers for plotting
-    # *switched from len(c) to 4
     pars_outliers = np.zeros((len(log_kd0_out), 4))
     pars_outliers[:, 0] = log_kd0_out
     pars_outliers[:, 1] = deltaHd_out
@@ -1123,13 +1124,11 @@ def calc_LFEs(gas, settings=None):
 
 
 def calc_params(gas):
-    """Implements the vH_loss function to optimize the DMS model based on
-        van't Hoff constraints.
+    """Implements `vH_loss()` to optimize the DMS model based on van't Hoff constraints.
     Args:
-        gas: An instance of the Gas class.
+        gas: An instance of the `Gas` class.
 
-    Returns:
-        Data in the Gas.vH class
+    Returns: Data in the `Gas.vH` class
     """
 
     # pulling in data
@@ -1307,11 +1306,9 @@ def calc_params(gas):
                 constraints={"type": "ineq", "fun": linear_constraint},
                 options=options,
             )
-        # print("STATUS")
-        # print(result.status)
+
         hessian_matrix[:, :, j] = hess(gas, result)
-        # print("=======HESSIAN========")
-        # print(hessian_matrix[:, :, j])
+
         flag[j] = result.status
         res[j] = result.fun
         dms[j, :] = result.x
@@ -1408,10 +1405,10 @@ def calc_params(gas):
 def chi2_error_fit(gas):
     """Calculates uncertainty via determination of the covariance materix.
     Args:
-        gas: An instance of the Gas class.
+        gas: An instance of the `Gas` class.
 
     Returns:
-        Data in the Gas and Gas.analysis classes
+        Data in the `Gas` and `Gas.analysis` classes
     """
     
     hessian_avg = gas.vH.hessian_matrix
@@ -1553,14 +1550,12 @@ def chi2_error_fit(gas):
 
 
 def propogate_error(gas):
-    """Determines error from the van't Hoff optimization and propagates
-        the error to further parameters
+    """Determines error from the van't Hoff optimization and propagates the error to further parameters
 
     Args:
-        gas: An instance of the Gas class with Gas.vH data populated
+        gas: An instance of the `Gas` class with `Gas.vH` data populated
 
-    Returns:
-        Data in the Gas.vH subclass and Gas class
+    Returns: Data in the `Gas.vH` subclass and `Gas` class
     """
     print("--------------------------------------------------------------")
     print("Optimization successful; starting error propagation")
@@ -1642,11 +1637,10 @@ def propogate_error(gas):
 
 
 def compute(gas, output="unnamed_file"):
-    """Provides a wrapper to run the entire optimization procedure with a
-        single function call.
+    """Provides a wrapper to run the entire optimization procedure with a single function call.
 
     Args:
-        gas: An instance of the Gas class.
+        gas: An instance of the `Gas` class.
         output: filenames of the PDF and .pkl files
 
     Returns:

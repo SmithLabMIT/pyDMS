@@ -2,7 +2,7 @@
 pyDMS.report
 
 Copyright 2026 Massachusetts Institute of Technology
-Licensed under the MIT License
+Licensed under the 3-clause BSD license
 """
 
 import os
@@ -20,8 +20,6 @@ from reportlab.platypus import (
     Table,
     TableStyle,
     Image as PlatypusImage,
-    # ListItem,
-    # ListFlowable,
     PageBreak,
 )
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -33,16 +31,13 @@ from . import visualize as vis
 
 
 def wait_for_file(path, timeout=20.0):
-    """Waits for file to become available when opening to avoid a "permission
-        denied" error.
+    """Waits for file to become available when opening to avoid a "permission denied" error.
 
     Args:
         path: The filepath of the file to try to open
-        timeout: The number of seconds to continue trying to open before
-            failing
+        timeout: The number of seconds to continue trying to open before failing
 
-    Returns:
-        None
+    Returns: None
     """
 
     iter1 = False
@@ -61,6 +56,8 @@ def wait_for_file(path, timeout=20.0):
 
 
 def get_scaled_image_dimensions(img_path, max_width=7 * inch, max_height=9 * inch, dpi=300):
+    """TODO
+    """
     with Image.open(img_path) as img:
         width_px, height_px = img.size
 
@@ -82,15 +79,14 @@ def get_scaled_image_dimensions(img_path, max_width=7 * inch, max_height=9 * inc
 def LFER(gas, tmpdir, outliers=False):
     """Plots and saves the LFER linear fits
 
-    report.LFER should be reserved specifically for printing in the report.
-    For general plotting of the LFERs, use visualization.LFER
+    `report.LFER()` should be reserved specifically for printing in the report. For general
+    plotting of the LFERs, use `visualize.LFER()`
 
     Args:
-        gas: An instance of the Gas class with Gas.LFER populated
+        gas: An instance of the `Gas` class with `Gas.LFER` populated
         outliers: whether the plot should contain all outlier data
 
-    Returns:
-        The path of the file that was saved
+    Returns: The path of the file that was saved
     """
 
     vis.LFER(gas, outliers)
@@ -104,15 +100,14 @@ def LFER(gas, tmpdir, outliers=False):
 def LFER_outliers(gas, tmpdir, outliers=True):
     """Plots and saves the LFER linear fits
 
-    report.LFER should be reserved specifically for printing in the report.
-    For general plotting of the LFERs, use visualization.LFER
+    `report.LFER_outliers()` should be reserved specifically for printing in the report.
+    For general plotting of the LFERs, use `visualize.LFER()`
 
     Args:
-        gas: An instance of the Gas class with Gas.LFER populated
+        gas: An instance of the `Gas` class with `Gas.LFER` populated
         outliers: whether the plot should contain all outlier data
 
-    Returns:
-        The path of the file that was saved
+    Returns: The path of the file that was saved
     """
 
     vis.LFER(gas, outliers)
@@ -126,12 +121,11 @@ def LFER_outliers(gas, tmpdir, outliers=True):
 def histograms(gas, tmpdir):
     """Plots and saves the histograms from the van't Hoff fits
 
-    report.histograms should be reserved specifically for printing in the
-        report.
-    For general plotting of the histograms, use visualization.histograms
+    `report.histograms()` should be reserved specifically for printing in the report.
+    For general plotting of the histograms, use `visualize.histograms()`
 
     Args:
-        gas: An instance of the Gas class with Gas.vH populated
+        gas: An instance of the `Gas` class with `Gas.vH` populated
 
     Returns:
         The path of the file that was saved
@@ -147,15 +141,13 @@ def histograms(gas, tmpdir):
 def isotherms(gas, tmpdir):
     """Plots and saves the sorption isotherms with DMS parameters
 
-    report.isotherms should be reserved specifically for printing in the
-        report.
-    For general plotting of the isotherms, use visualization.isotherms
+    ``report.isotherms()` should be reserved specifically for printing in the report.
+    For general plotting of the isotherms, use `visualize.isotherms()`
 
     Args:
-        gas: An instance of the Gas class with Gas populated
+        gas: An instance of the `Gas` class with `Gas` populated
 
-    Returns:
-        The path of the file that was saved
+    Returns: The path of the file that was saved
     """
 
     vis.isotherms(gas)
@@ -168,12 +160,11 @@ def isotherms(gas, tmpdir):
 def heat_of_sorption(gas, tmpdir="."):
     """Plots and saves the heats of sorption
 
-    report.heat_of_sorption should be reserved specifically for printing in the
-        report.
-    For general plotting of the isotherms, use visualize.heat_of_sorption
+    `report.heat_of_sorption()` should be reserved specifically for printing in the report.
+    For general plotting of the isotherms, use `visualize.heat_of_sorption()`
 
     Args:
-        gas: An instance of the Gas class with Gas populated
+        gas: An instance of the `Gas` class with `Gas` populated
 
     Returns:
         The path of the file that was saved
@@ -189,15 +180,14 @@ def heat_of_sorption(gas, tmpdir="."):
 def isosteric_heat(gas, tmpdir="."):
     """Plots and saves the isosteric heat of sorption
 
-    report.isosteric_heat should be reserved specifically for printing in the
+    `report.isosteric_heat()` should be reserved specifically for printing in the
         report.
-    For general plotting of the isotherms, use visualize.isosteric_heat
+    For general plotting of the isotherms, use `visualize.isosteric_heat()`
 
     Args:
-        gas: An instance of the Gas class with Gas populated
+        gas: An instance of the `Gas` class with `Gas` populated
 
-    Returns:
-        The path of the file that was saved
+    Returns: The path of the file that was saved
     """
 
     vis.isosteric_heat(gas)
@@ -214,8 +204,7 @@ def footer(canvas, doc):
         canvas: For reportlab internal use required for drawing the footer
         doc: For reportlab internal use required for drawing the footer
 
-    Returns:
-        None
+    Returns: None
     """
     width, height = letter
 
@@ -259,10 +248,9 @@ def generate(gas, report_name):
     """Creates the report PDF
 
     Args:
-        gas: An instance of the gas class with Gas.LFER and Gas.vH populated
+        gas: An instance of the `Gas` class with `Gas.LFER` and `Gas.vH` populated
 
-    Returns:
-        None
+    Returns: None
     """
     with tempfile.TemporaryDirectory() as tmpdir:
         print(f"Generating report {report_name}")
