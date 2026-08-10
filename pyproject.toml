@@ -39,7 +39,7 @@ classifiers = [
 
 [project.optional-dependencies]
 dev = ["pytest", "black", "build", "twine"]
-docs = ["sphinx", "sphinxcontrib-bibtex", "sphinx_copybutton",]
+docs = ["sphinx", "sphinxcontrib-bibtex", "sphinx_copybutton", "furo"]
 
 [tool.setuptools]
 include-package-data = true

@@ -4,9 +4,10 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 import sys
 import datetime
+import os
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 # -- Project information -----------------------------------------------------
 
@@ -58,6 +59,8 @@ html_logo = "images/pyDMS_logo.png"
 html_favicon = "images/pyDMS_favicon.png"
 html_static_path = ['_static']
 html_show_sourcelink = True
+html_baseurl = os.environ.get("READTHEDOCS_CANONICAL_URL", "/")
+
 
 numfig = True
 math_numfig = True
