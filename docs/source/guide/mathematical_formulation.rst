@@ -7,50 +7,50 @@ Dual-Mode Sorption Minimization
 The overarching goal of pyDMS is fit the dual-mode sorption (DMS) model
 
 .. math::
+      :label: eq-dms
 
       C=k_\mathrm{D}f+\frac{C_\mathrm{H}'bf}{1+bf}
-      \label{eq:dms}
 
 to experimental data. Thus, pyDMS seeks values to the parameters :math:`k_\mathrm{D}`, :math:`C_\mathrm{H}'`, and :math:`b` that minimize the :math:`\chi^2` loss function:
 
 .. math::
+       :label: eq-chi2
 
        \chi^2= \sum \left(\frac{C_i-C_{i,exp}}{\sigma_{C_i,exp}}\right)^2
-       \label{eq:chi2}
 
 To do so, the optimization procedure applies linear free energy relationship (LFER) constraints, :cite:`freeman_basis_1999` followed by van't Hoff constraints :cite:`wu_elucidating_2021, barrer_solution_1962, koros_energetics_1979, smith_hydrogen_2013` with the aim of obtaining more reproducible results than simple nonlinear regression. Below, we work through the mathematical complexities in doing so.
 
-pyDMS performs a sequential double-optimization procedure to reduce the number of independent variables being fit at a given time. First, the LFER section fits the DMS model (`[eq:dms] <#eq:dms>`__) by minimizing :math:`\chi^2` (`[eq:chi2] <#eq:chi2>`__) subject to the LFER constraints,
+pyDMS performs a sequential double-optimization procedure to reduce the number of independent variables being fit at a given time. First, the LFER section fits the DMS model :eq:`eq-dms` by minimizing :math:`\chi^2` :eq:`eq-chi2` subject to the LFER constraints,
 
 .. math::
+       :label: eq-LFER_HD
 
        \Delta H_\mathrm{D}=\alpha_\mathrm{D}\ln(k_{\mathrm{D},0})+\beta_\mathrm{D}
-       \label{eq:LFER_HD}
 
 and
 
 .. math::
+       :label: eq-LFER_Hb
 
        \Delta H_\mathrm{b}=\alpha_\mathrm{b}\ln(b_0)+\beta_\mathrm{b},
-       \label{eq:LFER_Hb}
 
 where the fitting parameters are :math:`k_{\mathrm{D},0}`, :math:`k_{\mathrm{b},0}`, :math:`\Delta H_\mathrm{D}`, :math:`\Delta H_\mathrm{b}`, and :math:`C_{\mathrm{H},i}`. Given that :math:`k_\mathrm{D}` and :math:`b` follow van't Hoff relationships, they can be solved as
 
 .. math::
+       :label: eq-kD_vh
 
        k_\mathrm{D}=k_{\mathrm{D},0} \exp\left( -\frac{\Delta H_{\mathrm{D}}}{RT} \right)
-       \label{eq:kD_vh}
 
 and
 
 .. math::
+       :label: eq-b_vh
 
        b=b_0\exp\left( -\frac{\Delta H_\mathrm{b}}{RT} \right)
-       \label{eq:b_vh}
 
-The optimization is performed ``trials`` number of times, each using a different uniformly random inital guesses bounded by the parameters in `2 <#tab:optimization-settings>`__. Solver options are provided in `1 <#tab:solver-options>`__. The resulting :math:`\alpha_i` and :math:`\beta_i` (Equations `[eq:LFER_HD] <#eq:LFER_HD>`__ and `[eq:LFER_Hb] <#eq:LFER_Hb>`__) are then extracted via linear regression using the RANSAC algorithm :cite:`fischler_random_1981` to remove outliers.
+The optimization is performed ``trials`` number of times, each using a different uniformly random inital guesses bounded by the parameters in :numref:`table-settings`. Solver options are provided in :numref:`table-gas-class`. The resulting :math:`\alpha_i` and :math:`\beta_i` (:eq:`eq-LFER_HD` and :eq:`eq-LFER_Hb`) are then extracted via linear regression using the RANSAC algorithm :cite:`fischler_random_1981` to remove outliers.
 
-The benefit to performing this optimization becomes clear when we perform the van't Hoff fitting. Rearranging Equations `[eq:LFER_HD] <#eq:LFER_HD>`__ and `[eq:LFER_Hb] <#eq:LFER_Hb>`__ allows for :math:`k_{\mathrm{D},0}` and :math:`b_0` to be solved for, removing the necessity of reoptimization. Now, the van't Hoff expressions (Equations `[eq:kD_vh] <#eq:kD_vh>`__ and `[eq:b_vh] <#eq:b_vh>`__) can be constrained with only one free variable each (:math:`\Delta H_\mathrm{D}` and :math:`\Delta H_\mathrm{b}`, respectively).
+The benefit to performing this optimization becomes clear when we perform the van't Hoff fitting. Rearranging :eq:`eq-LFER_HD` and :eq:`eq-LFER_Hb` allows for :math:`k_{\mathrm{D},0}` and :math:`b_0` to be solved for, removing the necessity of reoptimization. Now, the van't Hoff expressions (:eq:`eq-kD_vh` and :eq:`eq-b_vh`) can be constrained with only one free variable each (:math:`\Delta H_\mathrm{D}` and :math:`\Delta H_\mathrm{b}`, respectively).
 
 Again, the optimization is performed as described above. Outliers are removed using a scaled median absolute deviation technique. :cite:`noauthor_matlab_2024` That is, a datapoint is classified as an outlier if the following criteria is met:
 
@@ -63,7 +63,7 @@ where :math:`x` is a datapoint in the array, :math:`\mathbf{A}`, and erfcinv is 
 Error Propagation
 ~~~~~~~~~~~~~~~~~
 
-To gather uncertainty of the DMS parameters, error within the optimized parameters is determined directly from the Hessian matrix of the loss function, **H**\ (**x**) where :math:`\mathbf{x}` is the array of optimized parameters:
+To gather uncertainty of the DMS parameters, error within the optimized parameters is determined directly from the Hessian matrix of the loss function, :math:`\mathbf{\mathrm{H}(x)}` where :math:`\mathbf{x}` is the array of optimized parameters:
 
 .. math::
 
@@ -72,16 +72,16 @@ To gather uncertainty of the DMS parameters, error within the optimized paramete
 The Hessian is defined as
 
 .. math::
+       :label: eq-hessian
 
-   \textbf{H}(\textbf{x}) = 
-   \begin{bmatrix}
-   \frac{\partial^2 \chi^2}{\partial^2 \Delta H_\mathrm{D}} & \frac{\partial^2 \chi^2}{\partial \Delta H_\mathrm{D} \partial \Delta H_\mathrm{b}} & \cdots & \frac{\partial^2 \chi^2}{\partial \Delta H_\mathrm{D} \partial C_{\mathrm{H},j}'} & \cdots \\
-   \frac{\partial^2 \chi^2}{\partial \Delta H_\mathrm{b} \partial \Delta H_\mathrm{D}} & \frac{\partial^2 \chi^2}{\partial^2 \Delta H_\mathrm{b}} & \cdots & \frac{\partial^2 \chi^2}{\partial \Delta H_\mathrm{b} \partial C_{\mathrm{H},j}'} & \cdots \\
-   \vdots & \vdots & \ddots & \vdots & \\
-   \frac{\partial^2 \chi^2}{\partial C_{\mathrm{H},k}' \partial \Delta H_\mathrm{D}} & \frac{\partial^2 \chi^2}{\partial C_{\mathrm{H},k}' \partial \Delta H_\mathrm{b}} & \cdots & \frac{\partial^2 \chi^2}{\partial C_{\mathrm{H},k}' \partial C_{\mathrm{H},j}'} & \cdots \\
-   \vdots & \vdots & & \vdots & \ddots
-   \end{bmatrix}
-   \label{eq:hessian}
+       \textbf{H}(\textbf{x}) = 
+       \begin{bmatrix}
+       \frac{\partial^2 \chi^2}{\partial^2 \Delta H_\mathrm{D}} & \frac{\partial^2 \chi^2}{\partial \Delta H_\mathrm{D} \partial \Delta H_\mathrm{b}} & \cdots & \frac{\partial^2 \chi^2}{\partial \Delta H_\mathrm{D} \partial C_{\mathrm{H},j}'} & \cdots \\
+       \frac{\partial^2 \chi^2}{\partial \Delta H_\mathrm{b} \partial \Delta H_\mathrm{D}} & \frac{\partial^2 \chi^2}{\partial^2 \Delta H_\mathrm{b}} & \cdots & \frac{\partial^2 \chi^2}{\partial \Delta H_\mathrm{b} \partial C_{\mathrm{H},j}'} & \cdots \\
+       \vdots & \vdots & \ddots & \vdots & \\
+       \frac{\partial^2 \chi^2}{\partial C_{\mathrm{H},k}' \partial \Delta H_\mathrm{D}} & \frac{\partial^2 \chi^2}{\partial C_{\mathrm{H},k}' \partial \Delta H_\mathrm{b}} & \cdots & \frac{\partial^2 \chi^2}{\partial C_{\mathrm{H},k}' \partial C_{\mathrm{H},j}'} & \cdots \\
+       \vdots & \vdots & & \vdots & \ddots
+       \end{bmatrix}
 
 Since there is no functional form fit to :math:`C_{\mathrm{H}, i}`, there is assumed to be negligible dependence between their values, thus,
 
@@ -89,47 +89,47 @@ Since there is no functional form fit to :math:`C_{\mathrm{H}, i}`, there is ass
 
        \frac{\partial^2 \chi^2}{\partial C_{\mathrm{H},k}' \partial C_{\mathrm{H},j}'}=0
 
-Taking the second derivative of :math:`\chi^2`, defined in `[eq:chi2] <#eq:chi2>`__, for arbitrary variables :math:`x_j` and :math:`x_k` results in
+Taking the second derivative of :math:`\chi^2`, defined in :eq:`eq-chi2`, for arbitrary variables :math:`x_j` and :math:`x_k` results in
 
 .. math::
+       :label: eq-d2_chi2
 
        \frac{\partial^2 \chi^2}{\partial x_j \, \partial x_k} = 2\sum  \left[\left( \frac{1}{\sigma_{C_{i,\mathrm{exp}}}^2} \frac{\partial C_i}{\partial x_j} \frac{\partial C_i}{\partial x_k} \right) + \left( \frac{C_i - C_{i,\mathrm{exp}}}{\sigma^2_{C_{i,\mathrm{exp}}}} \right)\frac{\partial^2 C_i}{\partial x_j \, \partial x_k} \right]
-       \label{eq:d2_chi2}
 
-Assuming that the model is able to describe the data well and thus the residuals are negligible, `[eq:d2_chi2] <#eq:d2_chi2>`__ is simplified to
+Assuming that the model is able to describe the data well and thus the residuals are negligible, :eq:`eq-d2_chi2` is simplified to
 
 .. math::
+       :label: eq-d2_chi2-simplified
 
        \frac{\partial^2 \chi^2}{\partial x_j \, \partial x_k} \approx \sum \frac{2}{\sigma_{C_{i,\mathrm{exp}}}^2} \frac{\partial C_i}{\partial x_j} \frac{\partial C_i}{\partial x_k}
-       \label{eq:d2_chi2-simplified}
 
-The concentration to differentiate is from the DMS model (`[eq:dms] <#eq:dms>`__), with van't Hoff and LFER Equations (Equations `[eq:LFER_HD] <#eq:LFER_HD>`__"“`[eq:b_vh] <#eq:b_vh>`__) substituted in to yield
+The concentration to differentiate is from the DMS model :eq:`eq-dms`, with van't Hoff and LFER Equations (:eq:`eq-LFER_HD`--:eq:`eq-b_vh`) substituted in to yield
 
 .. math::
+       :label: eq-dms-full-sub
 
        C=\exp\left(-\frac{\Delta H_\mathrm{D}}{RT} + \frac{-\beta_\mathrm{D} + \Delta H_\mathrm{D}}{\alpha_\mathrm{D}} \right) f +
        \frac{C_\mathrm{H}'\exp\left( -\frac{\Delta H_\mathrm{b}}{RT} + \frac{-\beta_\mathrm{b} + \Delta H_\mathrm{b}}{\alpha_\mathrm{b}} \right) f
        }{ 1 + \exp\left( -\frac{\Delta H_\mathrm{b}}{RT} + \frac{-\beta_\mathrm{b} + \Delta H_\mathrm{b}}{\alpha_\mathrm{b}} \right) f}
-       \label{eq:dms-full-sub}
 
-Taking the resulting derivatives of `[eq:dms-full-sub] <#eq:dms-full-sub>`__ that appear in the Hessian yield:
-
-.. math::
-
-       \frac{\partial C}{\partial H_\mathrm{D}} = \exp\left(-\frac{\Delta H_\mathrm{D}}{RT} + \frac{-\beta_{\mathrm{D}}+\Delta H_\mathrm{D}}{\alpha_{\mathrm{D}}}\right)\left(-\frac{1}{RT} + \frac{1}{\alpha_{\mathrm{D}}}\right)f,
-       \label{eq:dCdHD}
+Taking the resulting derivatives of :eq:`eq-dms-full-sub` that appear in the Hessian yield:
 
 .. math::
+       :label: eq-dCdHD
+
+       \frac{\partial C}{\partial H_\mathrm{D}}=\exp\left(-\frac{\Delta H_\mathrm{D}}{RT} + \frac{-\beta_{\mathrm{D}}+\Delta H_\mathrm{D}}{\alpha_{\mathrm{D}}}\right)\left(-\frac{1}{RT} + \frac{1}{\alpha_{\mathrm{D}}}\right)f,
+
+.. math::
+       :label: eq-dCdHb
 
        \frac{\partial C}{\partial H_\mathrm{b}} = \frac{C_\mathrm{H}'\exp\left( \frac{\Delta H_{\mathrm{b}}}{RT} + \frac{\beta_{\mathrm{b}} + \Delta H_{\mathrm{b}}}{\alpha_{\mathrm{b}}} \right)(RT - \alpha_{\mathrm{b}})f}{\left( \exp\left( \frac{\beta_{\mathrm{b}}}{\alpha_{\mathrm{b}}} + \frac{\Delta H_{\mathrm{b}}}{RT} \right) + \exp\left( \frac{\Delta H_{\mathrm{b}}}{\alpha_{\mathrm{b}}} \right) f \right)^2 RT \alpha_{\mathrm{b}}},
-   \label{dCdHb}
 
 and
 
 .. math::
+       :label: eq-dCdCH
 
        \frac{\partial C}{\partial C_\mathrm{H}'} = \left(1+\frac{\exp\left(\tfrac{\beta_{\mathrm{b}}-\Delta H_\mathrm{b}}{\alpha_\mathrm{b}}+\tfrac{\Delta H_\mathrm{b}}{RT}\right)}{f}\right)^{-1}
-       \label{dCdCH}
 
 The Hessian used to determine the standard deviations of optimized parameters is the mean Hessian of successful van't Hoff optimizations, :math:`\overline{\mathrm{\bf{H}}}\bf(x)`. The covariance matrix is computed as:
 
@@ -146,29 +146,29 @@ The uncertainties in :math:`\mathbf{x}` are propagated to find the uncertainties
        \sigma_{k_\mathrm{D}}=\sqrt{
        \sigma_T^2 \left( \frac{\partial k_\mathrm{D}}{\partial T} \right)^2 + \sigma_{\alpha_D}^2 \left( \frac{\partial k_\mathrm{D}}{\partial \alpha_\mathrm{D}} \right)^2 +\sigma_{\beta_\mathrm{D}}^2 \left( \frac{\partial k_{\mathrm{D}}}{\partial \beta_\mathrm{D}} \right)^2 +\sigma_{\Delta H_{\mathrm{D}}}^2 \left( \frac{\partial k_{\mathrm{D}}}{\partial \Delta H_{\mathrm{D}}} \right)^2}
 
-where error in the temperature, :math:`\sigma_T^2`, is assumed to be constant at :math:`0.01` K and the partial derivatives are equal to
+where error in the temperature, :math:`\sigma_T^2`, is assumed to be constant at :math:`0.01\;\mathrm{K}` and the partial derivatives are equal to
 
 .. math::
+       :label: eq-dkDdT
 
        \frac{\partial k_\mathrm{D}}{\partial T}=\frac{\exp\left( -\frac{\Delta H_{\mathrm{D}}}{RT} + \frac{-\beta_{\mathrm{D}} + \Delta H_{\mathrm{D}}}{\alpha_{\mathrm{D}}} \right) \Delta H_{\mathrm{D}}}{RT^2},
-       \label{eq:dkDdT}
 
 .. math::
+       :label: eq-dkdalphaD
 
        \frac{\partial k_\mathrm{D}}{\partial \alpha_\mathrm{D}}=\frac{\exp\left( -\frac{\Delta H_{\mathrm{D}}}{RT} + \frac{-\beta_{\mathrm{D}} + \Delta H_{\mathrm{D}}}{\alpha_{\mathrm{D}}} \right) \left(\beta_{\mathrm{D}} - \Delta H_{\mathrm{D}} \right)}{\alpha_{\mathrm{D}}^2},
-       \label{eq:dkddalphaD}
 
 .. math::
+       :label: eq-dkDbetaD
 
         \frac{\partial k_\mathrm{D}}{\partial \beta_\mathrm{D}}=- \frac{\exp\left( -\frac{\Delta H_{\mathrm{D}}}{RT} + \frac{-\beta_{\mathrm{D}} + \Delta H_{\mathrm{D}}}{\alpha_{\mathrm{D}}} \right)}{\alpha_{\mathrm{D}}},
-   \label{eq:dkDalphaD}
 
 and
 
 .. math::
+       :label: eq-dkDdHD
 
        \frac{\partial k_\mathrm{D}}{\partial \Delta H_\mathrm{D}}=\exp\left( -\frac{\Delta H_{\mathrm{D}}}{RT} + \frac{-\beta_{\mathrm{D}} + \Delta H_{\mathrm{D}}}{\alpha_{\mathrm{D}}} \right)\left( -\frac{1}{RT} + \frac{1}{\alpha_{\mathrm{D}}} \right)
-       \label{eq:dkDdHD}
 
 Likewise, a similar approach can be followed for the uncertainty in :math:`b`:
 
@@ -177,29 +177,29 @@ Likewise, a similar approach can be followed for the uncertainty in :math:`b`:
        \sigma_{b}=\sqrt{
        \sigma_T^2 \left( \frac{\partial b}{\partial T} \right)^2 + \sigma_{\alpha_b}^2 \left( \frac{\partial b}{\partial \alpha_\mathrm{b}} \right)^2 +\sigma_{\beta_\mathrm{b}}^2 \left( \frac{\partial b}{\partial \beta_\mathrm{b}} \right)^2 +\sigma_{\Delta H_{\mathrm{b}}}^2 \left( \frac{\partial b}{\partial \Delta H_{\mathrm{b}}} \right)^2}
 
-where error in the temperature, :math:`\sigma_T^2`, is assumed to be constant at :math:`0.01` K and the partial derivatives are equal to
+where error in the temperature, :math:`\sigma_T^2`, is assumed to be constant at :math:`0.01\;\mathrm{K}` and the partial derivatives are equal to
 
 .. math::
+       :label: eq-dbdT
 
        \frac{\partial b}{\partial T}=\frac{\exp\left( -\frac{\Delta H_{\mathrm{b}}}{RT} + \frac{-\beta_{\mathrm{b}} + \Delta H_{\mathrm{b}}}{\alpha_{\mathrm{b}}} \right) \Delta H_{\mathrm{b}}}{RT^2},
-       \label{eq:dbdT}
 
 .. math::
+       :label: eq-dbdalphaD
 
        \frac{\partial b}{\partial \alpha_\mathrm{b}}=\frac{\exp\left( -\frac{\Delta H_{\mathrm{b}}}{RT} + \frac{-\beta_{\mathrm{b}} + \Delta H_{\mathrm{b}}}{\alpha_{\mathrm{b}}} \right) \left(\beta_{\mathrm{b}} - \Delta H_{\mathrm{b}} \right)}{\alpha_{\mathrm{b}}^2},
-       \label{eq:dbdalphaD}
 
 .. math::
+       :label: eq-dbbetaD
 
-   \frac{\partial b}{\partial \beta_\mathrm{b}}=- \frac{\exp\left( -\frac{\Delta H_{\mathrm{b}}}{RT} + \frac{-\beta_{\mathrm{b}} + \Delta H_{\mathrm{b}}}{\alpha_{\mathrm{b}}} \right)}{\alpha_{\mathrm{b}}},
-   \label{eq:dbalphaD}
+       \frac{\partial b}{\partial \beta_\mathrm{b}}=- \frac{\exp\left( -\frac{\Delta H_{\mathrm{b}}}{RT} + \frac{-\beta_{\mathrm{b}} + \Delta H_{\mathrm{b}}}{\alpha_{\mathrm{b}}} \right)}{\alpha_{\mathrm{b}}},     
 
 and
 
 .. math::
+       :label: eq-dbdHD
 
        \frac{\partial b}{\partial \Delta H_\mathrm{b}}=\exp\left( -\frac{\Delta H_{\mathrm{b}}}{RT} + \frac{-\beta_{\mathrm{b}} + \Delta H_{\mathrm{b}}}{\alpha_{\mathrm{b}}} \right)\left( -\frac{1}{RT} + \frac{1}{\alpha_{\mathrm{b}}} \right),
-       \label{eq:dbdHD}
 
 From these errors within the DMS parameters, the error within the concentration is calculated as
 
@@ -230,14 +230,14 @@ Uncertainty in :math:`S_\infty` is calculated as
 Energetics
 ----------
 
-Within the optimization, the heats (enthalpies) of Henry and Langmuir sorption are from Equations `[eq:kD_vh] <#eq:kD_vh>`__ and `[eq:b_vh] <#eq:b_vh>`__. A third heat of sorption, the infinite dilution heat of sorption (:math:`\Delta H_{\mathrm{S},\infty}`), also defined as a van't Hoff fit:
+Within the optimization, the heats (enthalpies) of Henry and Langmuir sorption are from :eq:`eq-kD_vh` and :eq:`eq-b_vh`. A third heat of sorption, the infinite dilution heat of sorption (:math:`\Delta H_{\mathrm{S},\infty}`), also defined as a van't Hoff fit:
 
 .. math::
+       :label: eq-vH_Sinf
 
        \ln{S_\infty}=\ln{S_{\infty,0}}-\frac{\Delta H_{\mathrm{S},\infty}}{RT}
-       \label{eq:vH_Sinf}
 
-is computed via an ordinary least squares (OLS) regression of `[eq:vH_Sinf] <#eq:vH_Sinf>`__ from the parameters within the optimization.
+is computed via an ordinary least squares (OLS) regression of :eq:`eq-vH_Sinf` from the parameters within the optimization.
 
 .. _error-propagation-2:
 
@@ -249,20 +249,20 @@ Uncertainties within the Henry and Langmuir heats of sorption are directly calcu
 Isosteric Heat of Sorption
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The isosteric heat of sorption, :math:`\Delta H_\mathrm{iso}`, is calculated via the Clausius"“Clapeyron approach :cite:`koros_energetics_1979`:
+The isosteric heat of sorption, :math:`\Delta H_\mathrm{iso}`, is calculated via the Clausius--Clapeyron approach :cite:`koros_energetics_1979`:
 
 .. math::
 
    \left(\frac{\mathrm{d}f}{\mathrm{d}(1/T)}\right)_C=\frac{\Delta H_\mathrm{iso}}{ZR}
 
-where :math:`f` would be substituted for :math:`P` if pressure-based DMS parameters are used and :math:`Z` is the compressibility factor (see Section `4.5 <#sec:fugacity>`__). :math:`\Delta H_\mathrm{iso}` is computed via OLS regression of :math:`\ln(f)` versus :math:`T^{-1}`. Fugacities at each temperature are computed from a constant concentration value calculated from the DMS parameters optimized within pyDMS. The compressibility factor at each concentration is found as the mean of the compressibility factors at each temperature.
+where :math:`f` would be substituted for :math:`P` if pressure-based DMS parameters are used and :math:`Z` is the compressibility factor (see :numref:`sec-fugacity`). :math:`\Delta H_\mathrm{iso}` is computed via OLS regression of :math:`\ln(f)` versus :math:`T^{-1}`. Fugacities at each temperature are computed from a constant concentration value calculated from the DMS parameters optimized within pyDMS. The compressibility factor at each concentration is found as the mean of the compressibility factors at each temperature.
 
 .. _error-propagation-3:
 
 Error Propagation
 ~~~~~~~~~~~~~~~~~
 
-Uncertainty of :math:`\Delta H_\mathrm{iso}` is calculated from the uncertainty within the slope of the OLS regression as
+Uncertainty in :math:`\Delta H_\mathrm{iso}` is calculated from the uncertainty within the slope of the OLS regression as
 
 .. math::
 
@@ -271,75 +271,75 @@ Uncertainty of :math:`\Delta H_\mathrm{iso}` is calculated from the uncertainty 
 Mixed-Gas DMS and Sorption Selectivities
 ----------------------------------------
 
-The mixed-gas DMS model extends the pure-gas DMS model to an :math:`N`"“component mixture
+The mixed-gas DMS model extends the pure-gas DMS model to an :math:`N`-component mixture
 
 .. math::
+       :label: eq-mixed-dms
 
        C_i=k_{\mathrm{D},i}f_i+\frac{C_{\mathrm{H},i}'b_if_i}{1+b_if_i+\cdots+b_Nf_N}
-       \label{eq:mixed-dms}
 
 where :math:`i` is the gas whose sorption isotherm is of interest. From these isotherms, binary sorption selectivity is calculated as
 
 .. math::
+       :label: eq-binary-selectivity
 
        \alpha_{i/j}^s=\frac{C_i/f_i}{C_j/f_j}
-       \label{eq:binary-selectivity}
 
 where :math:`f_i` and :math:`f_j` are defined by the Lewis and Randall rule :cite:`tester_thermodynamics_1997` such that
 
 .. math::
+       :label: eq-lewis-randall
 
        f_k=f_\mathrm{total}\cdot y_k
-       \label{eq:lewis-randall}
 
 where :math:`f_\mathrm{total}` is the fugacity of the gas of interest at the total pressure and :math:`y_k` is the mole fraction of the component.
 
 Calculations of sorption selectivity can be extended to any number of gases. Currently, pyDMS also has ternary selectivities built in, defined as
 
 .. math::
+       :label: eq-mixed-selec-2up
 
        \alpha_{(i+j)/k}^s=\frac{C_{i}/f_{i}+C_{j}/f_{j}}{C_{k}/f_{k}}
-       \label{eq:mixed-selec-2up}
 
 and
 
 .. math::
+       :label: eq-mixed-selec-1up
 
        \alpha_{i/(j+k)}^s=\frac{C_{i}/f_{i}}{C_{j}/f_{j}+C_{k}/f_{k}}
-       \label{eq:mixed-selec-1up}
 
 .. _error-propagation-4:
 
 Error Propagation
 ~~~~~~~~~~~~~~~~~
 
-Error propagation on the mixed-gas DMS model (`[eq:mixed-dms] <#eq:mixed-dms>`__) yields the following uncertainty within concentration
+Error propagation on the mixed-gas DMS model :eq:`eq-mixed-dms` yields the following uncertainty within concentration
 
 .. math::
+       :label: eq-mixed-dms-uncertainty
 
        \sigma_{C_i}=\sqrt{
-   \frac{
-       C_{\mathrm{H}_i}^{'2} f_i^2 \left( 1 + \sum_{j\neq i}^{N} b_{j} f_{j} \right)^2 \sigma_{b_i}^2
-   }{
-       \left( 1 + \sum_{j}^{N} b_{j} f_{j} \right)^4
-   }
-   +
-   \frac{C_{\mathrm{H},i}'^2 b_i^2 f_i^2}{\left( 1 + \sum_{j}^{N} b_{j} f_{j} \right)^4} \sum_{j \neq i}^{N} f_j^2 \sigma_{b_j}^2
-   +
-   \frac{
-       b_i^2 f_i^2 \sigma_{C_{\mathrm{H},i}}^2}{\left( 1 + \sum_{j}^{N} b_{j} f_{j} \right)^2}
-   +
-   f_i^2 \sigma_{k_{\mathrm{D},i}}^2
-   }
-       \label{eq:mixed-dms-uncertainty}
+       \frac{
+              C_{\mathrm{H}_i}^{'2} f_i^2 \left( 1 + \sum_{j\neq i}^{N} b_{j} f_{j} \right)^2 \sigma_{b_i}^2
+       }{
+              \left( 1 + \sum_{j}^{N} b_{j} f_{j} \right)^4
+       }
+       +
+       \frac{C_{\mathrm{H},i}'^2 b_i^2 f_i^2}{\left( 1 + \sum_{j}^{N} b_{j} f_{j} \right)^4} \sum_{j \neq i}^{N} f_j^2 \sigma_{b_j}^2
+       +
+       \frac{
+              b_i^2 f_i^2 \sigma_{C_{\mathrm{H},i}}^2}{\left( 1 + \sum_{j}^{N} b_{j} f_{j} \right)^2}
+       +
+       f_i^2 \sigma_{k_{\mathrm{D},i}}^2
+       }
 
-Binary sorption selectivity (`[eq:binary-selectivity] <#eq:binary-selectivity>`__) is error propagated as
+Binary sorption selectivity :eq:`eq-binary-selectivity` is error propagated as
 
 .. math::
 
        \sigma_{\alpha_{i/j}}=\sqrt{\frac{f_j^2 \left( C_j^2 \sigma_{C_i}^2 + C_i^2 \sigma_{C_j}^2 \right)}{C_j^4 f_i^2}}
 
-Ternary sorption selectivities (Equations `[eq:mixed-selec-2up] <#eq:mixed-selec-2up>`__ and `[eq:mixed-selec-1up] <#eq:mixed-selec-1up>`__) are error propagated as
+Ternary sorption selectivities (:eq:`eq-mixed-selec-2up` and :eq:`eq-mixed-selec-1up`) are error propagated as
 
 .. math::
 
@@ -363,7 +363,7 @@ and
 
 respectively.
 
-.. _`sec:fugacity`:
+.. _sec-fugacity:
 
 Fugacity
 --------
@@ -374,7 +374,7 @@ Deviation from ideal gas behavior can be represented using the compressibility f
 
        Z=\frac{p_iV_m}{RT}
 
-where :math:`p_i` is the partial pressure, :math:`V_m` is the molar volume, :math:`T` is the absolute temperature, and :math:`R` is the ideal gas constant. The compressibility factor is related to the fugacity (:math:`f`) and :math:`p_i` as
+where :math:`p_i` is the partial pressure, :math:`V_m` is the molar volume, :math:`T` is the absolute temperature, and :math:`R` is the ideal gas constant. The compressibility factor is related to the :math:`f` and :math:`p_i` as
 
 .. math::
 
@@ -412,9 +412,9 @@ In pyDMS, the Virial coefficients are expressed as temperature-dependent expansi
 and
 
 .. math::
+       :label: eq-virial-C
 
        C=C_0+C_1T^{-1}+C_2T^{-2}+C_3T^{-3}+C_4T^{-4}
-       \label{eq:virial-C}
 
 where :math:`B` has units of :math:`\mathrm{cm^3\; mol^{-1}}`, :math:`C` has units of :math:`\mathrm{cm^6\; mol^{-2}}`, and :math:`T` is the temperature in Kelvin. Data for the Virial coefficients are taken from Dymond et al. :cite:`dymond_virial_2002` The functional form was provided for the second Virial coefficient within Dymond et al., :cite:`dymond_virial_2002` however, no functional form was fit for :math:`C`, therefore, we calculated the fit using provided experimental data at temperatures greater than 200 K and shown in `[tab:third-virial-coeffs] <#tab:third-virial-coeffs>`__.
 
@@ -491,7 +491,7 @@ where :math:`B` has units of :math:`\mathrm{cm^3\; mol^{-1}}`, :math:`C` has uni
 
 .. note::
 
-   All coefficients are in units of :math:`\left( \mathrm{cm^6\; mol^{-2} \; K^{-j}\cdot10^{3}} \right)` where :math:`j` corresponds to :math:`C_j` to match the style of Dymond et al. :cite:`dymond_virial_2002` (i.e., each number must be multiplied by :math:`10^{-3}` before using `[eq:virial-C] <#eq:virial-C>`__).
+   All coefficients are in units of :math:`\left( \mathrm{cm^6\; mol^{-2} \; K^{-j}\cdot10^{3}} \right)` where :math:`j` corresponds to :math:`C_j` to match the style of Dymond et al. :cite:`dymond_virial_2002` (i.e., each number must be multiplied by :math:`10^{-3}` before using :eq:`eq-virial-C`).
 
 The fugacity coefficient can be expressed in terms of the Virial coefficients as
 
@@ -499,10 +499,10 @@ The fugacity coefficient can be expressed in terms of the Virial coefficients as
 
    \ln(\phi)=B^*p_i+\frac{1}{2}C^*p_i^2+\cdots
 
-Peng-Robinson Equation of State
+Peng--Robinson Equation of State
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The fugacity coefficient using the Peng"“Robinson:cite:`peng_new_1976` EoS is solved as
+The fugacity coefficient using the Peng--Robinson :cite:`peng_new_1976` EoS is solved as
 
 .. math::
 
@@ -511,9 +511,9 @@ The fugacity coefficient using the Peng"“Robinson:cite:`peng_new_1976` EoS is 
 where :math:`Z` is the compressibility factor which can be solved via the cubic equation
 
 .. math::
-
+       :label: eq-Z-soln
+       
        Z^3+(B-1)Z^2+(A-3B^2-2B)Z+(-AB+B^2+B^3)=0
-       \label{eq:Z-soln}
 
 with the constants :math:`A` and :math:`B` are defined as
 
@@ -545,4 +545,4 @@ where
 
        \kappa=0.375+1.542\omega-0.270\omega^2,
 
-and :math:`T_c`, :math:`P_c`, and :math:`\omega` are the critical temperature, critical pressure, and acentric factor, respectively. The largest root in `[eq:Z-soln] <#eq:Z-soln>`__ is always selected as it corresponds to the vapor phase. :cite:`tester_thermodynamics_1997`
+and :math:`T_c`, :math:`P_c`, and :math:`\omega` are the critical temperature, critical pressure, and acentric factor, respectively. The largest root in `eq-Z-soln`` is always selected as it corresponds to the vapor phase. :cite:`tester_thermodynamics_1997`

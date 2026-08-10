@@ -1,7 +1,7 @@
 ﻿Inputs and Outputs
 ==================
 
-All parameters that can either be supplied to pyDMS or collected after an optimization run are provided in :ref:`table-gas-class`. Parameters that the user can supply, but pyDMS will never calculate or supply, are marked accordingly. ``Gas`` here is the variable name of the ``Gas`` class. For example: ``co2 = dms.Gas()``.
+All parameters that can either be supplied to pyDMS or collected after an optimization run are provided in :numref:`table-gas-class`. ``Gas`` here is the variable name of the ``Gas`` class. For example: ``co2 = dms.Gas()``.
 
 .. _table-gas-class:
 .. list-table:: Attributes of the ``Gas`` class.
@@ -54,7 +54,7 @@ All parameters that can either be supplied to pyDMS or collected after an optimi
      - :math:`\sigma_{C_{\mathrm{H},i}'}`
      - numpy.ndarray
    * - ``.settings``
-     - Settings (see :ref:`table-settings`)
+     - Settings (see :numref:`table-settings`)
      - dict
    * - ``.virial_coeff``
      - User-defined Virial coefficients
@@ -132,10 +132,12 @@ All parameters that can either be supplied to pyDMS or collected after an optimi
 .. note::
 
    Example usage: ``Gas.formula = 'CO2'``.
+
    ``.out`` only includes inliers from RANSAC regression.
+
    ``.out_outliers`` includes inliers and outliers.
 
-:ref:`table-settings` details all the different settings that can be provided for the optimization. If a setting is not provided, the default value(s) will be used.
+:numref:`table-settings` details all the different settings that can be provided for the optimization. If a setting is not provided, the default value(s) will be used.
 
 .. _table-settings:
 .. list-table:: Optimization settings used by ``pyDMS`` within the ``Gas.settings`` attribute.
@@ -212,9 +214,10 @@ All parameters that can either be supplied to pyDMS or collected after an optimi
 .. note::
 
    Example usage: ``Gas.settings = {'dHD_guess':[-40, -1], 'dHD_bounds':[-60, 0]}``.
+
    Available solver options are ``'SLSQP'`` :cite:`noauthor_minimizemethodslsqp_nodate` or ``'trust-constr'`` :cite:`noauthor_minimizemethodtrust-constr_nodate` from ``scipy.optimize.minimize`` :cite:`virtanen_scipy_2020`.
 
-:ref:`table-fugacity` details the gases for which fugacity can automatically be computed from pressure data within ``pyDMS``.
+:numref:`table-fugacity` details the gases for which fugacity can automatically be computed from pressure data within pyDMS.
 
 .. _table-fugacity:
 .. list-table:: Built-in fugacity parameters and their corresponding references.

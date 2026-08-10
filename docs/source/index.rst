@@ -5,7 +5,8 @@ Table of Contents
 ===================
 
 .. toctree::
-   :maxdepth: 1
+   :numbered:
+   :maxdepth: 1 
    :caption: User Guide
 
    guide/introduction

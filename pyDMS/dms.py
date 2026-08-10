@@ -247,7 +247,7 @@ class vH:
 
 
 class analysis:
-    """Output from post-optimization analysis. These attributes will be populated automatically and
+    r"""Output from post-optimization analysis. These attributes will be populated automatically and
     can be accessed by calling ``Gas.analysis.PROPERTY`` (e.g., ``Gas.analysis.S_inf``) after ``running pyDMS.dms.compute()``.
 
     Attributes:
@@ -701,6 +701,10 @@ def is_outlier(arr):
     mad = median_abs_deviation(arr)
     c = -1 / (np.sqrt(2) * erfcinv(3 / 2))  # MATLAB's scaling factor
     scaled_mad = c * mad
+
+    # Fixing the bug where no colored historgrams show up because convergence is tight
+    min_scale = np.sqrt(np.finfo(float).eps) * np.abs(median) if median != 0 else 1e-8
+    scaled_mad = max(scaled_mad, min_scale)
 
     return np.abs(arr - median) > 3 * scaled_mad  # Boolean mask for outliers
 

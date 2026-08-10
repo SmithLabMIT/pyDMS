@@ -9,6 +9,8 @@ This user manual is broken into the following sections:
 
 #. **Examples**: How to apply pyDMS to model sorption isotherms and understand the results.
 
+#. **Skeleton Input File**: A Python file that you can use as a template to run pyDMS on your own data.
+
 #. **Inputs & Outputs**: What parameters can you supply and what data will pyDMS return.
 
 #. **Mathematical Formulation**: The math behind how pyDMS works. *Not required--for the interested reader only*.

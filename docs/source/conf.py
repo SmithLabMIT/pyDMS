@@ -23,6 +23,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
     "sphinxcontrib.bibtex",
+    "sphinx_copybutton",
 ]
 
 
@@ -39,8 +40,6 @@ exclude_patterns = [
 show_authors = True
 pygments_style = "sphinx"
 todo_include_todos = False
-
-
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
@@ -60,4 +59,6 @@ html_favicon = "images/pyDMS_favicon.png"
 html_static_path = ['_static']
 html_show_sourcelink = True
 
-
+numfig = True
+math_numfig = True
+numfig_secnum_depth = 0  # numbers as (1), (2), (3) not (1.1), (1.2)
