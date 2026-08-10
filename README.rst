@@ -52,15 +52,15 @@ Citation(s)
 
 **If you used pyDMS, please cite:**
 
-Tapia, B. C.; Dean, P. A.; Yeo, J. Y.; Wu, A. X., Smith, Z. P. pyDMS: A Python package for the determination of physics-informed, reproducible dual-mode sorption (DMS) parameters. *In prep.* **2026**.
+Tapia, B. C.; Dean, P. A.; Yeo, J. Y.; Wu, A. X., Smith, Z. P. pyDMS: A Python package for the determination of physics-informed, reproducible dual-mode sorption (DMS) parameters. *AIChE J.* Accepted **2026**.
 
 **We also recommend citing the following works which provide relevant background and theory on van't Hoff sorption energetics, LFERs, and their application to constrained DMS optimization, respectively:**
 
-Koros, W. J.; Paul, D. R.; Huvard, G. S. Energetics of Gas Sorption in Glassy Polymers. *Polymer* **1979**, *20* (8), 956–960. https://doi.org/10.1016/0032-3861(79)90192-7.
+Koros, W. J.; Paul, D. R.; Huvard, G. S. Energetics of Gas Sorption in Glassy Polymers. *Polymer* **1979**, *20* (8), 956--960. https://doi.org/10.1016/0032-3861(79)90192-7.
 
-Freeman, B. D. Basis of Permeability/Selectivity Tradeoff Relations in Polymeric Gas Separation Membranes. *Macromolecules* **1999**, *32* (2), 375–380. https://doi.org/10.1021/ma9814548.
+Freeman, B. D. Basis of Permeability/Selectivity Tradeoff Relations in Polymeric Gas Separation Membranes. *Macromolecules* **1999**, *32* (2), 375--380. https://doi.org/10.1021/ma9814548.
 
-Wu, A. X.; Drayton, J. A.; Mizrahi Rodriguez, K.; Benedetti, F. M.; Qian, Q.; Lin, S.; Smith, Z. P. Elucidating the Role of Fluorine Content on Gas Sorption Properties of Fluorinated Polyimides. *Macromolecules* **2021**, *54* (1), 22–34. https://doi.org/10.1021/acs.macromol.0c01746.
+Wu, A. X.; Drayton, J. A.; Mizrahi Rodriguez, K.; Benedetti, F. M.; Qian, Q.; Lin, S.; Smith, Z. P. Elucidating the Role of Fluorine Content on Gas Sorption Properties of Fluorinated Polyimides. *Macromolecules* **2021**, *54* (1), 22--34. https://doi.org/10.1021/acs.macromol.0c01746.
 
 License
 -------

@@ -416,9 +416,10 @@ and
 
        C=C_0+C_1T^{-1}+C_2T^{-2}+C_3T^{-3}+C_4T^{-4}
 
-where :math:`B` has units of :math:`\mathrm{cm^3\; mol^{-1}}`, :math:`C` has units of :math:`\mathrm{cm^6\; mol^{-2}}`, and :math:`T` is the temperature in Kelvin. Data for the Virial coefficients are taken from Dymond et al. :cite:`dymond_virial_2002` The functional form was provided for the second Virial coefficient within Dymond et al., :cite:`dymond_virial_2002` however, no functional form was fit for :math:`C`, therefore, we calculated the fit using provided experimental data at temperatures greater than 200 K and shown in `[tab:third-virial-coeffs] <#tab:third-virial-coeffs>`__.
+where :math:`B` has units of :math:`\mathrm{cm^3\; mol^{-1}}`, :math:`C` has units of :math:`\mathrm{cm^6\; mol^{-2}}`, and :math:`T` is the temperature in Kelvin. Data for the Virial coefficients are taken from Dymond et al. :cite:`dymond_virial_2002` The functional form was provided for the second Virial coefficient within Dymond et al., :cite:`dymond_virial_2002` however, no functional form was fit for :math:`C`, therefore, we calculated the fit using provided experimental data at temperatures greater than 200 K and shown in :numref:`tab-third-virial-coeffs`.
 
-.. list-table:: Second virial coefficients :math:`C_j` for supported gases.
+.. _tab-third-virial-coeffs:
+.. list-table:: Temperature-dependent fits for extracting the third Virial coefficient (:math:`C`) using :eq:`eq-virial-C`.
    :header-rows: 1
    :widths: 20 16 16 16 16 16
 

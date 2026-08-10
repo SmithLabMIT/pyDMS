@@ -6,7 +6,7 @@ The best way to understand how to use pyDMS is to see it applied. We provide exa
 Example 1: Fitting DMS Parameters
 ---------------------------------
 
-The main purpose of pyDMS is to fit DMS parameters. pyDMS is configured to have built-in solvers and settings that work for experimental sorption isotherms for a variety of different gases. To demonstrate, we fit data from Dean et al. :cite:`dean_elucidating_2024` for sorption in PIM-1 at temperatures of 35 °C, 45 °C, 55 °C, and 65 °C. It is important to note that pyDMS requires sorption at multiple temperatures to achieve its optimization routines. While in theory only two temperatures are needed, additional temperatures naturally improve fit.
+The main purpose of pyDMS is to fit DMS parameters. pyDMS is configured to have built-in solvers and settings that work for experimental sorption isotherms for a variety of different gases. To demonstrate, we fit data from Dean et al. :cite:`dean_elucidating_2024` for :math:`\text{CO}_2` sorption in PIM-1 at temperatures of 35 °C, 45 °C, 55 °C, and 65 °C. It is important to note that pyDMS requires sorption at multiple temperatures to achieve its optimization routines. While in theory only two temperatures are needed, additional temperatures naturally improve fit.
 
 To run the optimization, create a file called ``example1_pyDMS.py`` and copy the following code:
 
@@ -93,6 +93,42 @@ Example 2: Understanding pyDMS Results
 --------------------------------------
 
 In the folder where you ran ``example1_pyDMS.py``, you should see two new files: ``example1_pyDMS.pdf`` and ``example1_pyDMS.pkl``. The results of the optimization are shown in ``example1_pyDMS.pdf``. These results should look similar to the example report provided in the following pages, which walks you through how to interpret the results.
+
+.. _fig-report-page1:
+.. figure:: _static/report_pages/example1_pyDMS-1.png
+   :width: 100%
+   :align: center
+   :alt: Example report page 1
+
+.. _fig-report-page2:
+.. figure:: _static/report_pages/example1_pyDMS-2.png
+   :width: 100%
+   :align: center
+   :alt: Example report page 2
+
+.. _fig-report-page3:
+.. figure:: _static/report_pages/example1_pyDMS-3.png
+   :width: 100%
+   :align: center
+   :alt: Example report page 3
+
+.. _fig-report-page4:
+.. figure:: _static/report_pages/example1_pyDMS-4.png
+   :width: 100%
+   :align: center
+   :alt: Example report page 4
+
+.. _fig-report-page5:
+.. figure:: _static/report_pages/example1_pyDMS-5.png
+   :width: 100%
+   :align: center
+   :alt: Example report page 5
+
+.. _fig-report-page6:
+.. figure:: _static/report_pages/example1_pyDMS-6.png
+   :width: 100%
+   :align: center
+   :alt: Example report page 6
 
 If you open ``example1_pyDMS.pkl``, you will see non-human-readable results. That is because ``example1_pyDMS.pkl`` serializes and stores the results of the optimization such that they can be read back into Python from "Pickle" format. :cite:`pilgrim_serializing_2009` As an example, copy the following code into a new file called ``example2_pyDMS.py`` within the same folder as ``example1_pyDMS.pkl``:
 

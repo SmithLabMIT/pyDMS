@@ -1,7 +1,14 @@
 ﻿Inputs and Outputs
 ==================
+All parameters that can either be supplied to pyDMS or collected after an
+optimization run are provided in :numref:`table-gas-class`.
+``Gas`` here is the variable name of the ``Gas`` class.
+For example: ``co2 = dms.Gas()``.
 
-All parameters that can either be supplied to pyDMS or collected after an optimization run are provided in :numref:`table-gas-class`. ``Gas`` here is the variable name of the ``Gas`` class. For example: ``co2 = dms.Gas()``.
+.. note::
+
+   Attributes marked with :sup:`†` are **user-supplied inputs only** —
+   pyDMS will never calculate or overwrite these values.
 
 .. _table-gas-class:
 .. list-table:: Attributes of the ``Gas`` class.
@@ -14,22 +21,22 @@ All parameters that can either be supplied to pyDMS or collected after an optimi
    * - **Gas**
      -
      -
-   * - ``.formula``
+   * - ``.formula`` :sup:`†`
      - Chemical formula
      - str
-   * - ``.temp``
+   * - ``.temp`` :sup:`†`
      - Temperatures
      - numpy.ndarray
-   * - ``.p``
+   * - ``.p`` :sup:`†`
      - Pressures
      - numpy.ndarray
    * - ``.f``
      - Fugacities
      - numpy.ndarray
-   * - ``.c``
+   * - ``.c`` :sup:`†`
      - Concentrations
      - numpy.ndarray
-   * - ``.c_err``
+   * - ``.c_err`` :sup:`†`
      - Uncertainty in concentrations
      - numpy.ndarray
    * - ``.Z``
