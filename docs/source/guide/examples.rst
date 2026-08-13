@@ -95,37 +95,37 @@ Example 2: Understanding pyDMS Results
 In the folder where you ran ``example1_pyDMS.py``, you should see two new files: ``example1_pyDMS.pdf`` and ``example1_pyDMS.pkl``. The results of the optimization are shown in ``example1_pyDMS.pdf``. These results should look similar to the example report provided in the following pages, which walks you through how to interpret the results.
 
 .. _fig-report-page1:
-.. figure:: _static/report_pages/example1_pyDMS-1.png
+.. figure:: /_static/report_pages/example1_pyDMS-1.png
    :width: 100%
    :align: center
    :alt: Example report page 1
 
 .. _fig-report-page2:
-.. figure:: _static/report_pages/example1_pyDMS-2.png
+.. figure:: /_static/report_pages/example1_pyDMS-2.png
    :width: 100%
    :align: center
    :alt: Example report page 2
 
 .. _fig-report-page3:
-.. figure:: _static/report_pages/example1_pyDMS-3.png
+.. figure:: /_static/report_pages/example1_pyDMS-3.png
    :width: 100%
    :align: center
    :alt: Example report page 3
 
 .. _fig-report-page4:
-.. figure:: _static/report_pages/example1_pyDMS-4.png
+.. figure:: /_static/report_pages/example1_pyDMS-4.png
    :width: 100%
    :align: center
    :alt: Example report page 4
 
 .. _fig-report-page5:
-.. figure:: _static/report_pages/example1_pyDMS-5.png
+.. figure:: /_static/report_pages/example1_pyDMS-5.png
    :width: 100%
    :align: center
    :alt: Example report page 5
 
 .. _fig-report-page6:
-.. figure:: _static/report_pages/example1_pyDMS-6.png
+.. figure:: /_static/report_pages/example1_pyDMS-6.png
    :width: 100%
    :align: center
    :alt: Example report page 6
@@ -178,67 +178,13 @@ Example 5: Adjusting Default Parameters
 
 While the default settings within pyDMS successfully optimize different gases without needing to manually change them in microporous polymers, there are instances when a user may wish to modify the defaults, such as when the parameter ranges are too large and ``pyDMS`` cannot converge. The easiest method of performing these parameter changes, is to use the helper function, ``pyDMS.dms.parameter_assist()``, which will automatically modify parameter ranges based on the isotherms supplied. Below, we demonstrate how to incorporate this helper into your code, using sorption in PIM-1 as an example:
 
-.. literalinclude:: ../../../examples/example_5/example5_pyDMS.py
+.. literalinclude:: ../../../examples/example_5/example5_param_assist_pyDMS.py
    :language: python
 
 Alternatively, rather than use the helper, settings can be modified manually through the ``Gas.settings`` attribute. All settings that can be changed, and their default parameters, are shown in :numref:`table-settings`. Below, we provide an example demonstrating how to modify some settings:
 
-.. code:: python
-
-   import numpy as np
-   import pyDMS.dms as dms
-
-
-   # Data from:
-   # Dean, P. A.; Mizrahi Rodriguez, K.; Guo, S.; Roy, N.; Swager, T. M.; Smith,
-   # Z. P. Elucidating the role of micropore-generating backbone motifs and amine
-   # functionality on H2S, CO2, CH4 and N2 sorption. Journal of Membrane Science
-   # 2024, 696, 122465.
-
-   n2 = dms.Gas()
-
-   n2.formula = "N2"
-
-   n2.f = [np.array([0.3, 0.7, 1.2, 1.9, 2.8, 3.7, 4.8, 6.3, 9.2, 12.4, 18.3, 24.8,
-                     31.5, 38.2, 44.9]),
-           np.array([0.3, 0.7, 1.2, 1.9, 2.8, 3.8, 4.8, 6.3, 9.2, 12.5, 18.3, 24.8,
-                     31.6, 38.3, 45.1]),
-           np.array([0.3, 0.6, 1.2, 1.9, 2.8, 3.8, 4.8, 6.3, 9.2, 12.4, 18.3, 24.9,
-                     31.6, 38.4, 45.2]),
-           np.array([0.2, 0.6, 1.3, 1.9, 2.8, 3.8, 4.8, 6.3, 9.2, 12.5, 18.3, 24.9,
-                     31.7, 38.5, 45.4]),
-   ]
-
-   n2.c = [np.array([0.7, 1.4, 2.5, 3.9, 5.5, 7.3, 8.9, 11.2, 14.9, 18.7, 24.2, 29.2,
-                     33.4, 37.0, 40.1]),
-           np.array([0.5, 1.2, 2.1, 3.2, 4.6, 6.2, 7.6, 9.5, 13.0, 16.3, 21.4, 25.9,
-                     29.9, 33.3, 36.2]),
-           np.array([0.4, 0.9, 1.8, 2.6, 3.9, 5.2, 6.5, 8.1, 11.1, 14.1, 18.7, 22.9,
-                     26.6, 29.8, 32.6]),
-           np.array([0.3, 0.8, 1.5, 2.3, 3.3, 4.4, 5.5, 6.9, 9.6, 12.2, 16.2, 20.1,
-                     23.5, 26.3, 29.1])]
-
-   n2.c_err = [np.array([0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.2, 0.2, 0.3,
-                         0.3, 0.3, 0.4]),
-               np.array([0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.2, 0.2, 0.3,
-                         0.3, 0.3, 0.3]),
-               np.array([0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.2, 0.3,
-                         0.3, 0.3, 0.3]),
-               np.array([0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.2, 0.2,
-                         0.3, 0.3, 0.3])]
-
-   n2.temp = np.array([308, 318, 328, 338])
-
-   n2.settings = {'CH_guess': [[30, 70], [30, 60], [30, 50], [30, 40]],
-                  'CH_bounds': [[20, 80], [20, 70], [20, 60], [20, 50]],
-                  'dHD_guess': [-15, -1],
-                  'dHD_bounds': [-20, 0],
-                  'dHb_guess': [-15, -1],
-                  'dHb_bounds': [-20, 0],
-                  'trials': 1000,
-                  'seed': 34564}
-
-   dms.compute(n2, 'n2')
+.. literalinclude:: ../../../examples/example_5/example5_custom_pyDMS.py
+   :language: python
 
 As the paper describing ``pyDMS`` analyzed seven different glassy polymers, there are different settings that can be tried if pyDMS is struggling to converge. These different settings are described in the paper's supplemental information with the Python code also available in the ``examples/paper`` directory in pyDMS, which can be found on GitHub. If you suspect there may be convergence challenges, we suggest the following strategy:
 

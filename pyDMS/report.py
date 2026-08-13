@@ -98,16 +98,16 @@ def LFER(gas, tmpdir, outliers=False):
 
 
 def LFER_outliers(gas, tmpdir, outliers=True):
-    """Plots and saves the LFER linear fits
+    """Plots and saves the isosteric heat of sorption
 
-    `report.LFER_outliers()` should be reserved specifically for printing in the report.
-    For general plotting of the LFERs, use `visualize.LFER()`
+    `report.isosteric_heat()` should be reserved specifically for printing in the report.
+    For general plotting of the isotherms, use `visualize.isosteric_heat()`
 
     Args:
-        gas: An instance of the `Gas` class with `Gas.LFER` populated
-        outliers: whether the plot should contain all outlier data
+        gas: An instance of the `Gas` class with `Gas` populated
 
-    Returns: The path of the file that was saved
+    Returns:
+        The path of the file that was saved
     """
 
     vis.LFER(gas, outliers)
@@ -141,13 +141,14 @@ def histograms(gas, tmpdir):
 def isotherms(gas, tmpdir):
     """Plots and saves the sorption isotherms with DMS parameters
 
-    ``report.isotherms()` should be reserved specifically for printing in the report.
+    ``report.isotherms()`` should be reserved specifically for printing in the report.
     For general plotting of the isotherms, use `visualize.isotherms()`
 
     Args:
         gas: An instance of the `Gas` class with `Gas` populated
 
-    Returns: The path of the file that was saved
+    Returns:
+        The path of the file that was saved
     """
 
     vis.isotherms(gas)
@@ -187,7 +188,7 @@ def isosteric_heat(gas, tmpdir="."):
     Args:
         gas: An instance of the `Gas` class with `Gas` populated
 
-    Returns: The path of the file that was saved
+    Returns:The path of the file that was saved
     """
 
     vis.isosteric_heat(gas)

@@ -501,7 +501,7 @@ The fugacity coefficient can be expressed in terms of the Virial coefficients as
    \ln(\phi)=B^*p_i+\frac{1}{2}C^*p_i^2+\cdots
 
 Peng--Robinson Equation of State
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The fugacity coefficient using the Peng--Robinson :cite:`peng_new_1976` EoS is solved as
 

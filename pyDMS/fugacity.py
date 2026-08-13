@@ -254,7 +254,6 @@ def peng_robinson_eos(gas):
         J. Chem. Eng. Data 2001, 46 (5), 1059-1063.
         https://doi.org/10.1021/je000236i.
 
-
     Args:
         gas: An instance of the `Gas` class with `Gas.formula`, `Gas.T`, and `Gas.p` populated
         params: A dictionary containing the Peng-Robinson parameters of a custom gas, for example:
@@ -262,8 +261,10 @@ def peng_robinson_eos(gas):
             'Tc':373.1,
             'Pc':9, #MPa
             'omega': 0.1}
-    Returns: A numpy array in `gas.f` with the fugacities at the corresponding pressures provided
-    in `gas.p`
+
+    Returns:
+        A numpy array in `gas.f` with the fugacities at the corresponding pressures provided
+        in `gas.p`
     """
     gas_name = gas.formula
 
