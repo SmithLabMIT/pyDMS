@@ -1,3 +1,11 @@
+.. image:: https://img.shields.io/github/license/SmithLabMIT/pyDMS
+   :alt: GitHub License
+   :target: https://github.com/SmithLabMIT/pyDMS/blob/main/LICENSE
+
+.. image:: https://app.readthedocs.org/projects/pydms/badge/?version=latest
+   :alt: Documentation Status
+   :target: https://pydms.readthedocs.io/en/latest/
+
 pyDMS
 =====
 
@@ -12,7 +20,9 @@ pyDMS is a Python program for the computation of dual-mode sorption (DMS) parame
 
 pyDMS is developed in the `Smith Lab <https://smithlab.mit.edu/>`_ in the `Department of Chemical Engineering <https://cheme.mit.edu/>`_ at the `Massachusetts Institute of Technology <https://mit.edu/>`_.
 
-The paper describing pyDMS can be found `here <LINK>`_.
+pyDMS documentation is hosted on `Read the Docs<https://pydms.readthedocs.io>`_.
+
+The journal article describing pyDMS is published in *AIChE J.* which can be found `here <LINK>`_.
 
 Features
 --------
