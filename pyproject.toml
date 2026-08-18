@@ -3,19 +3,19 @@ requires = ["setuptools>=77.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pyDMS"
-version = "0.1.0"
-description = "dual-mode sorption (DMS) model fitting and analysis"
-readme = "README.md"
+name = "pyDMS-sorption"
+version = "0.9.0"
+description = "Python package for physics-informed dual-mode sorption (DMS) optimization"
+readme = "README.rst"
 requires-python = ">=3.9"
-license = "MIT"
+license = "BSD-3-Clause"
 license-files = ["LICENSE"]
 authors = [
   { name = "Brandon C. Tapia"},
   { name = "Pablo A. Dean" },
   { name = "Jing Ying Yeo" },
   { name = "Albert X. Wu" },
-  { name = "Zachary P. Smith", email = "smithlab_software@gmit.edu" }
+  { name = "Zachary P. Smith", email = "smithlab_software@mit.edu" }
 ]
 
 dependencies = [
@@ -40,6 +40,7 @@ classifiers = [
 [project.optional-dependencies]
 dev = ["pytest", "black", "build", "twine"]
 docs = ["sphinx", "sphinxcontrib-bibtex", "sphinx_copybutton", "furo"]
+publish = ["build", "twine"]
 
 [tool.setuptools]
 include-package-data = true
@@ -50,6 +51,8 @@ include-package-data = true
 [tool.setuptools.packages.find]
 where = ["."
 ]
+include = ["pyDMS*"]
+
 [tool.black]
 target-version = ["py312"]
 line-length = 100

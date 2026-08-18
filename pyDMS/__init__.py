@@ -37,7 +37,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import warnings
 
 # TODO: streamline versioning
-__version__ = "0.1.0"
+__version__ = "0.9.0"
 
 
 def error_in_red(message):
