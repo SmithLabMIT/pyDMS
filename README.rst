@@ -6,6 +6,20 @@
    :alt: Documentation Status
    :target: https://pydms.readthedocs.io/en/latest/
 
+.. image:: https://img.shields.io/pypi/v/pyDMS-sorption
+   :target: https://pypi.org/project/pyDMS-sorption/
+   :alt: PyPI version
+
+.. image:: https://img.shields.io/conda/vn/conda-forge/pyDMS-sorption
+   :target: https://anaconda.org/conda-forge/pyDMS-sorption
+   :alt: conda-forge version
+
+..
+   .. image:: https://img.shields.io/badge/AIChE%20J.-10.1002%2Faic.17053-blue
+      :target: https://doi.org/10.1002/aic.17053
+      :alt: AIChE Journal Paper
+
+
 pyDMS
 =====
 
@@ -38,8 +52,8 @@ Installation
 
 pyDMS can be installed using:
 
-- conda: ``conda install package-not-yet-available``
-- pip: ``pip install package-not-yet-available``
+- conda: ``conda install pyDMS-sorption``
+- pip: ``pip install pyDMS-sorption``
 
 Alternatively, users can install the latest version from GitHub, either directly:
 
