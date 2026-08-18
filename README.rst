@@ -52,8 +52,8 @@ Installation
 
 pyDMS can be installed using:
 
-- conda: ``conda install pyDMS-sorption``
-- pip: ``pip install pyDMS-sorption``
+- conda: ``conda install -c conda-forge pyDMS-sorption``
+- pip: ``python -m pip install pyDMS-sorption``
 
 Alternatively, users can install the latest version from GitHub, either directly:
 
