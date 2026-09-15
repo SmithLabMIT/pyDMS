@@ -6,6 +6,7 @@ import sys
 import datetime
 import os
 from pathlib import Path
+from importlib.metadata import version
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
@@ -14,7 +15,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 project = 'pyDMS'
 copyright = f'{datetime.date.today().year}, Massachusetts Institute of Technology'
 author = 'Massachusetts Institute of Technology'
-release = '0.1.0'
+release = version("pyDMS-sorption")
+version = release
 
 language = "en"
 
